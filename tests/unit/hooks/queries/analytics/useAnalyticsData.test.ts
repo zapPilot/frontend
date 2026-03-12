@@ -522,4 +522,127 @@ describe("useAnalyticsData", () => {
     const queryOptions = vi.mocked(useQuery).mock.calls[0][0];
     expect(queryOptions.enabled).toBe(false);
   });
+
+  it("queryFn throws when userId is undefined at call time", async () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    let capturedQueryFn: (() => Promise<unknown>) | null = null;
+    vi.mocked(useQuery).mockImplementation((options: any) => {
+      capturedQueryFn = options.queryFn;
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+      } as any;
+    });
+
+    renderHook(() =>
+      useAnalyticsData(undefined, { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(capturedQueryFn).toBeDefined();
+    expect(() => capturedQueryFn!()).toThrow("User ID is required");
+  });
+
+  it("queryFn calls getDailyYieldReturns with correct parameters when userId is defined", async () => {
+    const { getDailyYieldReturns } =
+      await import("@/services/analyticsService");
+    vi.mocked(getDailyYieldReturns as any).mockResolvedValue([]);
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    let capturedQueryFn: (() => Promise<unknown>) | null = null;
+    vi.mocked(useQuery).mockImplementation((options: any) => {
+      capturedQueryFn = options.queryFn;
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+      } as any;
+    });
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(capturedQueryFn).toBeDefined();
+    await capturedQueryFn!();
+
+    expect(getDailyYieldReturns).toHaveBeenCalledWith("user1", 30, undefined);
+  });
+
+  it("queryFn passes wallet filter to getDailyYieldReturns", async () => {
+    const { getDailyYieldReturns } =
+      await import("@/services/analyticsService");
+    vi.mocked(getDailyYieldReturns as any).mockResolvedValue([]);
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    let capturedQueryFn: (() => Promise<unknown>) | null = null;
+    vi.mocked(useQuery).mockImplementation((options: any) => {
+      capturedQueryFn = options.queryFn;
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+      } as any;
+    });
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, "0xabc")
+    );
+
+    expect(capturedQueryFn).toBeDefined();
+    await capturedQueryFn!();
+
+    expect(getDailyYieldReturns).toHaveBeenCalledWith("user1", 30, "0xabc");
+  });
+
+  it("queryFn converts null walletFilter to undefined for getDailyYieldReturns", async () => {
+    const { getDailyYieldReturns } =
+      await import("@/services/analyticsService");
+    vi.mocked(getDailyYieldReturns as any).mockResolvedValue([]);
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    let capturedQueryFn: (() => Promise<unknown>) | null = null;
+    vi.mocked(useQuery).mockImplementation((options: any) => {
+      capturedQueryFn = options.queryFn;
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+      } as any;
+    });
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, null)
+    );
+
+    expect(capturedQueryFn).toBeDefined();
+    await capturedQueryFn!();
+
+    // null walletFilter should be converted to undefined
+    expect(getDailyYieldReturns).toHaveBeenCalledWith("user1", 30, undefined);
+  });
 });

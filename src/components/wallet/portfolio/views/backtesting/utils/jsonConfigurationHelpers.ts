@@ -1,37 +1,26 @@
 import type { BacktestRequest } from "@/types/backtesting";
 
-import { SIMPLE_REGIME_STRATEGY_ID } from "../constants";
-
-const BORROWING_FIELDS = new Set([
-  "enable_borrowing",
-  "borrow_ltv",
-  "borrow_apr",
-]);
+import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 
 type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
 type ValueType = string | number | boolean;
 
-function parseJsonValue(json: string): unknown | null {
+function parseJsonObject(json: string): Record<string, unknown> | null {
   try {
-    return JSON.parse(json);
+    const parsed: unknown = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    return parsed as Record<string, unknown>;
   } catch {
     return null;
   }
 }
 
-function parseJsonObject(json: string): Record<string, unknown> | null {
-  const parsed = parseJsonValue(json);
-  if (!parsed || typeof parsed !== "object") {
-    return null;
-  }
-
-  return parsed as Record<string, unknown>;
-}
-
 function findRegimeConfig(
   configs: Record<string, unknown>[]
 ): Record<string, unknown> | undefined {
-  return configs.find(c => c["strategy_id"] === SIMPLE_REGIME_STRATEGY_ID);
+  return configs.find(c => c["strategy_id"] !== DCA_CLASSIC_STRATEGY_ID);
 }
 
 function parseConfigsArray(json: string): {
@@ -52,11 +41,26 @@ export function patchBacktestConfig(
 ): string | null {
   if (!parsedJson) return null;
 
-  if (isBorrowingField(field)) {
-    return updateBorrowingConfig(parsedJson, field, value);
+  // Preserve formatting for numbers while typing (e.g. "10.") by storing as string
+  // until it is a clean number again.
+  let valueToStore: string | number | boolean = value;
+
+  if (typeof value === "string" && value !== "") {
+    const num = Number(value);
+    if (!isNaN(num) && String(num) === value) {
+      valueToStore = num;
+    }
   }
 
-  return updateStandardConfig(parsedJson, field, value);
+  const updated = { ...parsedJson, [field]: valueToStore };
+
+  // Clean up date fields if switching to days mode
+  if (field === "days") {
+    delete updated.start_date;
+    delete updated.end_date;
+  }
+
+  return JSON.stringify(updated, null, 2);
 }
 
 /**
@@ -118,7 +122,7 @@ export function updateJsonField(
 }
 
 /**
- * Read a param from the `simple_regime` config inside the JSON editor value.
+ * Read a param from the first non-DCA config inside the JSON editor value.
  *
  * @param json - Raw JSON string from the editor
  * @param param - Parameter name within the regime config's `params` object
@@ -127,7 +131,7 @@ export function updateJsonField(
  *
  * @example
  * ```ts
- * parseRegimeParam(editorValue, "signal_provider", "")
+ * parseRegimeParam(editorValue, "signal_id", "dma_gated_fgi")
  * ```
  */
 export function parseRegimeParam(
@@ -145,7 +149,7 @@ export function parseRegimeParam(
 }
 
 /**
- * Write a param into the `simple_regime` config inside the JSON editor value.
+ * Write a param into the first non-DCA config inside the JSON editor value.
  * An empty string removes the key (lets the backend use its default).
  *
  * @param json - Raw JSON string from the editor
@@ -155,8 +159,8 @@ export function parseRegimeParam(
  *
  * @example
  * ```ts
- * updateRegimeParam(editorValue, "signal_provider", "fgi")
- * updateRegimeParam(editorValue, "signal_provider", "")  // removes key
+ * updateRegimeParam(editorValue, "signal_id", "fgi")
+ * updateRegimeParam(editorValue, "signal_id", "")  // removes key
  * ```
  */
 export function updateRegimeParam(
@@ -186,80 +190,4 @@ export function updateRegimeParam(
   }
 
   return JSON.stringify(result.parsed, null, 2);
-}
-
-function isBorrowingField(field: string): boolean {
-  return BORROWING_FIELDS.has(field);
-}
-
-function updateBorrowingConfig(
-  parsedJson: BacktestConfig,
-  field: string,
-  value: ValueType
-): string {
-  const updated = { ...parsedJson };
-
-  if (!Array.isArray(updated.configs)) {
-    updated.configs = [];
-  }
-
-  // Find or create simple_regime config
-  let regimeConfig = updated.configs.find(
-    c => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
-  );
-
-  if (!regimeConfig) {
-    regimeConfig = {
-      config_id: SIMPLE_REGIME_STRATEGY_ID,
-      strategy_id: SIMPLE_REGIME_STRATEGY_ID,
-      params: {
-        enable_borrowing: false,
-      },
-    };
-    updated.configs.push(regimeConfig);
-  }
-
-  if (!regimeConfig.params) {
-    regimeConfig.params = {
-      enable_borrowing: false,
-    };
-  }
-
-  // Convert borrow_apr from percentage to decimal
-  const storeValue =
-    field === "borrow_apr" && typeof value === "number" ? value / 100 : value;
-
-  regimeConfig.params[field] = storeValue;
-
-  // Force enable_borrowing to false regardless of input field/value
-  regimeConfig.params["enable_borrowing"] = false;
-
-  return JSON.stringify(updated, null, 2);
-}
-
-function updateStandardConfig(
-  parsedJson: BacktestConfig,
-  field: string,
-  value: ValueType
-): string {
-  // Preserve formatting for numbers while typing (e.g. "10.") by storing as string
-  // until it is a clean number again.
-  let valueToStore: string | number | boolean = value;
-
-  if (typeof value === "string" && value !== "") {
-    const num = Number(value);
-    if (!isNaN(num) && String(num) === value) {
-      valueToStore = num;
-    }
-  }
-
-  const updated = { ...parsedJson, [field]: valueToStore };
-
-  // Clean up date fields if switching to days mode
-  if (field === "days") {
-    delete updated.start_date;
-    delete updated.end_date;
-  }
-
-  return JSON.stringify(updated, null, 2);
 }

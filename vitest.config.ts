@@ -2,15 +2,32 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
 
+const enforceCoverageThresholds = process.env['VITEST_ENFORCE_THRESHOLDS'] !== 'false';
+const coverageThresholds = {
+  global: {
+    statements: 90,
+    branches: 85,
+    functions: 90,
+    lines: 90,
+  },
+  // Per-file thresholds for critical paths
+  'src/components/wallet/portfolio/modals/ConnectWalletModal.tsx': {
+    branches: 80,
+  },
+  'src/adapters/walletPortfolioDataAdapter.ts': {
+    branches: 80,
+  },
+} as const;
+
 export default defineConfig({
   plugins: [react()],
   test: {
-    // Resource controls: single worker to prevent memory exhaustion
-    // Uses fork pool for better cleanup and isolation
+    // Resource controls: run one file at a time and recycle the fork between files
+    // This reduces retained heap from long-lived JSDOM/module state across the suite
     pool: 'forks',
     poolOptions: {
       forks: {
-        singleFork: true,
+        singleFork: false,
       },
     },
     maxWorkers: 1,
@@ -54,22 +71,8 @@ export default defineConfig({
       ],
       reportOnFailure: true,
       all: true,
-      thresholds: {
-        global: {
-          statements: 90,
-          branches: 85,
-          functions: 90,
-          lines: 90,
-        },
-        // Per-file thresholds for critical paths
-        'src/components/wallet/portfolio/modals/ConnectWalletModal.tsx': {
-          branches: 80,
-        },
-        'src/adapters/walletPortfolioDataAdapter.ts': {
-          branches: 80,
-        },
-      },
-    }
+      ...(enforceCoverageThresholds ? { thresholds: coverageThresholds } : {}),
+    },
   },
   resolve: {
     alias: {

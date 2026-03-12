@@ -1,7 +1,6 @@
 import { httpUtils } from "@/lib/http";
 import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
 import {
-  enrichTimelineWithDma200,
   MAX_CHART_POINTS,
   MIN_CHART_POINTS,
   sampleTimelineData,
@@ -10,6 +9,7 @@ import type {
   BacktestRequest,
   BacktestResponse,
   BacktestStrategyCatalogResponseV3,
+  BacktestTimelinePoint,
 } from "@/types/backtesting";
 
 const callBacktestingApi = createApiServiceCaller(
@@ -23,25 +23,21 @@ const callBacktestingApi = createApiServiceCaller(
   "Failed to run backtest"
 );
 
-/**
- * Run the DCA comparison backtest.
- *
- * Automatically samples the timeline data to reduce browser RAM usage
- * while preserving important trading signals (buy/sell events).
- *
- * Uses a custom 10-minute timeout to accommodate complex backtesting
- * calculations that may involve:
- * - Multiple allocation strategies
- * - Extended historical data ranges (90+ days)
- * - High computational load on the analytics server
- */
-/**
- * Export internal helpers for testing purposes.
- * @internal - Not part of the public API
- */
+/** @internal — test-only re-exports */
 export { sampleTimelineData as _sampleTimelineData };
-export { enrichTimelineWithDma200 as _enrichTimelineWithDma200 } from "@/services/backtestingTimeline";
 export { MAX_CHART_POINTS, MIN_CHART_POINTS };
+
+/**
+ * Legacy test helper retained during the DMA-first migration.
+ * The backend now returns DMA values directly inside strategy.signal.dma.
+ *
+ * @internal
+ */
+export function _enrichTimelineWithDma200(
+  timeline: BacktestTimelinePoint[] | undefined
+): BacktestTimelinePoint[] {
+  return timeline ?? [];
+}
 
 export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
   return callBacktestingApi(() =>
@@ -64,12 +60,9 @@ export async function runBacktest(
     )
   );
 
-  // Compute DMA-200 from the full timeline before downsampling
-  const enrichedTimeline = enrichTimelineWithDma200(response.timeline);
-
   // Sample timeline data to reduce memory usage while preserving signals
   return {
     ...response,
-    timeline: sampleTimelineData(enrichedTimeline),
+    timeline: sampleTimelineData(response.timeline),
   };
 }

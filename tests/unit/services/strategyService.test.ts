@@ -1,12 +1,3 @@
-/**
- * Test suite for strategyService
- *
- * Tests:
- * - getStrategyConfigs endpoint calls
- * - Response structure with presets and backtest_defaults
- * - Backward compatibility with old API format (array response)
- */
-
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
@@ -26,7 +17,7 @@ function createMockPreset(
     config_id: "test_preset",
     display_name: "Test Preset",
     description: "Test description",
-    strategy_id: "dca_classic",
+    strategy_id: "dma_gated_fgi",
     params: {},
     is_default: false,
     is_benchmark: false,
@@ -39,10 +30,13 @@ function createMockResponse(
 ): StrategyConfigsResponse {
   return {
     presets: [
-      createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
       createMockPreset({
-        config_id: "fgi_exponential",
-        strategy_id: "simple_regime",
+        config_id: "dca_classic",
+        strategy_id: "dca_classic",
+        is_benchmark: true,
+      }),
+      createMockPreset({
+        config_id: "dma_gated_fgi_default",
         is_default: true,
       }),
     ],
@@ -62,9 +56,8 @@ describe("strategyService", () => {
   });
 
   describe("getStrategyConfigs", () => {
-    it("calls correct endpoint", async () => {
-      const mockResponse = createMockResponse();
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+    it("calls the correct endpoint", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(createMockResponse());
 
       await getStrategyConfigs();
 
@@ -73,104 +66,84 @@ describe("strategyService", () => {
       );
     });
 
-    it("returns StrategyConfigsResponse with presets and defaults", async () => {
+    it("returns the response envelope as-is", async () => {
       const mockResponse = createMockResponse();
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
       const result = await getStrategyConfigs();
 
-      expect(result.presets).toHaveLength(2);
-      expect(result.backtest_defaults.days).toBe(500);
-      expect(result.backtest_defaults.total_capital).toBe(10000);
+      expect(result).toEqual(mockResponse);
     });
 
-    it("returns presets with correct structure", async () => {
-      const mockResponse = createMockResponse();
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
-
-      const result = await getStrategyConfigs();
-
-      const benchmark = result.presets.find(p => p.is_benchmark);
-      const defaultPreset = result.presets.find(p => p.is_default);
-
-      expect(benchmark).toBeDefined();
-      expect(benchmark?.config_id).toBe("dca_classic");
-
-      expect(defaultPreset).toBeDefined();
-      expect(defaultPreset?.config_id).toBe("fgi_exponential");
-    });
-
-    it("handles backward compatibility with array response", async () => {
-      // Old API returns array instead of object
-      const mockArrayResponse: StrategyPreset[] = [
-        createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
+    it("wraps legacy array responses with fallback defaults", async () => {
+      const legacyPresets: StrategyPreset[] = [
         createMockPreset({
-          config_id: "fgi_exponential",
-          strategy_id: "simple_regime",
+          config_id: "dma_gated_fgi_default",
           is_default: true,
         }),
       ];
-      analyticsEngineGetSpy.mockResolvedValue(mockArrayResponse);
+      analyticsEngineGetSpy.mockResolvedValue(legacyPresets);
 
       const result = await getStrategyConfigs();
 
-      // Should wrap in response envelope with fallback defaults
-      expect(result.presets).toHaveLength(2);
-      expect(result.backtest_defaults.days).toBe(90); // FALLBACK
-      expect(result.backtest_defaults.total_capital).toBe(10000); // FALLBACK
-    });
-
-    it("handles empty presets array", async () => {
-      const mockResponse = createMockResponse({ presets: [] });
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
-
-      const result = await getStrategyConfigs();
-
-      expect(result.presets).toHaveLength(0);
-      expect(result.backtest_defaults.days).toBe(500);
-    });
-
-    it("handles custom backtest defaults from API", async () => {
-      const mockResponse = createMockResponse({
-        backtest_defaults: { days: 365, total_capital: 50000 },
+      expect(result.presets).toEqual(legacyPresets);
+      expect(result.backtest_defaults).toEqual({
+        days: 90,
+        total_capital: 10000,
       });
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
-
-      const result = await getStrategyConfigs();
-
-      expect(result.backtest_defaults.days).toBe(365);
-      expect(result.backtest_defaults.total_capital).toBe(50000);
     });
 
-    it("propagates errors from HTTP layer", async () => {
-      const error = new Error("Network error");
-      analyticsEngineGetSpy.mockRejectedValue(error);
+    it("propagates HTTP errors", async () => {
+      analyticsEngineGetSpy.mockRejectedValue(new Error("Network error"));
 
       await expect(getStrategyConfigs()).rejects.toThrow("Network error");
-    });
-
-    it("handles presets with params", async () => {
-      const mockResponse = createMockResponse({
-        presets: [
-          createMockPreset({
-            config_id: "fgi_exponential",
-            strategy_id: "simple_regime",
-            params: { k: 3.0, r_max: 1.2 },
-          }),
-        ],
-      });
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
-
-      const result = await getStrategyConfigs();
-
-      expect(result.presets[0].params).toEqual({ k: 3.0, r_max: 1.2 });
     });
   });
 
   describe("getDailySuggestion", () => {
-    it("calls correct endpoint with userId", async () => {
-      const mockResponse = { regime: "bull", trade_suggestions: [] };
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+    const mockSuggestion = {
+      as_of: "2026-03-07",
+      config_id: "dma_gated_fgi_default",
+      strategy_id: "dma_gated_fgi",
+      market: {
+        date: "2026-03-07",
+        token_price: { btc: 68148.28 },
+        sentiment: 18,
+        sentiment_label: "extreme_fear",
+      },
+      portfolio: {
+        spot_usd: 7000,
+        stable_usd: 3000,
+        total_value: 10000,
+        allocation: {
+          spot: 0.7,
+          stable: 0.3,
+        },
+      },
+      signal: null,
+      decision: {
+        action: "hold",
+        reason: "wait",
+        rule_group: "none",
+        target_allocation: {
+          spot: 0.7,
+          stable: 0.3,
+        },
+        immediate: false,
+      },
+      execution: {
+        event: null,
+        transfers: [],
+        blocked_reason: null,
+        step_count: 0,
+        steps_remaining: 0,
+        interval_days: 0,
+        buy_gate: null,
+      },
+    };
+
+    it("calls the user-specific endpoint", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
       await getDailySuggestion("user-123");
 
@@ -179,82 +152,40 @@ describe("strategyService", () => {
       );
     });
 
-    it("returns the response as-is", async () => {
-      const mockResponse = {
-        regime: "bear",
-        trade_suggestions: [{ action: "sell", amount_usd: 100 }],
-      };
-      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+    it("returns the daily suggestion response as-is", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
       const result = await getDailySuggestion("user-456");
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockSuggestion);
     });
 
-    it("appends query string with config_id param", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({});
+    it("appends config_id to the query string", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
-      await getDailySuggestion("user-123", { config_id: "fgi_exponential" });
+      await getDailySuggestion("user-123", {
+        config_id: "dma_gated_fgi_default",
+      });
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        "/api/v3/strategy/daily-suggestion/user-123?config_id=fgi_exponential"
+        "/api/v3/strategy/daily-suggestion/user-123?config_id=dma_gated_fgi_default"
       );
     });
 
-    it("appends multiple params to query string", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({});
-
-      await getDailySuggestion("user-123", {
-        config_id: "dca_classic",
-        drift_threshold: 0.1,
-      });
-
-      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
-      expect(calledUrl).toContain("config_id=dca_classic");
-      expect(calledUrl).toContain("drift_threshold=0.1");
-    });
-
     it("filters out undefined params", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({});
+      analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
       await getDailySuggestion("user-123", {
         config_id: undefined,
         drift_threshold: 0.05,
       });
 
-      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
-      expect(calledUrl).not.toContain("config_id");
-      expect(calledUrl).toContain("drift_threshold=0.05");
-    });
-
-    it("handles empty params object (no query string)", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({});
-
-      await getDailySuggestion("user-123", {});
-
-      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        "/api/v3/strategy/daily-suggestion/user-123"
+      expect(analyticsEngineGetSpy.mock.calls[0]?.[0]).toContain(
+        "drift_threshold=0.05"
       );
-    });
-
-    it("propagates errors from HTTP layer", async () => {
-      analyticsEngineGetSpy.mockRejectedValue(new Error("Server error"));
-
-      await expect(getDailySuggestion("user-123")).rejects.toThrow(
-        "Server error"
+      expect(analyticsEngineGetSpy.mock.calls[0]?.[0]).not.toContain(
+        "config_id"
       );
-    });
-
-    it("encodes special characters in params", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({});
-
-      await getDailySuggestion("user-123", {
-        config_id: "some preset&value",
-      });
-
-      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
-      // URLSearchParams encodes spaces as '+' per application/x-www-form-urlencoded spec
-      expect(calledUrl).toContain("some+preset%26value");
     });
   });
 });

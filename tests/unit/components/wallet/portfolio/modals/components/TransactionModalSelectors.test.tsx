@@ -1,3 +1,4 @@
+import { fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -215,5 +216,158 @@ describe("TransactionModalContent", () => {
     render(<TransactionModalContent {...defaultProps} />);
 
     expect(screen.getByTestId("form-actions")).toBeInTheDocument();
+  });
+
+  // --- Missed branch: DropdownPanel open branch (chain dropdown) ---
+  it("renders chain list items when chain dropdown is open", () => {
+    const propsWithChainOpen = {
+      ...defaultProps,
+      dropdownState: {
+        ...mockDropdownState,
+        isChainDropdownOpen: true,
+      } as any,
+      modalState: {
+        ...mockModalState,
+        transactionData: {
+          ...mockTransactionData,
+          chainList: [
+            { chainId: 1, name: "Ethereum" },
+            { chainId: 42161, name: "Arbitrum" },
+          ],
+        },
+      } as any,
+    };
+
+    render(<TransactionModalContent {...propsWithChainOpen} />);
+
+    // The chain dropdown panel is rendered with chain name buttons
+    expect(screen.getByText("Ethereum")).toBeInTheDocument();
+    expect(screen.getByText("Arbitrum")).toBeInTheDocument();
+  });
+
+  // --- Missed branch: DropdownPanel open branch (asset dropdown) ---
+  it("renders asset content when asset dropdown is open", () => {
+    const propsWithAssetOpen = {
+      ...defaultProps,
+      dropdownState: {
+        ...mockDropdownState,
+        isAssetDropdownOpen: true,
+      } as any,
+    };
+
+    render(<TransactionModalContent {...propsWithAssetOpen} />);
+
+    expect(screen.getByTestId("asset-content")).toBeInTheDocument();
+  });
+
+  // --- Missed function: handleSelectChain ---
+  it("calls form.setValue and closeDropdowns when a chain is selected", () => {
+    const closeDropdowns = vi.fn();
+    const setValue = vi.fn();
+
+    const propsWithChainOpen = {
+      ...defaultProps,
+      dropdownState: {
+        ...mockDropdownState,
+        isChainDropdownOpen: true,
+        closeDropdowns,
+      } as any,
+      modalState: {
+        ...mockModalState,
+        form: { ...mockForm, setValue },
+        transactionData: {
+          ...mockTransactionData,
+          chainList: [{ chainId: 42161, name: "Arbitrum" }],
+        },
+      } as any,
+    };
+
+    render(<TransactionModalContent {...propsWithChainOpen} />);
+
+    // Click the chain button in the open dropdown
+    const arbitrumButton = screen.getByText("Arbitrum");
+    fireEvent.click(arbitrumButton);
+
+    expect(setValue).toHaveBeenCalledWith("chainId", 42161);
+    expect(closeDropdowns).toHaveBeenCalledTimes(1);
+  });
+
+  // --- Missed branch: selectedChain is null (name ?? fallbacks) ---
+  it("shows fallback values when selectedChain is null", () => {
+    const propsWithNullChain = {
+      ...defaultProps,
+      modalState: {
+        ...mockModalState,
+        selectedChain: null,
+      } as any,
+    };
+
+    render(<TransactionModalContent {...propsWithNullChain} />);
+
+    // Network selector should show "Select" as fallback value
+    expect(screen.getByText("Network: Select")).toBeInTheDocument();
+  });
+
+  // --- Missed branch: selectedToken is undefined (selectedSymbol undefined) ---
+  it("shows fallback asset label when selectedToken is undefined", () => {
+    const propsWithNoToken = {
+      ...defaultProps,
+      modalState: {
+        ...mockModalState,
+        transactionData: {
+          ...mockTransactionData,
+          selectedToken: undefined,
+        },
+      } as any,
+    };
+
+    render(<TransactionModalContent {...propsWithNoToken} />);
+
+    // Asset selector should show "Select Asset" as fallback
+    expect(screen.getByText("Asset: Select Asset")).toBeInTheDocument();
+  });
+
+  // --- Missed branch: toggleChainDropdown and toggleAssetDropdown callbacks ---
+  it("calls toggleChainDropdown when chain selector is clicked", () => {
+    const toggleChainDropdown = vi.fn();
+
+    render(
+      <TransactionModalContent
+        {...defaultProps}
+        dropdownState={
+          {
+            ...mockDropdownState,
+            toggleChainDropdown,
+          } as any
+        }
+      />
+    );
+
+    const [chainSelectorBtn] = screen.getAllByTestId("selector-btn");
+    fireEvent.click(chainSelectorBtn);
+
+    expect(toggleChainDropdown).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls toggleAssetDropdown when asset selector is clicked", () => {
+    const toggleAssetDropdown = vi.fn();
+
+    render(
+      <TransactionModalContent
+        {...defaultProps}
+        dropdownState={
+          {
+            ...mockDropdownState,
+            toggleAssetDropdown,
+          } as any
+        }
+      />
+    );
+
+    const selectorBtns = screen.getAllByTestId("selector-btn");
+    const assetSelectorBtn = selectorBtns[1];
+    fireEvent.click(assetSelectorBtn);
+
+    expect(toggleAssetDropdown).toHaveBeenCalledTimes(1);
   });
 });

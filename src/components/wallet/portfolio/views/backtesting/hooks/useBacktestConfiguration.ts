@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
@@ -12,13 +12,29 @@ import type { StrategyConfigsResponse } from "@/types/strategy";
 
 import {
   DCA_CLASSIC_STRATEGY_ID,
-  SIMPLE_REGIME_STRATEGY_ID,
+  DMA_GATED_FGI_STRATEGY_ID,
 } from "../constants";
 import {
   buildDefaultPayloadFromCatalog,
   buildDefaultPayloadFromPresets,
   FALLBACK_DEFAULTS,
 } from "./backtestConfigurationBuilders";
+
+const backtestParamsSchema = z
+  .object({
+    cross_cooldown_days: z.coerce.number().int().nonnegative().optional(),
+    cross_on_touch: z.boolean().optional(),
+    pacing_k: z.coerce.number().optional(),
+    pacing_r_max: z.coerce.number().optional(),
+    buy_sideways_window_days: z.coerce.number().int().positive().optional(),
+    buy_sideways_max_range: z.coerce.number().nonnegative().optional(),
+    buy_leg_caps: z.array(z.coerce.number()).optional(),
+    signal_id: z.string().optional(),
+    signal_params: z.record(z.string(), z.unknown()).optional(),
+    pacing_params: z.record(z.string(), z.unknown()).optional(),
+    execution_params: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
 
 const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),
@@ -32,13 +48,35 @@ const backtestRequestSchema = z.object({
         config_id: z.string().min(1),
         strategy_id: z.enum([
           DCA_CLASSIC_STRATEGY_ID,
-          SIMPLE_REGIME_STRATEGY_ID,
+          DMA_GATED_FGI_STRATEGY_ID,
         ]),
-        params: z.record(z.string(), z.unknown()).optional(),
+        params: backtestParamsSchema.optional(),
       })
     )
     .min(1),
 });
+
+type ParsedBacktestRequest = z.infer<typeof backtestRequestSchema>;
+
+function formatValidationError(error: z.ZodError): string {
+  return error.issues
+    .map(issue => `${issue.path.join(".") || "payload"}: ${issue.message}`)
+    .join("\n");
+}
+
+function normalizeParams(
+  params: ParsedBacktestRequest["configs"][number]["params"]
+): BacktestRequest["configs"][number]["params"] {
+  if (!params) {
+    return undefined;
+  }
+  const normalized = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined)
+  );
+  return Object.keys(normalized).length > 0
+    ? (normalized as BacktestRequest["configs"][number]["params"])
+    : undefined;
+}
 
 export function useBacktestConfiguration() {
   const {
@@ -60,7 +98,10 @@ export function useBacktestConfiguration() {
     )
   );
   const [editorError, setEditorError] = useState<string | null>(null);
+  const [defaultsReady, setDefaultsReady] = useState(false);
+  const [initialRunSettled, setInitialRunSettled] = useState(false);
   const userEdited = useRef(false);
+  const initialRunStarted = useRef(false);
 
   // Fetch presets (primary) and catalog (fallback) in parallel on mount
   useEffect(() => {
@@ -88,6 +129,7 @@ export function useBacktestConfiguration() {
             presets.backtest_defaults
           );
           setEditorValue(JSON.stringify(payload, null, 2));
+          setDefaultsReady(true);
           return;
         }
       }
@@ -100,6 +142,8 @@ export function useBacktestConfiguration() {
         );
         setEditorValue(JSON.stringify(payload, null, 2));
       }
+
+      setDefaultsReady(true);
     };
 
     void fetchDefaults();
@@ -117,50 +161,93 @@ export function useBacktestConfiguration() {
     }
   }, [editorValue]);
 
-  const handleRunBacktest = () => {
-    if (!parsedEditorPayload) {
-      setEditorError("Invalid JSON: unable to parse.");
-      return;
-    }
+  const submitBacktest = useCallback(
+    (
+      parsedData: ParsedBacktestRequest,
+      options?: Parameters<typeof mutate>[1]
+    ) => {
+      const configs: BacktestRequest["configs"] = parsedData.configs.map(
+        cfg => {
+          const params = normalizeParams(cfg.params);
+          return {
+            config_id: cfg.config_id,
+            strategy_id: cfg.strategy_id,
+            ...(params !== undefined && { params }),
+          };
+        }
+      );
 
+      const request: BacktestRequest = {
+        total_capital: parsedData.total_capital,
+        configs,
+        ...(parsedData.token_symbol !== undefined && {
+          token_symbol: parsedData.token_symbol,
+        }),
+        ...(parsedData.start_date !== undefined && {
+          start_date: parsedData.start_date,
+        }),
+        ...(parsedData.end_date !== undefined && {
+          end_date: parsedData.end_date,
+        }),
+        ...(parsedData.days !== undefined && { days: parsedData.days }),
+      };
+
+      if (options) {
+        mutate(request, options);
+      } else {
+        mutate(request);
+      }
+    },
+    [mutate]
+  );
+
+  const validatePayload = useCallback(() => {
+    if (!parsedEditorPayload) {
+      return { ok: false as const, error: "Invalid JSON: unable to parse." };
+    }
     const parsed = backtestRequestSchema.safeParse(parsedEditorPayload);
     if (!parsed.success) {
-      setEditorError(
-        parsed.error.issues
-          .map(
-            issue => `${issue.path.join(".") || "payload"}: ${issue.message}`
-          )
-          .join("\n")
-      );
+      return {
+        ok: false as const,
+        error: formatValidationError(parsed.error),
+      };
+    }
+    return { ok: true as const, data: parsed.data };
+  }, [parsedEditorPayload]);
+
+  const handleRunBacktest = () => {
+    const result = validatePayload();
+    if (!result.ok) {
+      setEditorError(result.error);
+      return;
+    }
+    setEditorError(null);
+    submitBacktest(result.data);
+  };
+
+  useEffect(() => {
+    if (!defaultsReady || initialRunStarted.current) {
       return;
     }
 
+    const result = validatePayload();
+    if (!result.ok) {
+      setEditorError(result.error);
+      setInitialRunSettled(true);
+      return;
+    }
+
+    initialRunStarted.current = true;
     setEditorError(null);
-
-    // Conditional spreads keep only defined properties (exactOptionalPropertyTypes)
-    const configs: BacktestRequest["configs"] = parsed.data.configs.map(
-      cfg => ({
-        config_id: cfg.config_id,
-        strategy_id: cfg.strategy_id,
-        ...(cfg.params !== undefined && { params: cfg.params }),
-      })
-    );
-
-    mutate({
-      total_capital: parsed.data.total_capital,
-      configs,
-      ...(parsed.data.token_symbol !== undefined && {
-        token_symbol: parsed.data.token_symbol,
-      }),
-      ...(parsed.data.start_date !== undefined && {
-        start_date: parsed.data.start_date,
-      }),
-      ...(parsed.data.end_date !== undefined && {
-        end_date: parsed.data.end_date,
-      }),
-      ...(parsed.data.days !== undefined && { days: parsed.data.days }),
+    submitBacktest(result.data, {
+      onSettled: () => {
+        setInitialRunSettled(true);
+      },
     });
-  };
+  }, [defaultsReady, validatePayload, submitBacktest]);
+
+  const isInitializing =
+    !initialRunSettled && !backtestData && !error && !editorError;
 
   const resetConfiguration = () => {
     // Prefer presets if available, otherwise fall back to catalog
@@ -185,6 +272,7 @@ export function useBacktestConfiguration() {
     editorError,
     editorValue,
     error,
+    isInitializing,
     isPending,
     setEditorError,
     handleRunBacktest,

@@ -20,7 +20,7 @@
 ```bash
 pnpm run test:unit           # Run unit tests (memory optimized)
 pnpm run test:e2e           # Run Playwright E2E tests
-pnpm run test:coverage      # Check coverage thresholds (90% required)
+pnpm run test:coverage      # Check coverage thresholds (90/85/90/90, validated on Node 20)
 pnpm run type-check         # ALWAYS run before committing
 ```
 
@@ -28,6 +28,7 @@ pnpm run type-check         # ALWAYS run before committing
 - Use `renderWithProviders()` from `tests/test-utils.tsx` for component tests
 - Mock service functions, not implementation details
 - Coverage thresholds: 90% statements/functions/lines, 85% branches
+- Coverage batching: set `VITEST_COVERAGE_BATCH_SIZE=<n>` if a local run still needs smaller batches
 
 # Architecture Patterns
 
@@ -112,6 +113,8 @@ pnpm run format           # Format all files
 # Common Gotchas
 
 - **Memory**: Use `cross-env NODE_OPTIONS=--max-old-space-size=3072` for dev/build
+- **Node Runtime**: Coverage/test automation is validated on Node 20 (`.nvmrc` + CI baseline); newer
+  majors are best-effort
 - **Static Export**: `output: 'export'` in next.config.ts - no server-side features
 - **CSP Headers**: Strict Content-Security-Policy - test new external domains in dev first
 - **Wallet Provider**: Access via `useWalletProvider()` hook, not direct Thirdweb hooks

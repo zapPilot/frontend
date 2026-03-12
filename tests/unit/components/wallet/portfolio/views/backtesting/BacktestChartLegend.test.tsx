@@ -7,7 +7,7 @@ describe("BacktestChartLegend", () => {
   it("renders grouped legends for strategy, indicators, and events", () => {
     render(
       <BacktestChartLegend
-        sortedStrategyIds={["dca_classic", "simple_regime"]}
+        sortedStrategyIds={["dca_classic", "dma_gated_fgi_default"]}
       />
     );
 
@@ -16,20 +16,18 @@ describe("BacktestChartLegend", () => {
     expect(screen.getByText("Events")).toBeInTheDocument();
   });
 
-  it("includes strategy entries and indicator/event items in their groups", () => {
+  it("includes DMA-first strategy and event labels", () => {
     render(
       <BacktestChartLegend
-        sortedStrategyIds={["dca_classic", "simple_regime"]}
+        sortedStrategyIds={["dca_classic", "dma_gated_fgi_default"]}
       />
     );
 
     expect(screen.getByText("DCA Classic")).toBeInTheDocument();
-    expect(screen.getByText("Simple Regime")).toBeInTheDocument();
+    expect(screen.getByText("DMA Gated FGI Default")).toBeInTheDocument();
     expect(screen.getByText("Sentiment")).toBeInTheDocument();
     expect(screen.getByText("DMA 200")).toBeInTheDocument();
     expect(screen.getByText("Buy Spot")).toBeInTheDocument();
     expect(screen.getByText("Sell Spot")).toBeInTheDocument();
-    expect(screen.getByText("Buy LP")).toBeInTheDocument();
-    expect(screen.getByText("Sell LP")).toBeInTheDocument();
   });
 });

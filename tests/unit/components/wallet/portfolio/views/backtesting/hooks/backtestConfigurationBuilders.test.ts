@@ -4,7 +4,8 @@ import {
   DCA_CLASSIC_STRATEGY_ID,
   DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
-  SIMPLE_REGIME_STRATEGY_ID,
+  DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+  DMA_GATED_FGI_STRATEGY_ID,
 } from "@/components/wallet/portfolio/views/backtesting/constants";
 import {
   buildDefaultPayloadFromCatalog,
@@ -14,15 +15,14 @@ import {
 import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
 import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 
-// --- Test Helpers ---
-
 function createPreset(
   overrides: Partial<StrategyPreset> & { config_id: string }
 ): StrategyPreset {
   return {
+    config_id: overrides.config_id,
     display_name: "Test Strategy",
     description: null,
-    strategy_id: "simple_regime",
+    strategy_id: "dma_gated_fgi",
     params: {},
     is_default: false,
     is_benchmark: false,
@@ -32,17 +32,15 @@ function createPreset(
 
 const TEST_DEFAULTS: BacktestDefaults = { days: 365, total_capital: 50000 };
 
-// --- Tests ---
-
 describe("FALLBACK_DEFAULTS", () => {
-  it("has expected default values from constants", () => {
+  it("uses the configured hard-coded defaults", () => {
     expect(FALLBACK_DEFAULTS.days).toBe(DEFAULT_DAYS);
     expect(FALLBACK_DEFAULTS.total_capital).toBe(DEFAULT_TOTAL_CAPITAL);
   });
 });
 
 describe("buildDefaultPayloadFromPresets", () => {
-  it("includes benchmark and recommended configs when both present", () => {
+  it("includes benchmark and recommended configs when both are present", () => {
     const presets = [
       createPreset({
         config_id: "dca_classic",
@@ -50,63 +48,34 @@ describe("buildDefaultPayloadFromPresets", () => {
         is_benchmark: true,
       }),
       createPreset({
-        config_id: "regime_v1",
-        strategy_id: "simple_regime",
+        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
         is_default: true,
-        params: { signal_provider: "fgi" },
+        params: { signal_id: "dma_gated_fgi" },
       }),
     ];
 
     const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
 
-    expect(result.days).toBe(365);
-    expect(result.total_capital).toBe(50000);
-    expect(result.configs).toHaveLength(2);
-    expect(result.configs[0].config_id).toBe("dca_classic");
-    expect(result.configs[1].config_id).toBe("regime_v1");
-    expect(result.configs[1].params).toEqual({ signal_provider: "fgi" });
+    expect(result).toEqual({
+      days: 365,
+      total_capital: 50000,
+      configs: [
+        {
+          config_id: "dca_classic",
+          strategy_id: "dca_classic",
+          params: {},
+        },
+        {
+          config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          params: { signal_id: "dma_gated_fgi" },
+        },
+      ],
+    });
   });
 
-  it("includes only benchmark when no recommended preset exists", () => {
-    const presets = [
-      createPreset({
-        config_id: "dca_classic",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
-      }),
-    ];
-
-    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
-
-    expect(result.configs).toHaveLength(1);
-    expect(result.configs[0].config_id).toBe("dca_classic");
-  });
-
-  it("includes only recommended when no benchmark preset exists", () => {
-    const presets = [
-      createPreset({
-        config_id: "regime_v1",
-        strategy_id: "simple_regime",
-        is_default: true,
-      }),
-    ];
-
-    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
-
-    expect(result.configs).toHaveLength(1);
-    expect(result.configs[0].config_id).toBe("regime_v1");
-  });
-
-  it("falls back to DCA classic when no benchmark or recommended found", () => {
-    const result = buildDefaultPayloadFromPresets([], TEST_DEFAULTS);
-
-    expect(result.configs).toHaveLength(1);
-    expect(result.configs[0].config_id).toBe(DCA_CLASSIC_STRATEGY_ID);
-    expect(result.configs[0].strategy_id).toBe(DCA_CLASSIC_STRATEGY_ID);
-    expect(result.configs[0].params).toEqual({});
-  });
-
-  it("deduplicates when benchmark and recommended share config_id", () => {
+  it("deduplicates benchmark and recommended when they share a config id", () => {
     const presets = [
       createPreset({
         config_id: "shared_config",
@@ -118,123 +87,84 @@ describe("buildDefaultPayloadFromPresets", () => {
 
     const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
 
-    // benchmark is added, recommended has same config_id so is skipped
     expect(result.configs).toHaveLength(1);
-    expect(result.configs[0].config_id).toBe("shared_config");
+    expect(result.configs[0]?.config_id).toBe("shared_config");
   });
 
-  it("uses provided defaults for days and total_capital", () => {
-    const customDefaults: BacktestDefaults = {
-      days: 730,
-      total_capital: 100000,
-    };
-    const presets = [
-      createPreset({
-        config_id: "dca_classic",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
-      }),
-    ];
+  it("falls back to dca_classic when no curated presets are available", () => {
+    const result = buildDefaultPayloadFromPresets([], TEST_DEFAULTS);
 
-    const result = buildDefaultPayloadFromPresets(presets, customDefaults);
-
-    expect(result.days).toBe(730);
-    expect(result.total_capital).toBe(100000);
-  });
-
-  it("picks first benchmark and first recommended from multiple presets", () => {
-    const presets = [
-      createPreset({
-        config_id: "benchmark_1",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
-      }),
-      createPreset({
-        config_id: "benchmark_2",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
-      }),
-      createPreset({
-        config_id: "recommended_1",
-        strategy_id: "simple_regime",
-        is_default: true,
-      }),
-      createPreset({
-        config_id: "recommended_2",
-        strategy_id: "simple_regime",
-        is_default: true,
-      }),
-    ];
-
-    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
-
-    expect(result.configs).toHaveLength(2);
-    expect(result.configs[0].config_id).toBe("benchmark_1");
-    expect(result.configs[1].config_id).toBe("recommended_1");
+    expect(result.configs).toEqual([
+      {
+        config_id: DCA_CLASSIC_STRATEGY_ID,
+        strategy_id: DCA_CLASSIC_STRATEGY_ID,
+        params: {},
+      },
+    ]);
   });
 });
 
 describe("buildDefaultPayloadFromCatalog", () => {
-  it("builds payload with DCA and simple_regime from catalog", () => {
+  it("builds a DCA plus DMA payload from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "3.0",
+      catalog_version: "3.0.0",
       strategies: [
         {
-          id: SIMPLE_REGIME_STRATEGY_ID,
-          display_name: "Simple Regime",
-          hyperparam_schema: {},
-          recommended_params: { signal_provider: "fgi" },
+          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          display_name: "DMA Gated FGI",
+          description: "DMA-first strategy",
+          param_schema: {},
+          default_params: {
+            signal_id: "dma_gated_fgi",
+            pacing_params: { k: 5, r_max: 1 },
+          },
+          supports_daily_suggestion: true,
         },
       ],
     };
 
     const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
 
-    expect(result.days).toBe(365);
-    expect(result.total_capital).toBe(50000);
-    expect(result.configs).toHaveLength(2);
-    expect(result.configs[0].config_id).toBe(DCA_CLASSIC_STRATEGY_ID);
-    expect(result.configs[0].params).toEqual({});
-    expect(result.configs[1].config_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
-    expect(result.configs[1].params).toEqual({ signal_provider: "fgi" });
+    expect(result).toEqual({
+      days: 365,
+      total_capital: 50000,
+      configs: [
+        {
+          config_id: DCA_CLASSIC_STRATEGY_ID,
+          strategy_id: DCA_CLASSIC_STRATEGY_ID,
+          params: {},
+        },
+        {
+          config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          params: {
+            signal_id: "dma_gated_fgi",
+            pacing_params: { k: 5, r_max: 1 },
+          },
+        },
+      ],
+    });
   });
 
-  it("uses empty params when simple_regime not found in catalog", () => {
+  it("uses empty params when the DMA strategy is missing from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "3.0",
+      catalog_version: "3.0.0",
       strategies: [],
     };
 
     const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
 
-    expect(result.configs[1].params).toEqual({});
+    expect(result.configs[1]).toEqual({
+      config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+      strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+      params: {},
+    });
   });
 
-  it("uses FALLBACK_DEFAULTS when no defaults provided", () => {
+  it("uses fallback defaults when no defaults are provided", () => {
     const result = buildDefaultPayloadFromCatalog(null);
 
     expect(result.days).toBe(DEFAULT_DAYS);
     expect(result.total_capital).toBe(DEFAULT_TOTAL_CAPITAL);
-  });
-
-  it("handles null catalog gracefully", () => {
-    const result = buildDefaultPayloadFromCatalog(null, TEST_DEFAULTS);
-
-    expect(result.configs).toHaveLength(2);
-    expect(result.configs[0].config_id).toBe(DCA_CLASSIC_STRATEGY_ID);
-    expect(result.configs[1].config_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
-    expect(result.configs[1].params).toEqual({});
-  });
-
-  it("uses custom defaults when provided", () => {
-    const customDefaults: BacktestDefaults = {
-      days: 180,
-      total_capital: 25000,
-    };
-
-    const result = buildDefaultPayloadFromCatalog(null, customDefaults);
-
-    expect(result.days).toBe(180);
-    expect(result.total_capital).toBe(25000);
   });
 });

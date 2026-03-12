@@ -18,13 +18,15 @@ vi.mock("@/components/charts", () => ({
   ChartTooltip: () => <div data-testid="chart-tooltip" />,
 }));
 
-// Capture buildHoverData callback
+// Capture callbacks from useChartHover options
 let capturedBuildHoverData: any;
+let capturedGetYValue: any;
 
 // Mock chart helpers
 vi.mock("@/hooks/ui/useChartHover", () => ({
   useChartHover: vi.fn((_data: any, options: any) => {
     capturedBuildHoverData = options?.buildHoverData;
+    capturedGetYValue = options?.getYValue;
     return {
       hoveredPoint: null,
       onMouseMove: vi.fn(),
@@ -77,5 +79,29 @@ describe("DrawdownChart", () => {
       date: "2024-01-01",
       drawdown: -10,
     });
+  });
+
+  it("getYValue extracts value from data point", () => {
+    render(<DrawdownChart chartData={mockData} maxDrawdown={-15} />);
+
+    expect(capturedGetYValue).toBeDefined();
+    expect(capturedGetYValue({ x: 1, value: -7.5, date: "2024-01-01" })).toBe(
+      -7.5
+    );
+    expect(capturedGetYValue({ x: 2, value: 0, date: "2024-01-02" })).toBe(0);
+  });
+
+  it("uses fallback drawdownScale of 15 when all values are zero", () => {
+    // When all data points have value: 0, minValue will be 0 and Math.abs(0) = 0
+    // So drawdownScale falls back to 15 (the || 15 branch)
+    const zeroData = [
+      { x: 1, value: 0, date: "2024-01-01" },
+      { x: 2, value: 0, date: "2024-01-02" },
+    ];
+    // This should not throw and render correctly
+    const { container } = render(
+      <DrawdownChart chartData={zeroData} maxDrawdown={0} />
+    );
+    expect(container).toBeInTheDocument();
   });
 });

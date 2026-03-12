@@ -1,18 +1,13 @@
-import type { BacktestConstituentsSource } from "@/components/wallet/portfolio/components/allocation";
+import type {
+  BacktestPortfolioAllocation,
+  BacktestStrategyPoint,
+} from "@/types/backtesting";
 import { formatCurrency } from "@/utils";
 
 import { CHART_SIGNALS } from "../utils/chartHelpers";
-import {
-  calculatePercentages,
-  getStrategyDisplayName,
-} from "../utils/strategyDisplay";
+import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
-const SIGNAL_EVENT_KEYS = new Set<string>([
-  "buy_spot",
-  "sell_spot",
-  "buy_lp",
-  "sell_lp",
-]);
+const SIGNAL_EVENT_KEYS = new Set<string>(["buy_spot", "sell_spot"]);
 
 const SIGNAL_TO_EVENT_KEY: Record<string, string> = Object.fromEntries(
   CHART_SIGNALS.filter(s => SIGNAL_EVENT_KEYS.has(s.key)).map(s => [
@@ -64,8 +59,14 @@ export interface SignalItem {
 export interface AllocationBlock {
   id: string;
   displayName: string;
-  constituents: BacktestConstituentsSource;
+  allocation: BacktestPortfolioAllocation;
   index: number | undefined;
+}
+
+export interface DetailItem {
+  name: string;
+  value: string;
+  color: string;
 }
 
 export interface ParsedTooltipData {
@@ -74,21 +75,19 @@ export interface ParsedTooltipData {
     strategies: TooltipItem[];
     events: EventItem[];
     signals: SignalItem[];
+    details: DetailItem[];
     allocations: AllocationBlock[];
   };
 }
 
-interface StrategyPayloadItem {
-  portfolio_constituant?: BacktestConstituentsSource;
-}
-
-type StrategiesRecord = Record<string, StrategyPayloadItem>;
+type StrategiesRecord = Record<string, BacktestStrategyPoint>;
 type EventStrategiesRecord = Record<string, string[]>;
 
 interface TooltipSections {
   strategies: TooltipItem[];
   events: EventItem[];
   signals: SignalItem[];
+  details: DetailItem[];
 }
 
 function getOrderedStrategyIds(
@@ -107,9 +106,8 @@ function getOrderedStrategyIds(
   return [...sortedExistingIds, ...remainingIds];
 }
 
-function hasAllocationData(constituents: BacktestConstituentsSource): boolean {
-  const percentages = calculatePercentages(constituents);
-  return percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+function hasAllocationData(allocation: BacktestPortfolioAllocation): boolean {
+  return allocation.spot > 0 || allocation.stable > 0;
 }
 
 function buildAllocationBlock(
@@ -118,15 +116,15 @@ function buildAllocationBlock(
   sortedStrategyIds: string[] | undefined
 ): AllocationBlock | null {
   const strategy = strategies?.[strategyId];
-  const constituents = strategy?.portfolio_constituant;
-  if (!constituents || !hasAllocationData(constituents)) {
+  const allocation = strategy?.portfolio?.allocation;
+  if (!allocation || !hasAllocationData(allocation)) {
     return null;
   }
 
   return {
     id: strategyId,
     displayName: getStrategyDisplayName(strategyId),
-    constituents,
+    allocation,
     index: sortedStrategyIds?.indexOf(strategyId),
   };
 }
@@ -182,11 +180,14 @@ function formatSignalValue(
 function buildTooltipSections(
   payload: TooltipPayloadEntry[],
   eventStrategies: EventStrategiesRecord | undefined,
-  sentiment: string | undefined
+  sentiment: string | undefined,
+  strategies: StrategiesRecord | undefined,
+  orderedIds: string[]
 ): TooltipSections {
   const strategyItems: TooltipItem[] = [];
   const eventItems: EventItem[] = [];
   const signalItems: SignalItem[] = [];
+  const detailItems: DetailItem[] = [];
 
   for (const entry of payload) {
     if (!entry) {
@@ -220,11 +221,53 @@ function buildTooltipSections(
     }
   }
 
+  for (const strategyId of orderedIds) {
+    const strategy = strategies?.[strategyId];
+    if (strategy?.signal == null) {
+      continue;
+    }
+
+    const displayName = getStrategyDisplayName(strategyId);
+    detailItems.push({
+      name: `${displayName} decision`,
+      value: `${strategy.decision.action} · ${strategy.decision.reason}`,
+      color: "#cbd5e1",
+    });
+
+    if (strategy.execution.blocked_reason) {
+      detailItems.push({
+        name: `${displayName} blocked`,
+        value: strategy.execution.blocked_reason,
+        color: "#fda4af",
+      });
+    }
+
+    const buyGateBlockReason = getBuyGateBlockReason(strategy);
+    if (buyGateBlockReason) {
+      detailItems.push({
+        name: `${displayName} buy gate`,
+        value: buyGateBlockReason,
+        color: "#fcd34d",
+      });
+    }
+  }
+
   return {
     strategies: strategyItems,
     events: eventItems,
     signals: signalItems,
+    details: detailItems,
   };
+}
+
+function getBuyGateBlockReason(strategy: BacktestStrategyPoint): string | null {
+  const plugin = strategy.execution.diagnostics?.plugins?.["dma_buy_gate"];
+  if (!plugin || typeof plugin !== "object") {
+    return null;
+  }
+
+  const blockReason = plugin["block_reason"];
+  return typeof blockReason === "string" ? blockReason : null;
 }
 
 export function useBacktestTooltipData({
@@ -234,11 +277,14 @@ export function useBacktestTooltipData({
 }: BacktestTooltipProps): ParsedTooltipData | null {
   if (!payload || payload.length === 0) return null;
 
-  const dateStr = new Date(String(label)).toLocaleDateString();
   const firstPayload = payload[0]?.payload as
     | Record<string, unknown>
     | undefined;
-  const sentiment = firstPayload?.["sentiment_label"] as string | undefined;
+  const market = firstPayload?.["market"] as
+    | { date?: string; sentiment_label?: string | null }
+    | undefined;
+  const dateStr = new Date(String(market?.date ?? label)).toLocaleDateString();
+  const sentiment = market?.sentiment_label ?? undefined;
 
   const eventStrategies = firstPayload?.["eventStrategies"] as
     | EventStrategiesRecord
@@ -252,7 +298,13 @@ export function useBacktestTooltipData({
     strategies,
     sortedStrategyIds
   );
-  const sections = buildTooltipSections(payload, eventStrategies, sentiment);
+  const sections = buildTooltipSections(
+    payload,
+    eventStrategies,
+    sentiment,
+    strategies,
+    orderedIds
+  );
 
   // Compute BTC / DMA 200 ratio from signal items
   const btcSignal = sections.signals.find(s => s.name === "BTC Price");

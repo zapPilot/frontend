@@ -4,6 +4,7 @@ import { CircleDollarSign } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/ui/classNames";
+import type { DailySuggestionResponse } from "@/types/strategy";
 import { formatCurrency } from "@/utils/formatters";
 
 import { useDailySuggestion } from "../hooks/useDailySuggestion";
@@ -19,6 +20,45 @@ const ACTION_LABELS: Record<string, string> = {
   buy: "Add",
   sell: "Reduce",
 };
+
+interface DerivedTradeAction {
+  action: "buy" | "sell" | "hold";
+  bucket: "spot" | "stable";
+  amount_usd: number;
+  description: string;
+}
+
+function formatRegimeLabel(value: string | null | undefined): string {
+  return (value ?? "unknown").replace(/_/g, " ");
+}
+
+function inferDecisionBucket(data: DailySuggestionResponse): "spot" | "stable" {
+  return data.decision.target_allocation.spot >= data.portfolio.allocation.spot
+    ? "spot"
+    : "stable";
+}
+
+function buildTradeActions(
+  data: DailySuggestionResponse
+): DerivedTradeAction[] {
+  if (data.execution.transfers.length > 0) {
+    return data.execution.transfers.map(transfer => ({
+      action: transfer.to_bucket === "spot" ? "buy" : "sell",
+      bucket: transfer.to_bucket,
+      amount_usd: transfer.amount_usd,
+      description: `${transfer.from_bucket} -> ${transfer.to_bucket}`,
+    }));
+  }
+
+  return [
+    {
+      action: data.decision.action,
+      bucket: inferDecisionBucket(data),
+      amount_usd: 0,
+      description: data.execution.blocked_reason ?? data.decision.reason,
+    },
+  ];
+}
 
 function RebalancePanelSkeleton() {
   return (
@@ -97,6 +137,11 @@ export function RebalancePanel({ userId }: { userId: string }) {
 
   if (!data) return <RebalancePanelSkeleton />;
 
+  const tradeActions = buildTradeActions(data);
+  const regimeLabel = formatRegimeLabel(
+    data.signal?.regime ?? data.market.sentiment_label
+  );
+
   return (
     <BaseTradingPanel
       title="Portfolio Health"
@@ -104,12 +149,12 @@ export function RebalancePanel({ userId }: { userId: string }) {
         <>
           Aligned with{" "}
           <span className="text-gray-900 dark:text-white font-medium capitalize">
-            {data.regime.current.replace("_", " ")}
+            {regimeLabel}
           </span>{" "}
           Regime
         </>
       }
-      actionCardTitle={`${data.trade_suggestions.length} Actions`}
+      actionCardTitle={`${tradeActions.length} Actions`}
       actionCardSubtitle="Suggested Moves"
       actionCardIcon={
         <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
@@ -127,25 +172,30 @@ export function RebalancePanel({ userId }: { userId: string }) {
       onConfirmReview={() => setIsReviewOpen(false)}
     >
       <div className="space-y-4 pt-2">
-        {data.trade_suggestions.map((trade, i) => (
+        {tradeActions.map((trade, i) => (
           <div
             key={i}
             className="flex items-center justify-between group cursor-default p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors -mx-3"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <div
                 className={cn(
                   "w-2 h-2 rounded-full transition-all group-hover:scale-125 shadow-sm",
                   ACTION_STYLES[trade.action] ?? "bg-gray-400"
                 )}
               />
-              <span className="text-lg font-light text-gray-600 dark:text-gray-300">
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {ACTION_LABELS[trade.action] ?? "Hold"}
-                </span>{" "}
-                <span className="text-gray-400 mx-1">·</span>{" "}
-                {trade.bucket.toUpperCase()}
-              </span>
+              <div className="min-w-0">
+                <div className="text-lg font-light text-gray-600 dark:text-gray-300">
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {ACTION_LABELS[trade.action] ?? "Hold"}
+                  </span>{" "}
+                  <span className="text-gray-400 mx-1">·</span>{" "}
+                  {trade.bucket.toUpperCase()}
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {trade.description}
+                </div>
+              </div>
             </div>
             <span className="font-mono text-gray-900 dark:text-white font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg text-sm">
               {formatCurrency(trade.amount_usd)}

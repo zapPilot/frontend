@@ -1,11 +1,13 @@
 import {
   DCA_CLASSIC_STRATEGY_ID,
-  SIMPLE_REGIME_STRATEGY_ID,
+  DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+  DMA_GATED_FGI_STRATEGY_ID,
 } from "../constants";
 
 const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
   [DCA_CLASSIC_STRATEGY_ID]: "DCA Classic",
-  [SIMPLE_REGIME_STRATEGY_ID]: "Simple Regime",
+  [DMA_GATED_FGI_STRATEGY_ID]: "DMA Gated FGI",
+  [DMA_GATED_FGI_DEFAULT_CONFIG_ID]: "DMA Gated FGI Default",
 };
 
 const DCA_CLASSIC_COLOR = "#4b5563";
@@ -71,10 +73,10 @@ function sumValue(value: number | Record<string, number>): number {
 export function calculatePercentages(constituents: {
   spot: number | Record<string, number>;
   stable: number;
-  lp: number | Record<string, number>;
+  lp?: number | Record<string, number>;
 }): { spot: number; stable: number; lp: number } {
   const spotValue = sumValue(constituents.spot);
-  const lpValue = sumValue(constituents.lp);
+  const lpValue = sumValue(constituents.lp ?? 0);
   const total = spotValue + constituents.stable + lpValue;
   if (total === 0) return { spot: 0, stable: 0, lp: 0 };
   return {

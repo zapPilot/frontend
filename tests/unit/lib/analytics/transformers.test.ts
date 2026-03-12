@@ -115,6 +115,41 @@ describe("Analytics Transformers", () => {
       expect(result.points).toHaveLength(2);
     });
 
+    it("should use min as fallback when total_value_usd is undefined", () => {
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { date: "2024-01-01", total_value_usd: 5000 },
+            { date: "2024-01-02", total_value_usd: undefined },
+            { date: "2024-01-03", total_value_usd: 10000 },
+          ],
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = transformToPerformanceChart(dashboard);
+
+      expect(result.points).toHaveLength(3);
+      // The undefined value should fall back to min (5000)
+      expect(result.points[1].portfolioValue).toBe(5000);
+    });
+
+    it("should use ISO date fallback when date is missing", () => {
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { total_value_usd: 5000 },
+            { date: "2024-01-02", total_value_usd: 10000 },
+          ],
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = transformToPerformanceChart(dashboard);
+
+      expect(result.points).toHaveLength(2);
+      // First point should have a fallback date
+      expect(result.points[0].date).toBeDefined();
+    });
+
     it("should handle all zero values gracefully", () => {
       const dashboard = {
         trends: {
@@ -279,6 +314,141 @@ describe("Analytics Transformers", () => {
 
       expect(result.timeWeightedReturn.value).toBe("-20.0%");
       expect(result.timeWeightedReturn.trend).toBe("down");
+    });
+
+    it("should handle TWR with first value of 0", () => {
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { date: "2024-01-01", total_value_usd: 0 },
+            { date: "2024-01-30", total_value_usd: 5000 },
+          ],
+        },
+      } as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.timeWeightedReturn.value).toBe("0%");
+      expect(result.timeWeightedReturn.subValue).toBe("0% total return");
+    });
+
+    it("should classify Sharpe trend as neutral (0.5 < value <= 1.5)", () => {
+      const dashboard = {
+        trends: { daily_values: [] },
+        rolling_analytics: {
+          sharpe: {
+            rolling_sharpe_data: [
+              { date: "2024-01-01", rolling_sharpe_ratio: 1.0 },
+            ],
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.sharpe.trend).toBe("neutral");
+    });
+
+    it("should classify Sharpe trend as down (value <= 0.5)", () => {
+      const dashboard = {
+        trends: { daily_values: [] },
+        rolling_analytics: {
+          sharpe: {
+            rolling_sharpe_data: [
+              { date: "2024-01-01", rolling_sharpe_ratio: 0.3 },
+            ],
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.sharpe.trend).toBe("down");
+    });
+
+    it("should handle volatility above 25 with down trend", () => {
+      const dashboard = {
+        trends: { daily_values: [] },
+        rolling_analytics: {
+          volatility: {
+            rolling_volatility_data: [
+              { date: "2024-01-01", annualized_volatility_pct: 35 },
+            ],
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.volatility.trend).toBe("down");
+    });
+
+    it("should handle max drawdown trend up when > -15", () => {
+      const dashboard = {
+        trends: { daily_values: [] },
+        drawdown_analysis: {
+          enhanced: {
+            summary: {
+              max_drawdown_pct: -10,
+              recovery_days: 5,
+            },
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.maxDrawdown.trend).toBe("up");
+    });
+
+    it("should handle max drawdown trend down when <= -15", () => {
+      const dashboard = {
+        trends: { daily_values: [] },
+        drawdown_analysis: {
+          enhanced: {
+            summary: {
+              max_drawdown_pct: -20,
+              recovery_days: 0,
+            },
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.maxDrawdown.trend).toBe("down");
+    });
+
+    it("should handle win rate > 50% with up trend", () => {
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { pnl_percentage: 2.5 },
+            { pnl_percentage: 1.0 },
+            { pnl_percentage: -0.5 },
+          ],
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.winRate.value).toBe("67%");
+      expect(result.winRate.trend).toBe("up");
+    });
+
+    it("should handle missing pnl_percentage with fallback to 0", () => {
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { pnl_percentage: undefined },
+            { pnl_percentage: 1.0 },
+          ],
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      expect(result.winRate.value).toBe("50%");
     });
 
     it("should handle insufficient daily values for TWR", () => {
@@ -658,6 +828,75 @@ describe("Analytics Transformers", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].value).toBeCloseTo(3.5, 1); // (100 + 200 + 50) / 10000 * 100
+    });
+
+    it("should handle zero portfolio value (division by zero guard)", () => {
+      const dailyReturns = {
+        user_id: "user-123",
+        daily_returns: [
+          {
+            date: "2024-01-15",
+            yield_return_usd: 500,
+            protocol_name: "Aave",
+            asset_value_usd: 0,
+            protocol_id: "aave",
+            pool_id: "pool-1",
+          },
+        ],
+      };
+
+      const portfolioValues = [{ date: "2024-01-01", total_value_usd: 0 }];
+
+      const result = aggregateMonthlyPnL(dailyReturns, portfolioValues);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].value).toBe(0);
+    });
+
+    it("should handle null yield_return_usd with fallback to 0", () => {
+      const dailyReturns = {
+        user_id: "user-123",
+        daily_returns: [
+          {
+            date: "2024-01-15",
+            yield_return_usd: undefined,
+            protocol_name: "Aave",
+            asset_value_usd: 10000,
+            protocol_id: "aave",
+            pool_id: "pool-1",
+          },
+        ],
+      };
+
+      const result = aggregateMonthlyPnL(dailyReturns as any);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].value).toBe(0);
+    });
+
+    it("should use ISO date fallback when underwater point has no date", () => {
+      // Exercises the `d.date ?? new Date().toISOString()` branch in transformToDrawdownChart
+      const dashboard = {
+        drawdown_analysis: {
+          underwater_recovery: {
+            underwater_data: [
+              { drawdown_pct: -5 }, // no date field
+              { date: "2024-01-02", drawdown_pct: -8 },
+            ],
+          },
+          enhanced: {
+            summary: {
+              max_drawdown_pct: -8,
+              max_drawdown_date: "2024-01-02",
+            },
+          },
+        },
+      } as unknown as import("@/services/analyticsService").UnifiedDashboardResponse;
+
+      const result = transformToDrawdownChart(dashboard);
+      // First point falls back to a generated ISO date string
+      expect(typeof result.points[0].date).toBe("string");
+      expect(result.points[0].date).toMatch(/^\d{4}-/);
     });
 
     it("should sort months chronologically", () => {

@@ -183,6 +183,7 @@ export const BacktestChart = memo(function BacktestChart({
 
             <Tooltip
               allowEscapeViewBox={{ x: false, y: true }}
+              wrapperStyle={{ zIndex: 20 }}
               content={({ active, payload, label }) => {
                 const tooltipProps = buildBacktestTooltipProps({
                   active,

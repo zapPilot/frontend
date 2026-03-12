@@ -95,4 +95,40 @@ describe("IconBadge", () => {
       expect(screen.getByText("E")).toBeInTheDocument(); // Uppercase first letter
     });
   });
+
+  it("triggers onLoad callback and sets image status to success", async () => {
+    render(
+      <IconBadge
+        src="https://cdn.com/eth.webp"
+        alt="ETH"
+        fallback={{ type: "letter", content: "ETH" }}
+      />
+    );
+
+    const img = screen.getByRole("img");
+    fireEvent.load(img);
+
+    // After onLoad fires, image remains visible (no error fallback shown)
+    await waitFor(() => {
+      expect(screen.getByRole("img")).toBeInTheDocument();
+      expect(screen.queryByText("E")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows '?' when fallback letter content is empty", async () => {
+    render(
+      <IconBadge
+        src="https://cdn.com/missing.webp"
+        alt="unknown"
+        fallback={{ type: "letter", content: "" }}
+      />
+    );
+
+    const img = screen.getByRole("img");
+    fireEvent.error(img);
+
+    await waitFor(() => {
+      expect(screen.getByText("?")).toBeInTheDocument();
+    });
+  });
 });

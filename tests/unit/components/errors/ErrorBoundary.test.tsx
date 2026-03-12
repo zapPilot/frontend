@@ -325,4 +325,142 @@ describe("ErrorBoundary", () => {
       expect(supportText).toBeInTheDocument();
     });
   });
+
+  describe("Lifecycle: componentWillUnmount", () => {
+    it("should call clearTimeout when resetTimeoutId is set on unmount", () => {
+      const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+
+      // Directly instantiate and call lifecycle methods to exercise the private
+      // resetTimeoutId branch, which is only reachable when a timer has been queued.
+      const instance = new ErrorBoundary({ children: null });
+      // Inject a non-null resetTimeoutId to hit the truthy branch
+      (instance as any).resetTimeoutId = 999;
+
+      instance.componentWillUnmount();
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(999);
+      clearTimeoutSpy.mockRestore();
+    });
+
+    it("should not call clearTimeout when resetTimeoutId is null on unmount", () => {
+      const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+
+      const { unmount } = render(
+        <ErrorBoundary>
+          <ProblematicComponent shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      unmount();
+
+      // resetTimeoutId starts as null, so clearTimeout should not be called
+      expect(clearTimeoutSpy).not.toHaveBeenCalled();
+      clearTimeoutSpy.mockRestore();
+    });
+  });
+
+  describe("Lifecycle: componentDidUpdate edge cases", () => {
+    it("should not reset when hasError is false and resetKeys change", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["key1"]}>
+          <ProblematicComponent shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      // No error state - resetKeys change should not trigger reset
+      rerender(
+        <ErrorBoundary resetKeys={["key2"]}>
+          <ProblematicComponent shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      // Children still render normally - no error was thrown
+      expect(screen.getByTestId("working-component")).toBeInTheDocument();
+    });
+
+    it("should not reset when hasError is false and resetOnPropsChange is true", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetOnPropsChange={true}>
+          <ProblematicComponent shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      rerender(
+        <ErrorBoundary resetOnPropsChange={true}>
+          <div data-testid="different-child">New content</div>
+        </ErrorBoundary>
+      );
+
+      expect(screen.getByTestId("different-child")).toBeInTheDocument();
+    });
+
+    it("should not reset when resetKeys change but values are identical", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["key1"]}>
+          <ProblematicComponent shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(
+        screen.getByText("Oops! Something went wrong")
+      ).toBeInTheDocument();
+
+      // New array reference but same values - should NOT reset
+      rerender(
+        <ErrorBoundary resetKeys={["key1"]}>
+          <ProblematicComponent shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      // Error UI still shown because no key value changed
+      expect(
+        screen.getByText("Oops! Something went wrong")
+      ).toBeInTheDocument();
+    });
+
+    it("should not reset when resetOnPropsChange is false and children change", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetOnPropsChange={false}>
+          <ProblematicComponent shouldThrow={true} />
+        </ErrorBoundary>
+      );
+
+      expect(
+        screen.getByText("Oops! Something went wrong")
+      ).toBeInTheDocument();
+
+      rerender(
+        <ErrorBoundary resetOnPropsChange={false}>
+          <div data-testid="different-child">New content</div>
+        </ErrorBoundary>
+      );
+
+      // Still showing error because resetOnPropsChange is false
+      expect(
+        screen.getByText("Oops! Something went wrong")
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("reportError: production branch", () => {
+    it("should not throw when reportError is called in production mode", () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+
+      // Rendering with an error in production should not throw from reportError
+      expect(() => {
+        render(
+          <ErrorBoundary>
+            <ProblematicComponent shouldThrow={true} />
+          </ErrorBoundary>
+        );
+      }).not.toThrow();
+
+      expect(
+        screen.getByText("Oops! Something went wrong")
+      ).toBeInTheDocument();
+
+      process.env.NODE_ENV = originalEnv;
+    });
+  });
 });

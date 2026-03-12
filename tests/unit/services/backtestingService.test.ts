@@ -18,37 +18,86 @@ function createTimelinePoint(
   index: number,
   opts?: { withTransfers?: boolean }
 ): BacktestTimelinePoint {
-  const baseDate = new Date("2024-01-01");
-  baseDate.setDate(baseDate.getDate() + index);
-  const dateStr = baseDate.toISOString().split("T")[0] ?? "2024-01-01";
-
-  const regimeMetrics: Record<string, unknown> = {
-    signal: "fear",
-  };
-  if (opts?.withTransfers) {
-    regimeMetrics["metadata"] = {
-      transfers: [{ from_bucket: "spot", to_bucket: "lp", amount_usd: 123 }],
-    };
-  }
+  const date = new Date("2024-01-01");
+  date.setDate(date.getDate() + index);
 
   return {
-    date: dateStr,
-    token_price: { btc: 50000 + index * 10 },
-    sentiment: 50,
-    sentiment_label: "neutral",
+    market: {
+      date: date.toISOString().split("T")[0] ?? "2024-01-01",
+      token_price: { btc: 50000 + index * 10 },
+      sentiment: 50,
+      sentiment_label: "neutral",
+    },
     strategies: {
-      // Baseline is detected by `metrics.signal === "dca"`.
       dca_classic: {
-        portfolio_value: 10000 + index * 5,
-        portfolio_constituant: { spot: 5000, stable: 5000, lp: 0 },
-        event: "buy",
-        metrics: { signal: "dca" },
+        portfolio: {
+          spot_usd: 5000,
+          stable_usd: 5000,
+          total_value: 10000 + index * 5,
+          allocation: {
+            spot: 0.5,
+            stable: 0.5,
+          },
+        },
+        signal: null,
+        decision: {
+          action: "hold",
+          reason: "baseline_dca",
+          rule_group: "none",
+          target_allocation: {
+            spot: 0.5,
+            stable: 0.5,
+          },
+          immediate: false,
+        },
+        execution: {
+          event: null,
+          transfers: [],
+          blocked_reason: null,
+          step_count: 0,
+          steps_remaining: 0,
+          interval_days: 0,
+          buy_gate: null,
+        },
       },
-      simple_regime: {
-        portfolio_value: 10000 + index * 8,
-        portfolio_constituant: { spot: 5000, stable: 5000, lp: 0 },
-        event: opts?.withTransfers ? "rebalance" : null,
-        metrics: regimeMetrics,
+      dma_gated_fgi_default: {
+        portfolio: {
+          spot_usd: 6000,
+          stable_usd: 4000,
+          total_value: 10000 + index * 8,
+          allocation: {
+            spot: 0.6,
+            stable: 0.4,
+          },
+        },
+        signal: null,
+        decision: {
+          action: opts?.withTransfers ? "buy" : "hold",
+          reason: "dma_fgi",
+          rule_group: opts?.withTransfers ? "dma_fgi" : "none",
+          target_allocation: {
+            spot: 0.6,
+            stable: 0.4,
+          },
+          immediate: false,
+        },
+        execution: {
+          event: opts?.withTransfers ? "rebalance" : null,
+          transfers: opts?.withTransfers
+            ? [
+                {
+                  from_bucket: "stable",
+                  to_bucket: "spot",
+                  amount_usd: 123,
+                },
+              ]
+            : [],
+          blocked_reason: null,
+          step_count: opts?.withTransfers ? 1 : 0,
+          steps_remaining: 0,
+          interval_days: 3,
+          buy_gate: null,
+        },
       },
     },
   };
@@ -70,17 +119,16 @@ describe("backtestingService", () => {
   });
 
   describe("runBacktest", () => {
-    it("calls v3 compare endpoint with a 10-minute timeout", async () => {
+    it("calls the v3 compare endpoint with a 10-minute timeout", async () => {
       const mockRequest: BacktestRequest = {
-        token_symbol: "BTC",
         total_capital: 10000,
         days: 30,
         configs: [
           { config_id: "dca_classic", strategy_id: "dca_classic", params: {} },
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
-            params: { pacing_policy: "fgi_linear" },
+            config_id: "dma_gated_fgi_default",
+            strategy_id: "dma_gated_fgi",
+            params: { signal_id: "dma_gated_fgi" },
           },
         ],
       };
@@ -99,12 +147,11 @@ describe("backtestingService", () => {
       );
     });
 
-    it("propagates API errors using the backtesting error mapper", async () => {
+    it("maps API errors through the backtesting error mapper", async () => {
       analyticsEnginePostSpy.mockRejectedValue(new Error("API Error"));
 
       await expect(
         runBacktest({
-          token_symbol: "BTC",
           total_capital: 10000,
           configs: [{ config_id: "dca_classic", strategy_id: "dca_classic" }],
         })
@@ -113,7 +160,7 @@ describe("backtestingService", () => {
       );
     });
 
-    it("computes DMA from full timeline before downsampling", async () => {
+    it("samples the timeline before returning the response", async () => {
       const timeline = Array.from({ length: 220 }, (_, i) =>
         createTimelinePoint(i)
       );
@@ -124,152 +171,88 @@ describe("backtestingService", () => {
       });
 
       const result = await runBacktest({
-        token_symbol: "BTC",
         total_capital: 10000,
         configs: [{ config_id: "dca_classic", strategy_id: "dca_classic" }],
       });
 
       expect(result.timeline.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
-      const lastPoint = result.timeline[result.timeline.length - 1];
-      expect(lastPoint?.dma_200).toBeTypeOf("number");
     });
   });
 
   describe("enrichTimelineWithDma200", () => {
-    it("sets null for first 199 points and day-200 average at index 199", () => {
-      const timeline = Array.from({ length: 205 }, (_, i) =>
-        createTimelinePoint(i)
-      );
-      const result = enrichTimelineWithDma200(timeline);
-
-      for (let i = 0; i < 199; i++) {
-        expect(result[i]?.dma_200).toBeNull();
-      }
-
-      const expectedAt199 =
-        timeline
-          .slice(0, 200)
-          .reduce((acc, point) => acc + (point.token_price.btc ?? 0), 0) / 200;
-      expect(result[199]?.dma_200).toBeCloseTo(expectedAt199, 10);
+    it("returns an empty array when timeline is undefined", () => {
+      expect(enrichTimelineWithDma200(undefined)).toEqual([]);
     });
 
-    it("rolls deterministically over the next day", () => {
-      const timeline = Array.from({ length: 205 }, (_, i) =>
-        createTimelinePoint(i)
-      );
-      const result = enrichTimelineWithDma200(timeline);
-
-      const expectedAt200 =
-        timeline
-          .slice(1, 201)
-          .reduce((acc, point) => acc + (point.token_price.btc ?? 0), 0) / 200;
-      expect(result[200]?.dma_200).toBeCloseTo(expectedAt200, 10);
-    });
-
-    it("falls back to first numeric token price when btc is missing", () => {
-      const timeline = Array.from({ length: 205 }, (_, i) => {
-        const point = createTimelinePoint(i);
-        return {
-          ...point,
-          token_price: {
-            eth: (point.token_price.btc ?? 0) + 100,
-          },
-        };
-      });
-
-      const result = enrichTimelineWithDma200(timeline);
-      const expectedAt199 =
-        timeline
-          .slice(0, 200)
-          .reduce(
-            (acc, point) => acc + (Object.values(point.token_price)[0] ?? 0),
-            0
-          ) / 200;
-
-      expect(result[199]?.dma_200).toBeCloseTo(expectedAt199, 10);
-    });
-
-    it("resets dma_200 to null when encountering empty token_price", () => {
-      const timeline = Array.from({ length: 205 }, (_, i) => {
-        const point = createTimelinePoint(i);
-        if (i === 201) return { ...point, token_price: {} };
-        return point;
-      });
-
-      const result = enrichTimelineWithDma200(timeline);
-
-      for (let i = 201; i <= 204; i++) {
-        expect(result[i]?.dma_200).toBeNull();
-      }
+    it("returns the timeline unchanged", () => {
+      const timeline = [createTimelinePoint(0)];
+      expect(enrichTimelineWithDma200(timeline)).toEqual(timeline);
     });
   });
 
   describe("sampleTimelineData", () => {
-    it("returns empty array for undefined/empty timeline", () => {
+    it("returns empty array for undefined or empty timeline", () => {
       expect(sampleTimelineData(undefined)).toEqual([]);
       expect(sampleTimelineData([])).toEqual([]);
     });
 
-    it("returns timeline unchanged when <= minPoints", () => {
+    it("returns the timeline unchanged when it is already small enough", () => {
       const timeline = Array.from({ length: MIN_CHART_POINTS }, (_, i) =>
         createTimelinePoint(i)
       );
+
       expect(sampleTimelineData(timeline)).toEqual(timeline);
     });
 
-    it("preserves first and last points and all transfer points", () => {
-      const transferIndices = [10, 50, 150, 300, 450];
-      const timeline = Array.from({ length: 500 }, (_, i) =>
+    it("preserves first, last, and transfer points", () => {
+      const transferIndices = [10, 50, 150];
+      const timeline = Array.from({ length: 220 }, (_, i) =>
         createTimelinePoint(i, { withTransfers: transferIndices.includes(i) })
       );
 
       const result = sampleTimelineData(timeline);
-      const resultDates = new Set(result.map(p => p.date));
+      const dates = new Set(result.map(point => point.market.date));
 
-      expect(resultDates.has(timeline[0]?.date ?? "")).toBe(true);
-      expect(resultDates.has(timeline[timeline.length - 1]?.date ?? "")).toBe(
+      expect(dates.has(timeline[0]?.market.date ?? "")).toBe(true);
+      expect(dates.has(timeline[timeline.length - 1]?.market.date ?? "")).toBe(
         true
       );
-
-      for (const idx of transferIndices) {
-        expect(resultDates.has(timeline[idx]?.date ?? "")).toBe(true);
+      for (const index of transferIndices) {
+        expect(dates.has(timeline[index]?.market.date ?? "")).toBe(true);
       }
     });
 
-    it("does not treat baseline daily buys as critical points", () => {
-      // If baseline was treated as critical, we would likely return the full timeline.
-      const timeline = Array.from({ length: 500 }, (_, i) =>
-        createTimelinePoint(i, { withTransfers: i === 250 })
-      );
-      const result = sampleTimelineData(timeline);
+    it("does not treat DCA-only activity as a critical event", () => {
+      const timeline = Array.from({ length: 220 }, (_, i) =>
+        createTimelinePoint(i, { withTransfers: i === 100 })
+      ).map(point => ({
+        ...point,
+        strategies: {
+          dca_classic: {
+            ...point.strategies.dca_classic,
+            execution: {
+              ...point.strategies.dca_classic.execution,
+              transfers:
+                point.market.date ===
+                (timelineDate => timelineDate)(point.market.date)
+                  ? point.strategies.dma_gated_fgi_default.execution.transfers
+                  : [],
+            },
+          },
+        },
+      }));
+
+      const result = sampleTimelineData(timeline as BacktestTimelinePoint[]);
 
       expect(result.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
       expect(result.length).toBeLessThan(timeline.length);
-    });
-
-    it("returns only critical points when events exhaust all slots", () => {
-      // Create timeline where 140+ points have transfers - exceeds MAX_CHART_POINTS
-      const timeline = Array.from({ length: 500 }, (_, i) =>
-        createTimelinePoint(i, { withTransfers: i > 0 && i < 141 })
-      );
-      const result = sampleTimelineData(timeline);
-
-      // All returned points should be critical (first, last, or transfer points)
-      expect(result.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
-      expect(result.length).toBeGreaterThan(0);
-
-      // First and last points preserved
-      expect(result[0]?.date).toBe(timeline[0]?.date);
-      expect(result[result.length - 1]?.date).toBe(
-        timeline[timeline.length - 1]?.date
-      );
     });
   });
 
   describe("getBacktestingStrategiesV3", () => {
     it("calls the v3 strategies endpoint via GET", async () => {
       const mockStrategies = {
-        strategies: [{ id: "dca_classic", name: "DCA Classic" }],
+        strategies: [{ id: "dca_classic", display_name: "DCA Classic" }],
       };
       analyticsEngineGetSpy.mockResolvedValue(mockStrategies);
 
@@ -281,7 +264,7 @@ describe("backtestingService", () => {
       expect(result).toEqual(mockStrategies);
     });
 
-    it("propagates API errors using the backtesting error mapper", async () => {
+    it("maps GET errors with the backtesting error mapper", async () => {
       analyticsEngineGetSpy.mockRejectedValue(new Error("API Error"));
 
       await expect(getBacktestingStrategiesV3()).rejects.toThrow(

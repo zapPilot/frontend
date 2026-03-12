@@ -1,16 +1,11 @@
+import { DCA_CLASSIC_STRATEGY_ID } from "@/components/wallet/portfolio/views/backtesting/constants";
 import type {
   BacktestTimelinePoint,
   BacktestTransferMetadata,
 } from "@/types/backtesting";
 
-const VALID_BUCKETS = new Set(["spot", "stable", "lp"]);
-const DMA_WINDOW_DAYS = 200;
+const VALID_BUCKETS = new Set(["spot", "stable"]);
 const EVENT_PADDING = 20;
-
-interface StrategyMetrics {
-  metadata?: { transfers?: unknown };
-  signal?: unknown;
-}
 
 /**
  * Minimum number of data points to keep in the timeline for chart rendering.
@@ -40,81 +35,13 @@ function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
 function extractTransfers(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): BacktestTransferMetadata[] {
-  const metrics = strategy?.metrics as StrategyMetrics | undefined;
-  const transfers = metrics?.metadata?.transfers;
+  const transfers = strategy?.execution?.transfers;
 
   if (!Array.isArray(transfers)) {
     return [];
   }
 
   return transfers.filter(isValidTransfer);
-}
-
-function isDcaBaselineStrategy(
-  strategy: BacktestTimelinePoint["strategies"][string] | undefined
-): boolean {
-  const metrics = strategy?.metrics as StrategyMetrics | undefined;
-  return metrics?.signal === "dca";
-}
-
-function getTimelinePointPrice(point: BacktestTimelinePoint): number | null {
-  const prices = point.token_price ?? {};
-  const btcPrice = prices["btc"];
-
-  if (typeof btcPrice === "number" && Number.isFinite(btcPrice)) {
-    return btcPrice;
-  }
-
-  for (const value of Object.values(prices)) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Enrich timeline points with rolling DMA-200 values.
- *
- * Notes:
- * - Uses BTC price when available, otherwise falls back to the first numeric token price.
- * - Requires a full contiguous 200-day window; missing price resets the window.
- */
-export function enrichTimelineWithDma200(
-  timeline: BacktestTimelinePoint[] | undefined
-): BacktestTimelinePoint[] {
-  if (!timeline || timeline.length === 0) {
-    return [];
-  }
-
-  const window: number[] = [];
-  let rollingSum = 0;
-
-  return timeline.map(point => {
-    const price = getTimelinePointPrice(point);
-
-    if (price == null) {
-      window.length = 0;
-      rollingSum = 0;
-      return { ...point, dma_200: null };
-    }
-
-    window.push(price);
-    rollingSum += price;
-
-    if (window.length > DMA_WINDOW_DAYS) {
-      const removedValue = window.shift();
-      if (removedValue != null) {
-        rollingSum -= removedValue;
-      }
-    }
-
-    const dma200 =
-      window.length === DMA_WINDOW_DAYS ? rollingSum / DMA_WINDOW_DAYS : null;
-
-    return { ...point, dma_200: dma200 };
-  });
 }
 
 function sampleEvenlyFromIndices(
@@ -149,13 +76,7 @@ function sampleEvenlyFromIndices(
 function hasCriticalStrategyEvent(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): boolean {
-  if (isDcaBaselineStrategy(strategy)) {
-    return false;
-  }
-
-  const hasEvent = strategy?.event != null;
-  const hasTransfers = extractTransfers(strategy).length > 0;
-  return hasEvent || hasTransfers;
+  return extractTransfers(strategy).length > 0;
 }
 
 function collectCriticalIndices(
@@ -164,8 +85,10 @@ function collectCriticalIndices(
   const criticalIndices = new Set<number>([0, timeline.length - 1]);
 
   for (const [index, point] of timeline.entries()) {
-    const hasCriticalEvent = Object.values(point.strategies).some(
-      hasCriticalStrategyEvent
+    const hasCriticalEvent = Object.entries(point.strategies).some(
+      ([strategyId, strategy]) =>
+        strategyId !== DCA_CLASSIC_STRATEGY_ID &&
+        hasCriticalStrategyEvent(strategy)
     );
     if (hasCriticalEvent) {
       criticalIndices.add(index);
@@ -214,7 +137,7 @@ function collectNonCriticalIndices(
  *
  * Always preserves:
  * - First and last points
- * - Points where any non-dca_classic strategy has trading events (buy_spot, sell_spot, buy_lp, sell_lp)
+ * - Points where any non-dca_classic strategy executes spot/stable transfers
  *
  * Dynamically expands the point limit to fit all strategy events, then samples
  * non-critical points evenly to fill remaining slots.

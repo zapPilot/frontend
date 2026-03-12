@@ -86,6 +86,66 @@ describe("HealthRiskTooltip", () => {
     expect(mockOnViewDetails).toHaveBeenCalledTimes(1);
   });
 
+  it("renders risky risk level message", () => {
+    render(
+      <HealthRiskTooltip
+        riskMetrics={mockRiskMetrics}
+        riskLevel={RiskLevel.RISKY}
+        isOwnBundle={true}
+      />
+    );
+    expect(
+      screen.getByText(
+        "Low safety buffer. Consider adding collateral to reduce risk."
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("renders critical risk message for visitor", () => {
+    render(
+      <HealthRiskTooltip
+        riskMetrics={{ ...mockRiskMetrics, health_rate: 1.05 }}
+        riskLevel={RiskLevel.CRITICAL}
+        isOwnBundle={false}
+      />
+    );
+    expect(
+      screen.getByText("This position is at high risk of liquidation.")
+    ).toBeInTheDocument();
+  });
+
+  it("renders negative buffer with no + prefix", () => {
+    const negativeBuf = {
+      ...mockRiskMetrics,
+      health_rate: 0.9,
+      liquidation_threshold: 1.2,
+    };
+    render(
+      <HealthRiskTooltip
+        riskMetrics={negativeBuf}
+        riskLevel={RiskLevel.CRITICAL}
+        isOwnBundle={true}
+      />
+    );
+    // buffer = 0.9 - 1.2 = -0.30, should not have + prefix
+    expect(screen.getByText(/-0\.30 above threshold/)).toBeInTheDocument();
+  });
+
+  it("does not show view details button when not own bundle", () => {
+    const mockOnViewDetails = vi.fn();
+    render(
+      <HealthRiskTooltip
+        riskMetrics={mockRiskMetrics}
+        riskLevel={RiskLevel.SAFE}
+        isOwnBundle={false}
+        onViewDetails={mockOnViewDetails}
+      />
+    );
+    expect(
+      screen.queryByRole("button", { name: /View Detailed Breakdown/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("displays multiple positions note when position_count > 1", () => {
     const multiPosMetrics = { ...mockRiskMetrics, position_count: 3 };
     render(

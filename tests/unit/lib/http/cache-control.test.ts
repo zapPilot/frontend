@@ -98,6 +98,15 @@ describe("cache-control", () => {
       expect(result?.staleTimeMs).toBe(60 * 1000);
     });
 
+    it("should handle max-age=0 (totalSeconds <= 0 branch)", () => {
+      const result = parseCacheControlForHint("max-age=0");
+
+      expect(result).not.toBeNull();
+      expect(result?.staleTimeMs).toBe(0);
+      // gcTimeMs falls back to staleTimeMs when totalSeconds is 0
+      expect(result?.gcTimeMs).toBe(0);
+    });
+
     it("should handle invalid max-age values", () => {
       const result = parseCacheControlForHint("max-age=invalid");
 
@@ -150,6 +159,22 @@ describe("cache-control", () => {
       syncQueryCacheDefaultsFromHint(hint);
 
       expect(queryClient.setDefaultOptions).toHaveBeenCalled();
+    });
+
+    it("should update when getDefaultOptions has no queries key", () => {
+      vi.mocked(queryClient.getDefaultOptions).mockReturnValueOnce({});
+      const hint = { staleTimeMs: 30000, gcTimeMs: 150000 };
+
+      syncQueryCacheDefaultsFromHint(hint);
+
+      expect(queryClient.setDefaultOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queries: expect.objectContaining({
+            staleTime: 30000,
+            gcTime: 150000,
+          }),
+        })
+      );
     });
 
     it("should not update if hint matches current applied hint", () => {

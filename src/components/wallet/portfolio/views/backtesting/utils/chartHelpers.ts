@@ -1,19 +1,9 @@
-import type { MarketDashboardPoint } from "@/schemas/api/analyticsSchemas";
 import type { BacktestTimelinePoint } from "@/types/backtesting";
 
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
-// --- Signal Types & Constants ---
-
-export type SignalKey =
-  | "buy_spot"
-  | "sell_spot"
-  | "buy_lp"
-  | "sell_lp"
-  | "borrow"
-  | "repay"
-  | "liquidate";
+export type SignalKey = "buy_spot" | "sell_spot";
 
 export interface SignalConfig {
   key: SignalKey;
@@ -46,99 +36,37 @@ export const CHART_SIGNALS: SignalConfig[] = [
     color: "#ef4444",
     shape: "circle",
   },
-  {
-    key: "buy_lp",
-    field: "buyLpSignal",
-    name: "Buy LP",
-    color: "#3b82f6",
-    shape: "circle",
-  },
-  {
-    key: "sell_lp",
-    field: "sellLpSignal",
-    name: "Sell LP",
-    color: "#d946ef",
-    shape: "circle",
-  },
-  {
-    key: "borrow",
-    field: "borrowSignal",
-    name: "Borrow",
-    color: "#a855f7",
-    shape: "triangle",
-  },
-  {
-    key: "repay",
-    field: "repaySignal",
-    name: "Repay",
-    color: "#06b6d4",
-    shape: "diamond",
-  },
-  {
-    key: "liquidate",
-    field: "liquidateSignal",
-    name: "Liquidation",
-    color: "#dc2626",
-    shape: "cross",
-  },
 ];
 
 const SIGNAL_FIELDS = CHART_SIGNALS.map(s => s.field);
-
-/** Sentiment label to numeric index for Y-axis positioning */
 const SENTIMENT_INDEX_MAP: Record<string, number> = {
   extreme_fear: 0,
-  fear: 1,
-  neutral: 2,
-  greed: 3,
-  extreme_greed: 4,
+  fear: 25,
+  neutral: 50,
+  greed: 75,
+  extreme_greed: 100,
 };
-
-// --- Helper Types ---
+const MS_PER_DAY = 86_400_000;
+const DEFAULT_Y_DOMAIN: [number, number] = [0, 1000];
 
 interface SignalAccumulator {
   [key: string]: number | null | Record<SignalKey, string[]>;
   eventStrategies: Record<SignalKey, string[]>;
 }
 
-interface Transfer {
-  from_bucket?: string;
-  to_bucket?: string;
-}
-
 type BacktestStrategy = NonNullable<
   BacktestTimelinePoint["strategies"][string]
 >;
 
-const MS_PER_DAY = 86_400_000;
-const DEFAULT_Y_DOMAIN: [number, number] = [0, 1000];
-
-// --- Logic ---
-
-export function sentimentLabelToIndex(
-  label: string | null | undefined
-): number | null {
-  if (!label) return null;
-  return SENTIMENT_INDEX_MAP[label] ?? null;
-}
-
-const TRANSFER_SIGNAL_MAP: Record<string, Record<string, SignalKey>> = {
-  spot: { stable: "sell_spot", lp: "sell_spot" },
-  stable: { spot: "buy_spot", lp: "buy_lp" },
-  lp: { spot: "sell_lp", stable: "sell_lp" },
-};
-
 function classifyTransfer(from: string, to: string): SignalKey | null {
-  return TRANSFER_SIGNAL_MAP[from]?.[to] ?? null;
-}
-
-function classifyBorrowEvent(
-  metrics: Record<string, unknown> | undefined
-): SignalKey | null {
-  const event = metrics?.["borrow_event"];
-  if (event === "borrow" || event === "repay" || event === "liquidate") {
-    return event as SignalKey;
+  if (from === "stable" && to === "spot") {
+    return "buy_spot";
   }
+
+  if (from === "spot" && to === "stable") {
+    return "sell_spot";
+  }
+
   return null;
 }
 
@@ -151,9 +79,8 @@ function updateSignal(
   const config = CHART_SIGNALS.find(s => s.key === signalKey);
   if (!config) return;
 
-  const field = config.field;
-  const current = acc[field] as number | null;
-  acc[field] =
+  const current = acc[config.field] as number | null;
+  acc[config.field] =
     current == null ? portfolioValue : Math.max(current, portfolioValue);
 
   const strategies = acc.eventStrategies[signalKey];
@@ -162,57 +89,10 @@ function updateSignal(
   }
 }
 
-function isProcessableStrategy(
-  strategy: BacktestStrategy | undefined
-): strategy is BacktestStrategy {
-  if (!strategy) {
-    return false;
-  }
-
-  return strategy.metrics?.["signal"] !== "dca";
-}
-
-function processBorrowSignal(
-  strategy: BacktestStrategy,
-  acc: SignalAccumulator,
-  displayName: string
-): void {
-  const borrowSignalKey = classifyBorrowEvent(strategy.metrics);
-  if (!borrowSignalKey) {
-    return;
-  }
-
-  updateSignal(acc, borrowSignalKey, strategy.portfolio_value, displayName);
-}
-
-function getTransfers(strategy: BacktestStrategy): Transfer[] {
-  const metadata = strategy.metrics?.["metadata"] as
-    | { transfers?: Transfer[] }
-    | undefined;
-  const transfers = metadata?.transfers;
-  return Array.isArray(transfers) ? transfers : [];
-}
-
-function processTransferSignals(
-  strategy: BacktestStrategy,
-  acc: SignalAccumulator,
-  displayName: string
-): void {
-  for (const transfer of getTransfers(strategy)) {
-    if (!transfer.from_bucket || !transfer.to_bucket) {
-      continue;
-    }
-
-    const signalKey = classifyTransfer(
-      transfer.from_bucket,
-      transfer.to_bucket
-    );
-    if (!signalKey) {
-      continue;
-    }
-
-    updateSignal(acc, signalKey, strategy.portfolio_value, displayName);
-  }
+function getTransfers(
+  strategy: BacktestStrategy
+): BacktestStrategy["execution"]["transfers"] {
+  return strategy.execution.transfers ?? [];
 }
 
 function processStrategyTransfers(
@@ -221,14 +101,27 @@ function processStrategyTransfers(
   acc: SignalAccumulator
 ): void {
   for (const strategyId of strategyIds) {
+    if (strategyId === DCA_CLASSIC_STRATEGY_ID) {
+      continue;
+    }
+
     const strategy = point.strategies[strategyId];
-    if (!isProcessableStrategy(strategy)) {
+    if (!strategy) {
       continue;
     }
 
     const displayName = getStrategyDisplayName(strategyId);
-    processBorrowSignal(strategy, acc, displayName);
-    processTransferSignals(strategy, acc, displayName);
+    for (const transfer of getTransfers(strategy)) {
+      const signalKey = classifyTransfer(
+        transfer.from_bucket,
+        transfer.to_bucket
+      );
+      if (!signalKey) {
+        continue;
+      }
+
+      updateSignal(acc, signalKey, strategy.portfolio.total_value, displayName);
+    }
   }
 }
 
@@ -253,13 +146,43 @@ function getPointValues(
   const values: number[] = [];
 
   for (const key of keys) {
-    const val = point[key];
-    if (typeof val === "number") {
-      values.push(val);
+    const value = point[key];
+    if (typeof value === "number") {
+      values.push(value);
     }
   }
 
   return values;
+}
+
+function getPrimaryDma(
+  point: BacktestTimelinePoint,
+  strategyIds: string[]
+): number | null {
+  for (const strategyId of strategyIds) {
+    const signal = point.strategies[strategyId]?.signal;
+    const details = signal?.details;
+    const dmaDetails =
+      details && typeof details === "object" && "dma" in details
+        ? (details.dma as { dma_200?: number | null } | null | undefined)
+        : null;
+    const dma = dmaDetails?.dma_200;
+    if (typeof dma === "number") {
+      return dma;
+    }
+  }
+
+  return null;
+}
+
+export function sentimentLabelToIndex(
+  label: string | null | undefined
+): number | null {
+  if (!label) {
+    return null;
+  }
+
+  return SENTIMENT_INDEX_MAP[label] ?? null;
 }
 
 export function calculateYAxisDomain(
@@ -293,16 +216,12 @@ export function calculateActualDays(timeline: BacktestTimelinePoint[]): number {
 
   if (!firstPoint || !lastPoint) return 0;
 
-  const start = new Date(firstPoint.date).getTime();
-  const end = new Date(lastPoint.date).getTime();
+  const start = new Date(firstPoint.market.date).getTime();
+  const end = new Date(lastPoint.market.date).getTime();
 
   return Math.ceil(Math.abs(end - start) / MS_PER_DAY) + 1;
 }
 
-/**
- * Return the first non-DCA strategy ID, or fall back to the first ID.
- * Used by chart and terminal components to determine which series gets area fill.
- */
 export function getPrimaryStrategyId(sortedIds: string[]): string | null {
   return (
     sortedIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ?? sortedIds[0] ?? null
@@ -326,35 +245,32 @@ export function sortStrategyIds(ids: string[]): string[] {
 
 export function buildChartPoint(
   point: BacktestTimelinePoint,
-  strategyIds: string[],
-  marketDataMap?: Map<string, MarketDashboardPoint>
+  strategyIds: string[]
 ): Record<string, unknown> {
-  const data: Record<string, unknown> = { ...point };
+  const data: Record<string, unknown> = {
+    date: point.market.date,
+    market: point.market,
+    strategies: point.strategies,
+  };
 
-  // Strategy values
   for (const id of strategyIds) {
-    const s = point.strategies[id];
-    if (s) {
-      data[`${id}_value`] = s.portfolio_value;
+    const strategy = point.strategies[id];
+    if (strategy) {
+      data[`${id}_value`] = strategy.portfolio.total_value;
     }
   }
 
-  // Market dashboard overlay data (BTC price, DMA 200, sentiment)
-  const marketPoint = marketDataMap?.get(point.date);
-  data["btc_price"] = marketPoint?.price_usd ?? null;
-  data["dma_200"] = marketPoint?.dma_200 ?? point.dma_200 ?? null;
+  data["btc_price"] = point.market.token_price["btc"] ?? null;
+  data["dma_200"] = getPrimaryDma(point, strategyIds);
   data["sentiment"] =
-    marketPoint?.sentiment_value ??
-    point.sentiment ??
-    sentimentLabelToIndex(point.sentiment_label) ??
-    null;
+    point.market.sentiment ??
+    sentimentLabelToIndex(point.market.sentiment_label);
 
-  // Signals
   const acc = createSignalAccumulator();
   processStrategyTransfers(point, strategyIds, acc);
 
-  for (const s of CHART_SIGNALS) {
-    data[s.field] = acc[s.field];
+  for (const signal of CHART_SIGNALS) {
+    data[signal.field] = acc[signal.field];
   }
   data["eventStrategies"] = acc.eventStrategies;
 

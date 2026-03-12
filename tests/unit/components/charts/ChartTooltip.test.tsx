@@ -268,6 +268,127 @@ describe("ChartTooltip", () => {
     });
   });
 
+  it("should use containerWidth/containerHeight when provided", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400,
+          y: 200,
+          date: "2024-01-01",
+          value: 100,
+          containerWidth: 1000,
+          containerHeight: 500,
+        }}
+      />
+    );
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toBeInTheDocument();
+  });
+
+  it("should use screenX/screenY when provided", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400,
+          y: 200,
+          date: "2024-01-01",
+          value: 100,
+          screenX: 500,
+          screenY: 250,
+        }}
+      />
+    );
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({ left: "500px" });
+  });
+
+  it("should handle chartWidth of 0 gracefully", () => {
+    render(
+      <ChartTooltip
+        chartWidth={0}
+        chartHeight={300}
+        hoveredPoint={{
+          chartType: "drawdown-recovery",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: -5,
+        }}
+      />
+    );
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({ left: "12px" });
+  });
+
+  it("should not apply legend guard for non-legend chart types", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "drawdown-recovery",
+          x: 400,
+          y: 190,
+          date: "2024-01-01",
+          value: -5,
+        }}
+      />
+    );
+    const tooltip = screen.getByTestId("chart-tooltip");
+    // drawdown-recovery is NOT in CHARTS_WITH_TOP_LEGEND, so no legend guard
+    expect(tooltip).toHaveStyle({
+      top: "170px",
+      transform: "translate(-50%, -100%)",
+    });
+  });
+
+  it("should return null for unknown chartType (default switch branch)", () => {
+    // Exercises the `default: return null` branch in TooltipContent switch
+    const { container } = render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={
+          {
+            chartType: "unknown-chart-type" as "performance",
+            x: 100,
+            y: 150,
+            date: "2024-01-01",
+            value: 42,
+          } as any
+        }
+      />
+    );
+    // Outer tooltip div still renders but inner content is null
+    expect(screen.getByTestId("chart-tooltip")).toBeInTheDocument();
+    expect(
+      container.querySelector("[data-testid^='tooltip-content-']")
+    ).toBeNull();
+  });
+
+  it("should compute pointer.y as 0 when chartHeight is 0", () => {
+    // Exercises the `chartHeight > 0 ? ... : 0` false branch in pointer.y calculation
+    render(
+      <ChartTooltip
+        chartWidth={800}
+        chartHeight={0}
+        hoveredPoint={{
+          chartType: "drawdown-recovery",
+          x: 400,
+          y: 150,
+          date: "2024-01-01",
+          value: -5,
+        }}
+      />
+    );
+    // pointer.y becomes 0; top = 0 - 20 = -20; -20 - 120 < 12 => flip to bottom
+    // top = min(0 + 20, 0 - 12) = min(20, -12) = -12
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toBeInTheDocument();
+  });
+
   it("should trigger legend avoidance when valid space exists but legend overlaps", () => {
     render(
       <ChartTooltip

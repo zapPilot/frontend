@@ -1,5 +1,8 @@
-/** Canonical strategy ID for the regime-based strategy used across configuration helpers. */
-export const SIMPLE_REGIME_STRATEGY_ID = "simple_regime";
+/** Canonical strategy ID for the DMA-first strategy used across configuration helpers. */
+export const DMA_GATED_FGI_STRATEGY_ID = "dma_gated_fgi";
+
+/** Default curated preset config ID served by the backend. */
+export const DMA_GATED_FGI_DEFAULT_CONFIG_ID = "dma_gated_fgi_default";
 
 /** Canonical strategy ID for the DCA classic (benchmark) strategy. */
 export const DCA_CLASSIC_STRATEGY_ID = "dca_classic";
@@ -10,23 +13,5 @@ export const DEFAULT_TOTAL_CAPITAL = 10000;
 /** Default number of simulation days when no API default is available. */
 export const DEFAULT_DAYS = 500;
 
-/** Available signal-provider options for the regime strategy backtest controls. */
-export const SIGNAL_PROVIDER_OPTIONS = [
-  { value: "", label: "default" },
-  { value: "fgi", label: "fgi" },
-  { value: "hybrid_fgi_dma", label: "hybrid_fgi_dma" },
-  { value: "hybrid_dma_fgi", label: "hybrid_dma_fgi" },
-  { value: "mayer", label: "mayer" },
-  { value: "hybrid_fgi_mayer", label: "hybrid_fgi_mayer" },
-  { value: "dma_gated_fgi", label: "dma_gated_fgi" },
-  { value: "dma_200", label: "dma_200" },
-  { value: "vix", label: "vix" },
-  { value: "mvrv", label: "mvrv" },
-] as const;
-
-/** Available pacing-policy options for the regime strategy backtest controls. */
-export const PACING_POLICY_OPTIONS = [
-  { value: "fgi_exponential", label: "fgi_exponential" },
-  { value: "score_exponential", label: "score_exponential" },
-  { value: "dma_sentiment_tanh", label: "dma_sentiment_tanh" },
-] as const;
+/** Fixed pacing engine used by the DMA-first runtime. */
+export const FIXED_PACING_ENGINE_ID = "fgi_exponential";

@@ -7,15 +7,13 @@ import type { BacktestResponse } from "@/types/backtesting";
 
 import {
   DEFAULT_DAYS,
-  PACING_POLICY_OPTIONS,
-  SIGNAL_PROVIDER_OPTIONS,
+  DMA_GATED_FGI_STRATEGY_ID,
+  FIXED_PACING_ENGINE_ID,
 } from "../constants";
 import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
   parseJsonField,
-  parseRegimeParam,
   updateJsonField,
-  updateRegimeParam,
 } from "../utils/jsonConfigurationHelpers";
 import { BacktestChart } from "./BacktestChart";
 import {
@@ -33,26 +31,6 @@ const COLLAPSE_ANIMATION = {
   animate: { height: "auto" as const, opacity: 1 },
   exit: { height: 0, opacity: 0 },
 };
-
-function TerminalOptionList({
-  options,
-}: {
-  options: readonly { readonly value: string; readonly label: string }[];
-}) {
-  return (
-    <>
-      {options.map(opt => (
-        <option
-          key={opt.value}
-          value={opt.value}
-          className="bg-gray-900 text-emerald-400"
-        >
-          {opt.label}
-        </option>
-      ))}
-    </>
-  );
-}
 
 export interface BacktestTerminalDisplayProps {
   /** Strategy summaries keyed by strategy_id */
@@ -93,12 +71,6 @@ export function BacktestTerminalDisplay({
   const [showMetrics, setShowMetrics] = useState(false);
 
   const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
-  const signalProvider = parseRegimeParam(editorValue, "signal_provider", "");
-  const pacingPolicy = parseRegimeParam(
-    editorValue,
-    "pacing_policy",
-    "fgi_exponential"
-  );
 
   const primaryId = getPrimaryStrategyId(sortedStrategyIds);
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
@@ -115,19 +87,8 @@ export function BacktestTerminalDisplay({
     );
   };
 
-  const handleSignalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onEditorValueChange(
-      updateRegimeParam(editorValue, "signal_provider", e.target.value)
-    );
-  };
-  const handlePacingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onEditorValueChange(
-      updateRegimeParam(editorValue, "pacing_policy", e.target.value)
-    );
-  };
-
   return (
-    <div className="font-mono bg-gray-950 rounded-2xl border border-gray-800 overflow-hidden">
+    <div className="font-mono bg-gray-950 rounded-2xl border border-gray-800 overflow-visible">
       {/* Command prompt bar */}
       <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-2 flex-wrap">
         <span className="text-emerald-400" style={phosphorGlowStyle}>
@@ -142,24 +103,20 @@ export function BacktestTerminalDisplay({
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 w-16 text-center focus:outline-none"
           style={phosphorGlowStyle}
         />
-        <span className="text-gray-400">--signal</span>
-        <select
-          value={signalProvider}
-          onChange={handleSignalChange}
-          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
+        <span className="text-gray-400">--strategy</span>
+        <span
+          className="border-b border-emerald-400/30 text-emerald-400 px-1"
           style={phosphorGlowStyle}
         >
-          <TerminalOptionList options={SIGNAL_PROVIDER_OPTIONS} />
-        </select>
+          {DMA_GATED_FGI_STRATEGY_ID}
+        </span>
         <span className="text-gray-400">--pacing</span>
-        <select
-          value={pacingPolicy}
-          onChange={handlePacingChange}
-          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
+        <span
+          className="border-b border-emerald-400/30 text-emerald-400 px-1"
           style={phosphorGlowStyle}
         >
-          <TerminalOptionList options={PACING_POLICY_OPTIONS} />
-        </select>
+          {FIXED_PACING_ENGINE_ID}
+        </span>
         <button
           onClick={onRun}
           disabled={isPending}

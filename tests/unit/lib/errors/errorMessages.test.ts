@@ -65,6 +65,27 @@ describe("errorMessages", () => {
       });
     });
 
+    // Branch: findMessagePattern with Record patterns but no message
+    describe("Pattern matching without message", () => {
+      it("should skip service pattern when no message is given for Record-based patterns", () => {
+        // backend-service 400 has Record patterns (requires message to match)
+        // Without a message, findMessagePattern returns null → falls through to HTTP generic
+        const msg = getErrorMessage({ status: 400, source: "backend-service" });
+        expect(msg).toBe("Invalid request. Please check your input.");
+      });
+
+      it("should return default pattern when patterns have no default key", () => {
+        // intent-service 400 has patterns with a default key
+        // With a message that doesn't match any pattern, should return the default
+        const msg = getErrorMessage({
+          status: 400,
+          message: "something unknown",
+          source: "intent-service",
+        });
+        expect(msg).toBe("Invalid transaction parameters.");
+      });
+    });
+
     // Fallbacks
     describe("Fallbacks", () => {
       it("should use original message if no pattern matches", () => {

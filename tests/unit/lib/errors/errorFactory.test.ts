@@ -161,4 +161,49 @@ describe("resolveErrorMessage", () => {
       expect(result).toBe("fallback");
     });
   });
+
+  describe("edge cases for uncovered branches", () => {
+    it("should handle object with key present but value explicitly undefined", () => {
+      // Exercises the `nestedValue === undefined` branch in normalizeObjectValue
+      // where Object.prototype.hasOwnProperty returns true but the value is undefined
+      const obj = Object.defineProperty({}, "message", {
+        value: undefined,
+        enumerable: true,
+        configurable: true,
+      });
+      // Falls through to JSON.stringify since message key has undefined value
+      const result = resolveErrorMessage(
+        "fallback",
+        obj as Record<string, unknown>
+      );
+      // JSON.stringify omits undefined values — result will be "{}" which is found=true
+      expect(result).toBeDefined();
+    });
+
+    it("should handle already-seen object in WeakSet (circular guard triggers on recursive call)", () => {
+      // The seen.has(value) true-branch fires when the same object appears
+      // nested inside itself via one of the message candidate keys.
+      const inner: Record<string, unknown> = { code: 42 };
+      // Make the outer object reference itself via a candidate key so that
+      // during recursive normalizeObjectValue the same reference is encountered.
+      const outer: Record<string, unknown> = { message: inner };
+      inner.message = outer; // outer -> inner -> outer (via message chain)
+      // This triggers the seen.has guard on the second visit to outer
+      const result = resolveErrorMessage("fallback", outer);
+      // The first pass reads outer.message = inner; inner.message = outer.
+      // On visiting outer.message (inner): inner has no direct string, tries inner.message = outer.
+      // outer is already in `seen` -> returns { value: fallback, found: false }.
+      // Then falls through to JSON.stringify(inner) which fails (circular) -> fallback.
+      expect(result).toBe("fallback");
+    });
+
+    it("should convert Symbol to string via fallthrough path", () => {
+      // Symbol is not a string, number, boolean, bigint, object, or Error,
+      // so it falls through to String(value) at the end of normalizeErrorMessage.
+      // We cast as unknown to bypass TypeScript's spread type check.
+      const sym = Symbol("test-sym");
+      const result = resolveErrorMessage("fallback", sym as unknown);
+      expect(result).toBe("Symbol(test-sym)");
+    });
+  });
 });

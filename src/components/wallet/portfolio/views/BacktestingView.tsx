@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import { type ReactElement, useEffect } from "react";
+import { type ReactElement } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
@@ -15,7 +15,9 @@ export function BacktestingView(): ReactElement {
   const {
     backtestData,
     editorValue,
+    editorError,
     error,
+    isInitializing,
     isPending,
     handleRunBacktest,
     updateEditorValue,
@@ -24,13 +26,8 @@ export function BacktestingView(): ReactElement {
   const { chartData, yAxisDomain, summary, sortedStrategyIds, actualDays } =
     useBacktestResult(backtestData ?? null);
 
-  useEffect(() => {
-    handleRunBacktest();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   let content: ReactElement;
-  if (isPending) {
+  if (isInitializing || isPending) {
     content = (
       <BaseCard variant="glass" className="bg-gray-900/40">
         <BacktestLoadingState />
@@ -70,13 +67,16 @@ export function BacktestingView(): ReactElement {
         </p>
       </div>
 
-      {error && (
+      {(editorError || error) && (
         <BaseCard
           variant="glass"
           className="p-4 bg-rose-500/5 border-rose-500/20"
         >
           <div className="text-sm text-rose-400 font-medium">
-            {error instanceof Error ? error.message : "Failed to run backtest"}
+            {editorError ??
+              (error instanceof Error
+                ? error.message
+                : "Failed to run backtest")}
           </div>
         </BaseCard>
       )}

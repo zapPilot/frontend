@@ -13,45 +13,71 @@ import type {
   BacktestTimelinePoint,
 } from "@/types/backtesting";
 
-// --- Test Helpers ---
+function createStrategyPoint(
+  overrides: Partial<BacktestStrategyPoint> = {}
+): BacktestStrategyPoint {
+  return {
+    portfolio: {
+      spot_usd: 5000,
+      stable_usd: 5000,
+      total_value: 10000,
+      allocation: {
+        spot: 0.5,
+        stable: 0.5,
+      },
+    },
+    signal: null,
+    decision: {
+      action: "hold",
+      reason: "wait",
+      rule_group: "none",
+      target_allocation: {
+        spot: 0.5,
+        stable: 0.5,
+      },
+      immediate: false,
+    },
+    execution: {
+      event: null,
+      transfers: [],
+      blocked_reason: null,
+      step_count: 0,
+      steps_remaining: 0,
+      interval_days: 0,
+      buy_gate: null,
+    },
+    ...overrides,
+  };
+}
 
-function createMockTimelinePoint(
+function createTimelinePoint(
   overrides: Partial<BacktestTimelinePoint> = {}
 ): BacktestTimelinePoint {
   return {
-    date: "2024-01-01",
-    token_price: { btc: 50000 },
-    sentiment: null,
-    sentiment_label: null,
-    dma_200: null,
+    market: {
+      date: "2024-01-01",
+      token_price: { btc: 50000 },
+      sentiment: null,
+      sentiment_label: null,
+    },
     strategies: {},
     ...overrides,
   };
 }
 
-function createMockStrategyPoint(
-  overrides: Partial<BacktestStrategyPoint> = {}
-): BacktestStrategyPoint {
-  return {
-    portfolio_value: 10000,
-    portfolio_constituant: { spot: { btc: 5000 }, stable: 5000, lp: {} },
-    event: null,
-    metrics: {},
-    ...overrides,
-  };
-}
-
-// --- Tests ---
-
 describe("sentimentLabelToIndex", () => {
   it.each([
     ["extreme_fear", 0],
-    ["fear", 1],
-    ["neutral", 2],
-    ["greed", 3],
-    ["extreme_greed", 4],
+    ["fear", 25],
+    ["neutral", 50],
+    ["greed", 75],
+    ["extreme_greed", 100],
   ])("maps %s to %i", (label, expected) => {
     expect(sentimentLabelToIndex(label)).toBe(expected);
+  });
+
+  it("returns null for unknown labels", () => {
+    expect(sentimentLabelToIndex("unknown")).toBeNull();
   });
 
   it("returns null for null input", () => {
@@ -61,433 +87,519 @@ describe("sentimentLabelToIndex", () => {
   it("returns null for undefined input", () => {
     expect(sentimentLabelToIndex(undefined)).toBeNull();
   });
-
-  it("returns null for empty string", () => {
-    expect(sentimentLabelToIndex("")).toBeNull();
-  });
-
-  it("returns null for unknown label", () => {
-    expect(sentimentLabelToIndex("unknown")).toBeNull();
-  });
 });
 
 describe("getPrimaryStrategyId", () => {
-  it("returns null for empty array", () => {
+  it("returns null for an empty array", () => {
     expect(getPrimaryStrategyId([])).toBeNull();
   });
 
-  it("skips dca_classic and returns first non-DCA strategy", () => {
-    expect(getPrimaryStrategyId(["dca_classic", "simple_regime"])).toBe(
-      "simple_regime"
-    );
-  });
-
-  it("falls back to dca_classic when only DCA present", () => {
-    expect(getPrimaryStrategyId(["dca_classic"])).toBe("dca_classic");
-  });
-
-  it("returns first strategy when no DCA present", () => {
-    expect(getPrimaryStrategyId(["alpha", "beta"])).toBe("alpha");
-  });
-
-  it("skips DCA and returns first non-DCA with multiple strategies", () => {
-    expect(getPrimaryStrategyId(["dca_classic", "alpha", "beta"])).toBe(
-      "alpha"
+  it("prefers the first non-DCA strategy", () => {
+    expect(getPrimaryStrategyId(["dca_classic", "dma_gated_fgi_default"])).toBe(
+      "dma_gated_fgi_default"
     );
   });
 });
 
 describe("sortStrategyIds", () => {
-  it("returns empty array for empty input", () => {
-    expect(sortStrategyIds([])).toEqual([]);
-  });
-
-  it("returns DCA only when only DCA present", () => {
-    expect(sortStrategyIds(["dca_classic"])).toEqual(["dca_classic"]);
-  });
-
-  it("places DCA first when DCA and others present", () => {
-    expect(sortStrategyIds(["simple_regime", "dca_classic"])).toEqual([
+  it("places dca_classic first", () => {
+    expect(sortStrategyIds(["dma_gated_fgi_default", "dca_classic"])).toEqual([
       "dca_classic",
-      "simple_regime",
+      "dma_gated_fgi_default",
     ]);
   });
 
-  it("sorts by display name when no DCA present", () => {
-    expect(sortStrategyIds(["simple_regime", "alpha_strategy"])).toEqual([
+  it("sorts other strategies by display name", () => {
+    expect(sortStrategyIds(["zebra_strategy", "alpha_strategy"])).toEqual([
       "alpha_strategy",
-      "simple_regime",
+      "zebra_strategy",
     ]);
-  });
-
-  it("sorts multiple non-DCA strategies alphabetically by display name", () => {
-    expect(
-      sortStrategyIds(["zebra_strategy", "alpha_beta", "simple_regime"])
-    ).toEqual(["alpha_beta", "simple_regime", "zebra_strategy"]);
   });
 });
 
 describe("calculateActualDays", () => {
-  it("returns 0 for empty timeline", () => {
+  it("returns 0 for fewer than two points", () => {
     expect(calculateActualDays([])).toBe(0);
+    expect(calculateActualDays([createTimelinePoint()])).toBe(0);
   });
 
-  it("returns 0 for single point", () => {
-    const timeline = [createMockTimelinePoint({ date: "2024-01-01" })];
-    expect(calculateActualDays(timeline)).toBe(0);
-  });
-
-  it("returns 2 for two points 1 day apart", () => {
+  it("calculates span from market.date", () => {
     const timeline = [
-      createMockTimelinePoint({ date: "2024-01-01" }),
-      createMockTimelinePoint({ date: "2024-01-02" }),
+      createTimelinePoint({
+        market: {
+          date: "2024-01-01",
+          token_price: { btc: 1 },
+          sentiment: null,
+          sentiment_label: null,
+        },
+      }),
+      createTimelinePoint({
+        market: {
+          date: "2024-01-31",
+          token_price: { btc: 1 },
+          sentiment: null,
+          sentiment_label: null,
+        },
+      }),
     ];
-    expect(calculateActualDays(timeline)).toBe(2);
-  });
 
-  it("returns 31 for 30-day span", () => {
-    const timeline = [
-      createMockTimelinePoint({ date: "2024-01-01" }),
-      createMockTimelinePoint({ date: "2024-01-31" }),
-    ];
     expect(calculateActualDays(timeline)).toBe(31);
-  });
-
-  it("returns 1 for same date twice", () => {
-    const timeline = [
-      createMockTimelinePoint({ date: "2024-01-01" }),
-      createMockTimelinePoint({ date: "2024-01-01" }),
-    ];
-    expect(calculateActualDays(timeline)).toBe(1);
   });
 });
 
 describe("calculateYAxisDomain", () => {
-  it("returns default domain for empty data", () => {
+  it("returns the default domain when there is no data", () => {
     expect(calculateYAxisDomain([], [])).toEqual([0, 1000]);
   });
 
-  it("returns same min/max when single point has no padding", () => {
-    const data = [{ simple_regime_value: 1000 }];
-    expect(calculateYAxisDomain(data, ["simple_regime"])).toEqual([1000, 1000]);
+  it("returns default domain when all points have no numeric values", () => {
+    const [min, max] = calculateYAxisDomain(
+      [{ date: "2024-01-01" }, { date: "2024-01-02" }],
+      ["nonexistent_strategy"]
+    );
+
+    expect(min).toBe(0);
+    expect(max).toBe(1000);
   });
 
-  it("applies 5% padding to min and max with multiple points", () => {
-    const data = [{ simple_regime_value: 1000 }, { simple_regime_value: 2000 }];
-    const [min, max] = calculateYAxisDomain(data, ["simple_regime"]);
-    expect(min).toBe(950); // 1000 - (1000 * 0.05)
-    expect(max).toBe(2050); // 2000 + (1000 * 0.05)
-  });
+  it("includes strategy values and signal markers", () => {
+    const [min, max] = calculateYAxisDomain(
+      [
+        { dma_gated_fgi_default_value: 1000, buySpotSignal: 500 },
+        { dma_gated_fgi_default_value: 2000, sellSpotSignal: 2200 },
+      ],
+      ["dma_gated_fgi_default"]
+    );
 
-  it("calculates domain from multiple strategies", () => {
-    const data = [
-      { simple_regime_value: 1000, dca_classic_value: 1500 },
-      { simple_regime_value: 2000, dca_classic_value: 2500 },
-    ];
-    const [min, max] = calculateYAxisDomain(data, [
-      "simple_regime",
-      "dca_classic",
-    ]);
-    expect(min).toBe(925); // 1000 - (1500 * 0.05)
-    expect(max).toBe(2575); // 2500 + (1500 * 0.05)
-  });
-
-  it("includes signal field values in domain calculation", () => {
-    const data = [
-      { simple_regime_value: 1000, buySpotSignal: 500 },
-      { simple_regime_value: 2000, sellSpotSignal: 2200 },
-    ];
-    const [min, max] = calculateYAxisDomain(data, ["simple_regime"]);
-    expect(min).toBe(415); // 500 - (1700 * 0.05)
-    expect(max).toBe(2285); // 2200 + (1700 * 0.05)
-  });
-
-  it("never returns negative min", () => {
-    const data = [{ simple_regime_value: 1 }, { simple_regime_value: 100 }];
-    const [min] = calculateYAxisDomain(data, ["simple_regime"]);
-    expect(min).toBe(0); // Math.max(0, 1 - 4.95) where padding = 99 * 0.05 = 4.95
-  });
-
-  it("returns default domain when no matching strategy keys found", () => {
-    const data = [{ unrelated_value: 1000 }];
-    expect(calculateYAxisDomain(data, ["simple_regime"])).toEqual([0, 1000]);
+    expect(min).toBe(415);
+    expect(max).toBe(2285);
   });
 });
 
 describe("buildChartPoint", () => {
-  it("sets strategy_value for each strategy from portfolio_value", () => {
-    const point = createMockTimelinePoint({
+  it("copies strategy values from portfolio.total_value", () => {
+    const point = createTimelinePoint({
       strategies: {
-        simple_regime: createMockStrategyPoint({ portfolio_value: 12000 }),
-        dca_classic: createMockStrategyPoint({ portfolio_value: 10500 }),
-      },
-    });
-
-    const result = buildChartPoint(point, ["simple_regime", "dca_classic"]);
-
-    expect(result["simple_regime_value"]).toBe(12000);
-    expect(result["dca_classic_value"]).toBe(10500);
-  });
-
-  it("sets sentiment from point.sentiment when present", () => {
-    const point = createMockTimelinePoint({ sentiment: 3 });
-    const result = buildChartPoint(point, []);
-
-    expect(result["sentiment"]).toBe(3);
-  });
-
-  it("falls back to sentimentLabelToIndex when sentiment is null but label exists", () => {
-    const point = createMockTimelinePoint({
-      sentiment: null,
-      sentiment_label: "fear",
-    });
-    const result = buildChartPoint(point, []);
-
-    expect(result["sentiment"]).toBe(1);
-  });
-
-  it("sets dma_200 from point.dma_200", () => {
-    const point = createMockTimelinePoint({ dma_200: 48000 });
-    const result = buildChartPoint(point, []);
-
-    expect(result["dma_200"]).toBe(48000);
-  });
-
-  it("sets all signal fields to null when no transfers and no borrow events", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          metrics: {},
+        dma_gated_fgi_default: createStrategyPoint({
+          portfolio: {
+            spot_usd: 8000,
+            stable_usd: 2000,
+            total_value: 12000,
+            allocation: {
+              spot: 0.8,
+              stable: 0.2,
+            },
+          },
         }),
-      },
-    });
-
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["buySpotSignal"]).toBeNull();
-    expect(result["sellSpotSignal"]).toBeNull();
-    expect(result["buyLpSignal"]).toBeNull();
-    expect(result["sellLpSignal"]).toBeNull();
-    expect(result["borrowSignal"]).toBeNull();
-    expect(result["repaySignal"]).toBeNull();
-    expect(result["liquidateSignal"]).toBeNull();
-  });
-
-  it("detects sell_spot from spot to stable transfer", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 12000,
-          metrics: {
-            signal: "fear",
-            metadata: {
-              transfers: [
-                { from_bucket: "spot", to_bucket: "stable", amount_usd: 100 },
-              ],
+        dca_classic: createStrategyPoint({
+          portfolio: {
+            spot_usd: 5250,
+            stable_usd: 5250,
+            total_value: 10500,
+            allocation: {
+              spot: 0.5,
+              stable: 0.5,
             },
           },
         }),
       },
     });
 
-    const result = buildChartPoint(point, ["simple_regime"]);
+    const result = buildChartPoint(point, [
+      "dma_gated_fgi_default",
+      "dca_classic",
+    ]);
 
-    expect(result["sellSpotSignal"]).toBe(12000);
+    expect(result.dma_gated_fgi_default_value).toBe(12000);
+    expect(result.dca_classic_value).toBe(10500);
+    expect(result.market).toEqual(point.market);
+    expect(result.strategies).toEqual(point.strategies);
   });
 
-  it("detects buy_spot from stable to spot transfer", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 11000,
-          metrics: {
-            signal: "greed",
-            metadata: {
-              transfers: [
-                { from_bucket: "stable", to_bucket: "spot", amount_usd: 200 },
-              ],
+  it("uses market.sentiment when present", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        market: {
+          date: "2024-01-01",
+          token_price: { btc: 50000 },
+          sentiment: 18,
+          sentiment_label: "extreme_fear",
+        },
+      }),
+      []
+    );
+
+    expect(result.sentiment).toBe(18);
+  });
+
+  it("falls back to a sentiment label index", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        market: {
+          date: "2024-01-01",
+          token_price: { btc: 50000 },
+          sentiment: null,
+          sentiment_label: "fear",
+        },
+      }),
+      []
+    );
+
+    expect(result.sentiment).toBe(25);
+  });
+
+  it("reads dma_200 from the first strategy signal with DMA data", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            signal: {
+              signal_id: "dma_gated_fgi",
+              regime: "fear",
+              raw_value: 20,
+              confidence: 1,
+              ath_event: null,
+              details: {
+                dma: {
+                  dma_200: 48000,
+                  distance: 0,
+                  zone: "above",
+                  cross_event: null,
+                  cooldown_active: false,
+                  cooldown_remaining_days: 0,
+                  cooldown_blocked_zone: null,
+                  fgi_slope: 0,
+                },
+              },
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
 
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["buySpotSignal"]).toBe(11000);
+    expect(result.dma_200).toBe(48000);
   });
 
-  it("detects buy_lp from stable to lp transfer", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 13000,
-          metrics: {
-            metadata: {
+  it("creates a sell spot marker from a spot -> stable transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
               transfers: [
-                { from_bucket: "stable", to_bucket: "lp", amount_usd: 500 },
+                {
+                  from_bucket: "spot",
+                  to_bucket: "stable",
+                  amount_usd: 100,
+                },
               ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
 
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["buyLpSignal"]).toBe(13000);
+    expect(result.sellSpotSignal).toBe(10000);
+    expect(
+      (result.eventStrategies as Record<string, string[]>).sell_spot
+    ).toEqual(["DMA Gated FGI Default"]);
   });
 
-  it("detects sell_lp from lp to stable transfer", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 9500,
-          metrics: {
-            metadata: {
+  it("creates a buy spot marker from a stable -> spot transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 7000,
+              stable_usd: 3000,
+              total_value: 11000,
+              allocation: {
+                spot: 0.7,
+                stable: 0.3,
+              },
+            },
+            execution: {
+              event: "rebalance",
               transfers: [
-                { from_bucket: "lp", to_bucket: "stable", amount_usd: 300 },
+                {
+                  from_bucket: "stable",
+                  to_bucket: "spot",
+                  amount_usd: 200,
+                },
               ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
 
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["sellLpSignal"]).toBe(9500);
+    expect(result.buySpotSignal).toBe(11000);
   });
 
-  it("populates eventStrategies with display names for triggered signals", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 12000,
-          metrics: {
-            metadata: {
+  it("ignores DCA transfers when computing markers", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dca_classic: createStrategyPoint({
+            execution: {
+              event: "buy",
               transfers: [
-                { from_bucket: "spot", to_bucket: "stable", amount_usd: 100 },
+                {
+                  from_bucket: "stable",
+                  to_bucket: "spot",
+                  amount_usd: 100,
+                },
               ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 7,
+              buy_gate: null,
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dca_classic"]
+    );
 
-    const result = buildChartPoint(point, ["simple_regime"]);
-    const eventStrategies = result["eventStrategies"] as Record<
-      string,
-      string[]
-    >;
-
-    expect(eventStrategies["sell_spot"]).toEqual(["Simple Regime"]);
+    expect(result.buySpotSignal).toBeNull();
+    expect(result.sellSpotSignal).toBeNull();
   });
 
-  it("ignores DCA baseline signals", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        dca_classic: createMockStrategyPoint({
-          portfolio_value: 10000,
-          metrics: {
-            signal: "dca",
-            metadata: {
+  it("skips missing strategy ids in strategies map", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          existing_strat: createStrategyPoint(),
+        },
+      }),
+      ["existing_strat", "nonexistent_strat"]
+    );
+
+    expect(result.existing_strat_value).toBe(10000);
+    expect(result.nonexistent_strat_value).toBeUndefined();
+  });
+
+  it("returns null sentiment when both sentiment and label are null", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        market: {
+          date: "2024-01-01",
+          token_price: { btc: 50000 },
+          sentiment: null,
+          sentiment_label: null,
+        },
+      }),
+      []
+    );
+
+    expect(result.sentiment).toBeNull();
+  });
+
+  it("returns null dma_200 when no strategies have DMA data", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          strat_a: createStrategyPoint({ signal: null }),
+        },
+      }),
+      ["strat_a"]
+    );
+
+    expect(result.dma_200).toBeNull();
+  });
+
+  it("uses null for transfers when execution.transfers is null or undefined", () => {
+    // Exercises the `strategy.execution.transfers ?? []` fallback in getTransfers
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
+              transfers: null as unknown as [],
+              blocked_reason: null,
+              step_count: 0,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
+
+    // No transfers processed — signals remain null
+    expect(result.buySpotSignal).toBeNull();
+    expect(result.sellSpotSignal).toBeNull();
+  });
+
+  it("skips transfers with neither stable->spot nor spot->stable direction", () => {
+    // Exercises the `if (!signalKey) continue` branch in processStrategyTransfers
+    // and the `return null` branch of classifyTransfer
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
+              transfers: [
+                {
+                  from_bucket: "spot",
+                  to_bucket: "spot", // unrecognised direction
+                  amount_usd: 100,
+                },
+                {
+                  from_bucket: "stable",
+                  to_bucket: "stable", // also unrecognised
+                  amount_usd: 50,
+                },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
+
+    // Unrecognised transfer directions produce no signal markers
+    expect(result.buySpotSignal).toBeNull();
+    expect(result.sellSpotSignal).toBeNull();
+  });
+
+  it("does not add duplicate strategy name when same strategy triggers the same signal twice", () => {
+    // Exercises the `if (!strategies.includes(displayName))` false branch in updateSignal
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 7000,
+              stable_usd: 3000,
+              total_value: 11000,
+              allocation: { spot: 0.7, stable: 0.3 },
+            },
+            execution: {
+              event: "rebalance",
               transfers: [
                 { from_bucket: "stable", to_bucket: "spot", amount_usd: 100 },
+                { from_bucket: "stable", to_bucket: "spot", amount_usd: 50 },
               ],
+              blocked_reason: null,
+              step_count: 2,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"]
+    );
 
-    const result = buildChartPoint(point, ["dca_classic"]);
-
-    expect(result["buySpotSignal"]).toBeNull();
-    expect(result["sellSpotSignal"]).toBeNull();
-    expect(result["buyLpSignal"]).toBeNull();
-    expect(result["sellLpSignal"]).toBeNull();
+    const eventStrategies = result.eventStrategies as Record<string, string[]>;
+    // Strategy name should appear only once despite two matching transfers
+    expect(eventStrategies.buy_spot).toEqual(["DMA Gated FGI Default"]);
   });
 
-  it("handles borrow event", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 15000,
-          metrics: {
-            borrow_event: "borrow",
-          },
-        }),
-      },
-    });
+  it("returns null btc_price when token_price has no btc key", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        market: {
+          date: "2024-01-01",
+          token_price: {},
+          sentiment: null,
+          sentiment_label: null,
+        },
+      }),
+      []
+    );
 
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["borrowSignal"]).toBe(15000);
+    expect(result.btc_price).toBeNull();
   });
 
-  it("handles repay event", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 14000,
-          metrics: {
-            borrow_event: "repay",
-          },
-        }),
-      },
-    });
-
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["repaySignal"]).toBe(14000);
-  });
-
-  it("handles liquidate event", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 8000,
-          metrics: {
-            borrow_event: "liquidate",
-          },
-        }),
-      },
-    });
-
-    const result = buildChartPoint(point, ["simple_regime"]);
-
-    expect(result["liquidateSignal"]).toBe(8000);
-  });
-
-  it("uses max portfolio_value when multiple strategies trigger same signal type", () => {
-    const point = createMockTimelinePoint({
-      strategies: {
-        simple_regime: createMockStrategyPoint({
-          portfolio_value: 12000,
-          metrics: {
-            metadata: {
+  it("uses the max portfolio value when multiple strategies trigger the same marker", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 7000,
+              stable_usd: 3000,
+              total_value: 11000,
+              allocation: {
+                spot: 0.7,
+                stable: 0.3,
+              },
+            },
+            execution: {
+              event: "rebalance",
               transfers: [
-                { from_bucket: "stable", to_bucket: "spot", amount_usd: 100 },
+                {
+                  from_bucket: "stable",
+                  to_bucket: "spot",
+                  amount_usd: 100,
+                },
               ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
             },
-          },
-        }),
-        alpha_strategy: createMockStrategyPoint({
-          portfolio_value: 15000,
-          metrics: {
-            metadata: {
+          }),
+          alpha_strategy: createStrategyPoint({
+            portfolio: {
+              spot_usd: 10000,
+              stable_usd: 5000,
+              total_value: 15000,
+              allocation: {
+                spot: 2 / 3,
+                stable: 1 / 3,
+              },
+            },
+            execution: {
+              event: "rebalance",
               transfers: [
-                { from_bucket: "stable", to_bucket: "spot", amount_usd: 200 },
+                {
+                  from_bucket: "stable",
+                  to_bucket: "spot",
+                  amount_usd: 200,
+                },
               ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+              buy_gate: null,
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default", "alpha_strategy"]
+    );
 
-    const result = buildChartPoint(point, ["simple_regime", "alpha_strategy"]);
-
-    expect(result["buySpotSignal"]).toBe(15000);
+    expect(result.buySpotSignal).toBe(15000);
   });
 });

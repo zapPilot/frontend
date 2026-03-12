@@ -1,23 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { mapBacktestToUnified } from "@/components/wallet/portfolio/components/allocation";
 import { BacktestAllocationBar } from "@/components/wallet/portfolio/views/backtesting/components/BacktestAllocationBar";
 import { getStrategyColor } from "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay";
 
 import { render, screen } from "../../../../../../../test-utils";
 
-// Mock allocation utilities
 vi.mock("@/components/wallet/portfolio/components/allocation", () => ({
-  mapBacktestToUnified: vi.fn(),
   UnifiedAllocationBar: (props: {
     testIdPrefix: string;
-    segments: unknown[];
+    segments: { label: string; percentage: number }[];
   }) => (
-    <div data-testid={props.testIdPrefix}>{props.segments.length} segments</div>
+    <div data-testid={props.testIdPrefix}>
+      {props.segments
+        .map(segment => `${segment.label}:${segment.percentage}`)
+        .join("|")}
+    </div>
   ),
 }));
 
-// Mock strategy display utilities
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay",
   () => ({
@@ -25,7 +25,6 @@ vi.mock(
   })
 );
 
-const mockedMapBacktestToUnified = vi.mocked(mapBacktestToUnified);
 const mockedGetStrategyColor = vi.mocked(getStrategyColor);
 
 describe("BacktestAllocationBar", () => {
@@ -33,176 +32,78 @@ describe("BacktestAllocationBar", () => {
     vi.clearAllMocks();
   });
 
-  it("returns null when segments are empty", () => {
-    mockedMapBacktestToUnified.mockReturnValue([]);
-
+  it("returns null when both spot and stable allocations are zero", () => {
     render(
       <BacktestAllocationBar
         displayName="Test Strategy"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
+        allocation={{ spot: 0, stable: 0 }}
       />
     );
 
-    // The component should not render when segments are empty
     expect(screen.queryByText("Test Strategy")).not.toBeInTheDocument();
     expect(screen.queryByTestId(/^backtest-/)).not.toBeInTheDocument();
   });
 
-  it("renders display name", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-
+  it("renders display name and the mapped allocation segments", () => {
     render(
       <BacktestAllocationBar
         displayName="AWP Portfolio"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
+        allocation={{ spot: 0.6, stable: 0.4 }}
       />
     );
 
     expect(screen.getByText("AWP Portfolio")).toBeInTheDocument();
+    expect(screen.getByTestId("backtest-default")).toHaveTextContent(
+      "SPOT:60|STABLE:40"
+    );
   });
 
-  it("renders color indicator when strategyId is provided", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
+  it("renders a strategy color indicator when strategyId is provided", () => {
     mockedGetStrategyColor.mockReturnValue("#3b82f6");
 
     const { container } = render(
       <BacktestAllocationBar
-        displayName="AWP Portfolio"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-        strategyId="awp"
-        index={0}
-      />
-    );
-
-    const colorIndicator = container.querySelector(
-      ".w-2.h-2.rounded-full.shrink-0"
-    );
-    expect(colorIndicator).toBeInTheDocument();
-    expect(colorIndicator).toHaveStyle({ backgroundColor: "#3b82f6" });
-  });
-
-  it("does not render color indicator when strategyId is undefined", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-
-    const { container } = render(
-      <BacktestAllocationBar
-        displayName="Custom Portfolio"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-      />
-    );
-
-    const colorIndicator = container.querySelector(
-      ".w-2.h-2.rounded-full.shrink-0"
-    );
-    expect(colorIndicator).not.toBeInTheDocument();
-  });
-
-  it("calls getStrategyColor with correct parameters", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-    mockedGetStrategyColor.mockReturnValue("#10b981");
-
-    render(
-      <BacktestAllocationBar
         displayName="Momentum"
-        constituents={{ spot: 10000, lp: 0, stable: 0 }}
+        allocation={{ spot: 1, stable: 0 }}
         strategyId="momentum"
         index={2}
       />
     );
 
     expect(mockedGetStrategyColor).toHaveBeenCalledWith("momentum", 2);
-  });
-
-  it("renders UnifiedAllocationBar with correct testIdPrefix when strategyId provided", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 60, color: "#f7931a" },
-      { id: "ETH", label: "ETH", percentage: 40, color: "#627eea" },
-    ]);
-
-    render(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 6000, lp: 2000, stable: 2000 }}
-        strategyId="awp"
-        index={0}
-      />
-    );
-
-    expect(screen.getByTestId("backtest-awp")).toBeInTheDocument();
-    expect(screen.getByText("2 segments")).toBeInTheDocument();
-  });
-
-  it("renders UnifiedAllocationBar with default testIdPrefix when strategyId is undefined", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 100, color: "#f7931a" },
-    ]);
-
-    render(
-      <BacktestAllocationBar
-        displayName="Custom"
-        constituents={{ spot: 10000, lp: 0, stable: 0 }}
-      />
-    );
-
-    expect(screen.getByTestId("backtest-default")).toBeInTheDocument();
-    expect(screen.getByText("1 segments")).toBeInTheDocument();
-  });
-
-  it("recalculates segments when constituents change", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 70, color: "#f7931a" },
-    ]);
-
-    const { rerender } = render(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 7000, lp: 1500, stable: 1500 }}
-      />
-    );
-
-    expect(mockedMapBacktestToUnified).toHaveBeenCalledTimes(1);
-
-    // Rerender with different constituents
-    rerender(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-      />
-    );
-
-    // Should call mapping function again
-    expect(mockedMapBacktestToUnified).toHaveBeenCalledTimes(2);
-  });
-
-  it("renders complete component with all props", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 60, color: "#f7931a" },
-      { id: "ETH", label: "ETH", percentage: 40, color: "#627eea" },
-    ]);
-    mockedGetStrategyColor.mockReturnValue("#3b82f6");
-
-    const { container } = render(
-      <BacktestAllocationBar
-        displayName="AWP Portfolio"
-        constituents={{ spot: 6000, lp: 2000, stable: 2000 }}
-        strategyId="awp"
-        index={0}
-      />
-    );
-
-    // Check all elements are present
-    expect(screen.getByText("AWP Portfolio")).toBeInTheDocument();
     expect(
       container.querySelector(".w-2.h-2.rounded-full.shrink-0")
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("backtest-awp")).toBeInTheDocument();
+    ).toHaveStyle({ backgroundColor: "#3b82f6" });
+    expect(screen.getByTestId("backtest-momentum")).toBeInTheDocument();
+  });
+
+  it("omits the color indicator when strategyId is absent", () => {
+    const { container } = render(
+      <BacktestAllocationBar
+        displayName="Custom"
+        allocation={{ spot: 0.5, stable: 0.5 }}
+      />
+    );
+
+    expect(
+      container.querySelector(".w-2.h-2.rounded-full.shrink-0")
+    ).not.toBeInTheDocument();
+  });
+
+  it("filters out zero-percentage segments", () => {
+    render(
+      <BacktestAllocationBar
+        displayName="Spot Only"
+        allocation={{ spot: 1, stable: 0 }}
+        strategyId="spot_only"
+      />
+    );
+
+    expect(screen.getByTestId("backtest-spot_only")).toHaveTextContent(
+      "SPOT:100"
+    );
+    expect(screen.getByTestId("backtest-spot_only")).not.toHaveTextContent(
+      "STABLE"
+    );
   });
 });

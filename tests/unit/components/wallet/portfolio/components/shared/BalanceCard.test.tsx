@@ -23,6 +23,31 @@ vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
   ),
 }));
 
+vi.mock(
+  "@/components/wallet/portfolio/components/shared/HealthFactorPill",
+  () => ({
+    HealthFactorPill: () => <div data-testid="health-factor-pill">Health</div>,
+  })
+);
+
+vi.mock(
+  "@/components/wallet/portfolio/components/shared/BorrowingHealthPill",
+  () => ({
+    BorrowingHealthPill: () => (
+      <div data-testid="borrowing-health-pill">Borrowing</div>
+    ),
+  })
+);
+
+vi.mock(
+  "@/components/wallet/portfolio/components/shared/HealthWarningBanner",
+  () => ({
+    HealthWarningBanner: () => (
+      <div data-testid="health-warning-banner">Warning</div>
+    ),
+  })
+);
+
 describe("BalanceCard", () => {
   const mockOnOpenModal = vi.fn();
 
@@ -306,6 +331,142 @@ describe("BalanceCard", () => {
 
       expect(
         screen.queryByTestId("freshness-indicator")
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Leverage Health", () => {
+    it("shows HealthFactorPill when has_leverage and health_rate are truthy", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          riskMetrics={{ has_leverage: true, health_rate: 1.5 } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("health-factor-pill")).toBeInTheDocument();
+    });
+
+    it("shows HealthWarningBanner when leverage health is shown", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          riskMetrics={{ has_leverage: true, health_rate: 1.2 } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("health-warning-banner")).toBeInTheDocument();
+    });
+
+    it("does not show HealthFactorPill without has_leverage", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          riskMetrics={{ has_leverage: false, health_rate: 1.5 } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("health-factor-pill")
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show HealthFactorPill in empty state", () => {
+      render(
+        <BalanceCard
+          balance={0}
+          isEmptyState={true}
+          riskMetrics={{ has_leverage: true, health_rate: 1.5 } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("health-factor-pill")
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show HealthFactorPill when health_rate is falsy", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          riskMetrics={{ has_leverage: true, health_rate: 0 } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("health-factor-pill")
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Borrowing Alert", () => {
+    it("shows BorrowingHealthPill when has_debt is truthy", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          borrowingSummary={{ has_debt: true } as any}
+          userId="0x123"
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("borrowing-health-pill")).toBeInTheDocument();
+    });
+
+    it("does not show BorrowingHealthPill without has_debt", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          borrowingSummary={{ has_debt: false } as any}
+          userId="0x123"
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("borrowing-health-pill")
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show BorrowingHealthPill in empty state", () => {
+      render(
+        <BalanceCard
+          balance={0}
+          isEmptyState={true}
+          borrowingSummary={{ has_debt: true } as any}
+          userId="0x123"
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("borrowing-health-pill")
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show BorrowingHealthPill without userId", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          borrowingSummary={{ has_debt: true } as any}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("borrowing-health-pill")
       ).not.toBeInTheDocument();
     });
   });

@@ -1,6 +1,7 @@
 import type {
   BacktestRequest,
   BacktestStrategyCatalogResponseV3,
+  BacktestStrategyIdV3,
 } from "@/types/backtesting";
 import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 
@@ -8,7 +9,8 @@ import {
   DCA_CLASSIC_STRATEGY_ID,
   DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
-  SIMPLE_REGIME_STRATEGY_ID,
+  DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+  DMA_GATED_FGI_STRATEGY_ID,
 } from "../constants";
 
 /** Fallback defaults when API response is unavailable. */
@@ -33,7 +35,7 @@ export function buildDefaultPayloadFromPresets(
   if (benchmark) {
     configs.push({
       config_id: benchmark.config_id,
-      strategy_id: benchmark.strategy_id,
+      strategy_id: benchmark.strategy_id as BacktestStrategyIdV3,
       params: benchmark.params,
     });
   }
@@ -41,7 +43,7 @@ export function buildDefaultPayloadFromPresets(
   if (recommended && recommended.config_id !== benchmark?.config_id) {
     configs.push({
       config_id: recommended.config_id,
-      strategy_id: recommended.strategy_id,
+      strategy_id: recommended.strategy_id as BacktestStrategyIdV3,
       params: recommended.params,
     });
   }
@@ -68,10 +70,10 @@ export function buildDefaultPayloadFromCatalog(
   catalog: BacktestStrategyCatalogResponseV3 | null,
   defaults: BacktestDefaults = FALLBACK_DEFAULTS
 ): BacktestRequest {
-  const simpleRegime = catalog?.strategies.find(
-    strategy => strategy.id === SIMPLE_REGIME_STRATEGY_ID
+  const dmaGatedFgi = catalog?.strategies.find(
+    strategy => strategy.strategy_id === DMA_GATED_FGI_STRATEGY_ID
   );
-  const recommendedParams = simpleRegime?.recommended_params ?? {};
+  const defaultParams = dmaGatedFgi?.default_params ?? {};
 
   return {
     days: defaults.days,
@@ -83,9 +85,9 @@ export function buildDefaultPayloadFromCatalog(
         params: {},
       },
       {
-        config_id: SIMPLE_REGIME_STRATEGY_ID,
-        strategy_id: SIMPLE_REGIME_STRATEGY_ID,
-        params: recommendedParams,
+        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        params: defaultParams,
       },
     ],
   };

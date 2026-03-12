@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { BacktestTerminalDisplay } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTerminalDisplay";
 import type { BacktestResponse } from "@/types/backtesting";
 
-// Mock framer-motion
 vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
@@ -20,20 +19,12 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
-// Mock constants
 vi.mock("@/components/wallet/portfolio/views/backtesting/constants", () => ({
   DEFAULT_DAYS: 500,
-  SIGNAL_PROVIDER_OPTIONS: [
-    { value: "", label: "None" },
-    { value: "fgi", label: "FGI" },
-  ],
-  PACING_POLICY_OPTIONS: [
-    { value: "fgi_exponential", label: "FGI Exp" },
-    { value: "linear", label: "Linear" },
-  ],
+  DMA_GATED_FGI_STRATEGY_ID: "dma_gated_fgi",
+  FIXED_PACING_ENGINE_ID: "fgi_exponential",
 }));
 
-// Mock chart helpers
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/utils/chartHelpers",
   () => ({
@@ -41,27 +32,18 @@ vi.mock(
   })
 );
 
-// Mock JSON configuration helpers
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers",
   () => ({
     parseJsonField: vi.fn(
       (_json: string, _field: string, fallback: number) => fallback
     ),
-    parseRegimeParam: vi.fn(
-      (_json: string, _param: string, fallback: string) => fallback
-    ),
     updateJsonField: vi.fn(
       (_json: string, _field: string, value: number) => `{"days":${value}}`
-    ),
-    updateRegimeParam: vi.fn(
-      (_json: string, _param: string, value: string) =>
-        `{"regime_params":{"${_param}":"${value}"}}`
     ),
   })
 );
 
-// Mock BacktestChart
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/components/BacktestChart",
   () => ({
@@ -69,40 +51,40 @@ vi.mock(
   })
 );
 
-// Mock backtestTerminalMetrics
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/components/backtestTerminalMetrics",
   () => ({
-    createHeroMetrics: vi.fn(regime =>
-      regime
+    createHeroMetrics: vi.fn(strategy =>
+      strategy
         ? [
             {
-              label: "Total Return",
+              label: "ROI",
               value: "+25.5%",
               bar: "████████",
               color: "text-emerald-400",
             },
             {
-              label: "Sharpe Ratio",
-              value: "1.85",
+              label: "CALMAR",
+              value: "1.24",
               bar: "██████",
-              color: "text-emerald-400",
+              color: "text-cyan-400",
             },
             {
-              label: "Win Rate",
-              value: "62%",
+              label: "MAX DRAWDOWN",
+              value: "12.3%",
               bar: "█████",
-              color: "text-emerald-400",
+              color: "text-rose-400",
             },
           ]
         : []
     ),
-    createSecondaryMetrics: vi.fn(regime =>
-      regime
+    createSecondaryMetrics: vi.fn(strategy =>
+      strategy
         ? [
-            { label: "Max DD", value: "-12.3%" },
-            { label: "Vol", value: "18.5%" },
-            { label: "Trades", value: "142" },
+            { label: "INVESTED", value: "$10,000" },
+            { label: "TRADES", value: "12" },
+            { label: "STABLE", value: "20.0%" },
+            { label: "SIGNAL", value: "dma_gated_fgi" },
           ]
         : []
     ),
@@ -127,302 +109,132 @@ describe("BacktestTerminalDisplay", () => {
 
   const mockSummary: { strategies: BacktestResponse["strategies"] } = {
     strategies: {
-      regime_dynamic: {
-        regime: "regime_dynamic",
-        total_return: 0.255,
-        sharpe_ratio: 1.85,
-        max_drawdown: -0.123,
-        win_rate: 0.62,
-        total_trades: 142,
-        volatility: 0.185,
-        sortino_ratio: 2.1,
-        calmar_ratio: 1.5,
-        avg_win: 0.025,
-        avg_loss: -0.015,
-        profit_factor: 1.8,
+      dma_gated_fgi_default: {
+        strategy_id: "dma_gated_fgi_default",
+        display_name: "DMA Gated FGI Default",
+        signal_id: "dma_gated_fgi",
+        total_invested: 10000,
+        final_value: 12550,
+        roi_percent: 25.5,
+        trade_count: 12,
+        final_allocation: {
+          spot: 0.8,
+          stable: 0.2,
+        },
+        parameters: {},
       },
     },
   };
 
-  it("renders command prompt bar with all elements", () => {
+  it("renders command prompt controls", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
     expect(screen.getByText("$")).toBeDefined();
     expect(screen.getByText("backtest")).toBeDefined();
     expect(screen.getByText("--days")).toBeDefined();
-    expect(screen.getByText("--signal")).toBeDefined();
+    expect(screen.getByText("--strategy")).toBeDefined();
+    expect(screen.getByText("dma_gated_fgi")).toBeDefined();
     expect(screen.getByText("--pacing")).toBeDefined();
+    expect(screen.getByText("fgi_exponential")).toBeDefined();
     expect(screen.getByRole("button", { name: /RUN/i })).toBeDefined();
   });
 
-  it("shows [RUN] when not pending", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} isPending={false} />);
-
-    const button = screen.getByRole("button", { name: /RUN/i });
-    expect(button.textContent).toBe("[RUN]");
-  });
-
-  it("shows [...] when pending", () => {
+  it("shows pending state in the run button", () => {
     render(<BacktestTerminalDisplay {...defaultProps} isPending={true} />);
 
     const button = screen.getByRole("button");
     expect(button.textContent).toBe("[...]");
-  });
-
-  it("disables run button when isPending", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} isPending={true} />);
-
-    const button = screen.getByRole("button");
     expect(button.getAttribute("disabled")).not.toBeNull();
   });
 
-  it("enables run button when not isPending", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} isPending={false} />);
-
-    const button = screen.getByRole("button", { name: /RUN/i });
-    expect(button.getAttribute("disabled")).toBeNull();
-  });
-
-  it("calls onRun when run button clicked", () => {
+  it("calls onRun when run button is clicked", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
-    const button = screen.getByRole("button", { name: /RUN/i });
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: /RUN/i }));
 
     expect(mockOnRun).toHaveBeenCalledOnce();
   });
 
-  it("handleDaysChange: calls onEditorValueChange with updateJsonField result", async () => {
+  it("updates days via updateJsonField", async () => {
     const { updateJsonField } =
       await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
 
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
-    const daysInput = screen.getByRole("spinbutton");
-    fireEvent.change(daysInput, { target: { value: "365" } });
+    fireEvent.change(screen.getByRole("spinbutton"), {
+      target: { value: "365" },
+    });
 
     expect(updateJsonField).toHaveBeenCalledWith('{"days":500}', "days", 365);
     expect(mockOnEditorValueChange).toHaveBeenCalledWith('{"days":365}');
   });
 
-  it("handleSignalChange: calls onEditorValueChange with updateRegimeParam result", async () => {
-    const { updateRegimeParam } =
-      await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
-
+  it("renders the fixed strategy indicator instead of a signal selector", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
-    const selects = screen.getAllByRole("combobox");
-    const signalSelect = selects[0];
-    fireEvent.change(signalSelect, { target: { value: "fgi" } });
-
-    expect(updateRegimeParam).toHaveBeenCalledWith(
-      '{"days":500}',
-      "signal_provider",
-      "fgi"
-    );
-    expect(mockOnEditorValueChange).toHaveBeenCalledWith(
-      '{"regime_params":{"signal_provider":"fgi"}}'
-    );
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.getByText("dma_gated_fgi")).toBeDefined();
   });
 
-  it("handlePacingChange: calls onEditorValueChange with updateRegimeParam result", async () => {
-    const { updateRegimeParam } =
-      await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
-
-    render(<BacktestTerminalDisplay {...defaultProps} />);
-
-    const selects = screen.getAllByRole("combobox");
-    const pacingSelect = selects[1];
-    fireEvent.change(pacingSelect, { target: { value: "linear" } });
-
-    expect(updateRegimeParam).toHaveBeenCalledWith(
-      '{"days":500}',
-      "pacing_policy",
-      "linear"
-    );
-    expect(mockOnEditorValueChange).toHaveBeenCalledWith(
-      '{"regime_params":{"pacing_policy":"linear"}}'
-    );
-  });
-
-  it("shows hero metrics when summary has a matching strategy", () => {
+  it("shows hero metrics for the primary non-DCA strategy", () => {
     render(
       <BacktestTerminalDisplay
         {...defaultProps}
         summary={mockSummary}
-        sortedStrategyIds={["regime_dynamic"]}
+        sortedStrategyIds={["dma_gated_fgi_default"]}
       />
     );
 
-    expect(screen.getByText("Total Return")).toBeDefined();
+    expect(screen.getByText("ROI")).toBeDefined();
     expect(screen.getByText("+25.5%")).toBeDefined();
-    expect(screen.getByText("Sharpe Ratio")).toBeDefined();
-    expect(screen.getByText("1.85")).toBeDefined();
-    expect(screen.getByText("Win Rate")).toBeDefined();
-    expect(screen.getByText("62%")).toBeDefined();
+    expect(screen.getByText("CALMAR")).toBeDefined();
+    expect(screen.getByText("1.24")).toBeDefined();
+    expect(screen.getByText("MAX DRAWDOWN")).toBeDefined();
+    expect(screen.getByText("12.3%")).toBeDefined();
   });
 
-  it("hides hero metrics when summary is null", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} summary={null} />);
-
-    expect(screen.queryByText("Total Return")).toBeNull();
-    expect(screen.queryByText("Sharpe Ratio")).toBeNull();
-    expect(screen.queryByText("Win Rate")).toBeNull();
-  });
-
-  it("hides hero metrics when sortedStrategyIds is empty", () => {
-    render(
-      <BacktestTerminalDisplay
-        {...defaultProps}
-        summary={mockSummary}
-        sortedStrategyIds={[]}
-      />
-    );
-
-    expect(screen.queryByText("Total Return")).toBeNull();
-    expect(screen.queryByText("Sharpe Ratio")).toBeNull();
-  });
-
-  it("shows chart when chartData has entries", () => {
+  it("shows the chart only when chart data exists", () => {
     const chartData = [
-      { date: "2024-01-01", regime_dynamic: 100 },
-      { date: "2024-01-02", regime_dynamic: 105 },
+      { date: "2024-01-01", dma_gated_fgi_default_value: 100 },
+      { date: "2024-01-02", dma_gated_fgi_default_value: 105 },
     ];
 
-    render(<BacktestTerminalDisplay {...defaultProps} chartData={chartData} />);
+    const { rerender } = render(
+      <BacktestTerminalDisplay {...defaultProps} chartData={chartData} />
+    );
 
     expect(screen.getByTestId("backtest-chart")).toBeDefined();
-  });
 
-  it("hides chart when chartData is empty", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} chartData={[]} />);
+    rerender(<BacktestTerminalDisplay {...defaultProps} chartData={[]} />);
 
     expect(screen.queryByTestId("backtest-chart")).toBeNull();
   });
 
-  it("shows toggle prompt when regime exists", () => {
+  it("toggles secondary metrics", () => {
     render(
       <BacktestTerminalDisplay
         {...defaultProps}
         summary={mockSummary}
-        sortedStrategyIds={["regime_dynamic"]}
+        sortedStrategyIds={["dma_gated_fgi_default"]}
       />
     );
 
-    expect(screen.getByText("show_metrics")).toBeDefined();
-    expect(screen.getByText("[y/N]")).toBeDefined();
-  });
+    expect(screen.queryByText("INVESTED")).toBeNull();
 
-  it("hides toggle prompt when regime does not exist", () => {
-    render(
-      <BacktestTerminalDisplay
-        {...defaultProps}
-        summary={null}
-        sortedStrategyIds={[]}
-      />
-    );
-
-    expect(screen.queryByText("show_metrics")).toBeNull();
-  });
-
-  it("toggles secondary metrics when show_metrics button clicked", () => {
-    render(
-      <BacktestTerminalDisplay
-        {...defaultProps}
-        summary={mockSummary}
-        sortedStrategyIds={["regime_dynamic"]}
-      />
-    );
-
-    // Initially hidden
-    expect(screen.queryByText("Max DD")).toBeNull();
-    expect(screen.queryByText("-12.3%")).toBeNull();
-
-    // Click toggle button
     const toggleButton = screen.getByText("show_metrics").closest("button");
-    if (!toggleButton) throw new Error("Toggle button not found");
+    if (!toggleButton) {
+      throw new Error("Toggle button not found");
+    }
+
     fireEvent.click(toggleButton);
 
-    // Now visible
-    expect(screen.getByText("Max DD")).toBeDefined();
-    expect(screen.getByText("-12.3%")).toBeDefined();
+    expect(screen.getByText("INVESTED")).toBeDefined();
+    expect(screen.getByText("$10,000")).toBeDefined();
+    expect(screen.getByText("TRADES")).toBeDefined();
+    expect(screen.getByText("12")).toBeDefined();
+    expect(screen.getByText("STABLE")).toBeDefined();
+    expect(screen.getByText("20.0%")).toBeDefined();
+    expect(screen.getByText("SIGNAL")).toBeDefined();
     expect(screen.getByText("[Y/n]")).toBeDefined();
-  });
-
-  it("shows correct secondary metrics after toggle", () => {
-    render(
-      <BacktestTerminalDisplay
-        {...defaultProps}
-        summary={mockSummary}
-        sortedStrategyIds={["regime_dynamic"]}
-      />
-    );
-
-    const toggleButton = screen.getByText("show_metrics").closest("button");
-    if (!toggleButton) throw new Error("Toggle button not found");
-    fireEvent.click(toggleButton);
-
-    expect(screen.getByText("Max DD")).toBeDefined();
-    expect(screen.getByText("-12.3%")).toBeDefined();
-    expect(screen.getByText("Vol")).toBeDefined();
-    expect(screen.getByText("18.5%")).toBeDefined();
-    expect(screen.getByText("Trades")).toBeDefined();
-    expect(screen.getByText("142")).toBeDefined();
-  });
-
-  it("hides secondary metrics when toggled back to closed state", () => {
-    render(
-      <BacktestTerminalDisplay
-        {...defaultProps}
-        summary={mockSummary}
-        sortedStrategyIds={["regime_dynamic"]}
-      />
-    );
-
-    const toggleButton = screen.getByText("show_metrics").closest("button");
-    if (!toggleButton) throw new Error("Toggle button not found");
-
-    // Open
-    fireEvent.click(toggleButton);
-    expect(screen.getByText("Max DD")).toBeDefined();
-
-    // Close
-    fireEvent.click(toggleButton);
-    expect(screen.queryByText("Max DD")).toBeNull();
-    expect(screen.getByText("[y/N]")).toBeDefined();
-  });
-
-  it("renders signal provider options correctly", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} />);
-
-    const selects = screen.getAllByRole("combobox");
-    const signalSelect = selects[0] as HTMLSelectElement;
-
-    const options = Array.from(signalSelect.options).map(opt => ({
-      value: opt.value,
-      label: opt.textContent,
-    }));
-
-    expect(options).toEqual([
-      { value: "", label: "None" },
-      { value: "fgi", label: "FGI" },
-    ]);
-  });
-
-  it("renders pacing policy options correctly", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} />);
-
-    const selects = screen.getAllByRole("combobox");
-    const pacingSelect = selects[1] as HTMLSelectElement;
-
-    const options = Array.from(pacingSelect.options).map(opt => ({
-      value: opt.value,
-      label: opt.textContent,
-    }));
-
-    expect(options).toEqual([
-      { value: "fgi_exponential", label: "FGI Exp" },
-      { value: "linear", label: "Linear" },
-    ]);
   });
 });

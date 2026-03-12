@@ -49,6 +49,13 @@ vi.mock("@/services", () => ({
   disconnectTelegram: (...args: unknown[]) => mockDisconnectTelegram(...args),
 }));
 
+vi.mock("@/utils", () => ({
+  getErrorMessage: (err: unknown, fallback: string) => {
+    if (err instanceof Error) return err.message;
+    return fallback;
+  },
+}));
+
 describe("SettingsModal", () => {
   const mockOnClose = vi.fn();
 
@@ -155,5 +162,334 @@ describe("SettingsModal", () => {
     fireEvent.click(footerCloseButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Connect flow", () => {
+    it("opens deep link and shows connecting state on successful connect", async () => {
+      mockGetTelegramStatus.mockResolvedValue({
+        isConnected: false,
+        isEnabled: false,
+        connectedAt: null,
+      });
+      mockRequestTelegramToken.mockResolvedValue({
+        deepLink: "https://t.me/bot?start=abc",
+      });
+      const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Connect/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /Connect/i }));
+
+      await waitFor(() => {
+        expect(openSpy).toHaveBeenCalledWith(
+          "https://t.me/bot?start=abc",
+          "_blank"
+        );
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Waiting for confirmation/i)
+        ).toBeInTheDocument();
+      });
+
+      openSpy.mockRestore();
+    });
+
+    it("shows error state when connect fails", async () => {
+      mockGetTelegramStatus.mockResolvedValue({
+        isConnected: false,
+        isEnabled: false,
+        connectedAt: null,
+      });
+      mockRequestTelegramToken.mockRejectedValue(
+        new Error("Token generation failed")
+      );
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Connect/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /Connect/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Token generation failed")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Disconnect flow", () => {
+    it("disconnects and refetches status on success", async () => {
+      mockGetTelegramStatus
+        .mockResolvedValueOnce({
+          isConnected: true,
+          isEnabled: true,
+          connectedAt: "2026-01-01",
+        })
+        .mockResolvedValueOnce({
+          isConnected: false,
+          isEnabled: false,
+          connectedAt: null,
+        });
+      mockDisconnectTelegram.mockResolvedValue(undefined);
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Disconnect/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /Disconnect/i }));
+
+      await waitFor(() => {
+        expect(mockDisconnectTelegram).toHaveBeenCalledWith("0x123");
+      });
+
+      await waitFor(() => {
+        expect(mockGetTelegramStatus).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it("shows error when disconnect fails", async () => {
+      mockGetTelegramStatus.mockResolvedValue({
+        isConnected: true,
+        isEnabled: true,
+        connectedAt: "2026-01-01",
+      });
+      mockDisconnectTelegram.mockRejectedValue(new Error("Disconnect failed"));
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Disconnect/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /Disconnect/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Disconnect failed")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Error recovery", () => {
+    it("retries fetching status when Retry is clicked", async () => {
+      mockGetTelegramStatus
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce({
+          isConnected: false,
+          isEnabled: false,
+          connectedAt: null,
+        });
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Failed to load Telegram status/i)
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /Retry/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Connect/i })
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("fetchStatus without userId", () => {
+    it("shows no-user message when modal is opened without userId", () => {
+      render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
+      expect(
+        screen.getByText(/connect your wallet first/i)
+      ).toBeInTheDocument();
+      expect(mockGetTelegramStatus).not.toHaveBeenCalled();
+    });
+
+    it("does not call getTelegramStatus when userId is undefined and modal opens", () => {
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId={undefined} />
+      );
+      expect(mockGetTelegramStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Polling", () => {
+    it("stops polling and shows timeout error after MAX_POLL_DURATION_MS", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      mockGetTelegramStatus.mockResolvedValue({
+        isConnected: false,
+        isEnabled: false,
+        connectedAt: null,
+      });
+      mockRequestTelegramToken.mockResolvedValue({
+        deepLink: "https://t.me/bot?start=abc",
+      });
+      vi.spyOn(window, "open").mockImplementation(() => null);
+
+      const { act } = await import("@testing-library/react");
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      // Flush the initial status fetch promise
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(
+        screen.getByRole("button", { name: /Connect/i })
+      ).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /Connect/i }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(screen.getByText(/Waiting for confirmation/i)).toBeInTheDocument();
+
+      // Advance time past MAX_POLL_DURATION_MS (120_000ms)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(123_000);
+      });
+
+      expect(screen.getByText(/Connection timed out/i)).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it("continues polling and recovers after a transient error during polling", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      mockGetTelegramStatus
+        .mockResolvedValueOnce({
+          isConnected: false,
+          isEnabled: false,
+          connectedAt: null,
+        })
+        // First poll interval: transient failure
+        .mockRejectedValueOnce(new Error("Network blip"))
+        // Second poll interval: success — connection established
+        .mockResolvedValue({
+          isConnected: true,
+          isEnabled: true,
+          connectedAt: "2026-01-01",
+        });
+      mockRequestTelegramToken.mockResolvedValue({
+        deepLink: "https://t.me/bot?start=transient",
+      });
+      vi.spyOn(window, "open").mockImplementation(() => null);
+
+      const { act } = await import("@testing-library/react");
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      // Flush the initial status fetch
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // Click connect to start polling
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /Connect/i }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(screen.getByText(/Waiting for confirmation/i)).toBeInTheDocument();
+
+      // Advance through first poll (transient error — should keep polling, not error state)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_100);
+      });
+
+      // Should still show connecting state (error was swallowed)
+      expect(screen.getByText(/Waiting for confirmation/i)).toBeInTheDocument();
+
+      // Advance through second poll (success)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_100);
+      });
+
+      expect(screen.getByText("Connected")).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it("stops polling when connection is confirmed", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      mockGetTelegramStatus
+        .mockResolvedValueOnce({
+          isConnected: false,
+          isEnabled: false,
+          connectedAt: null,
+        })
+        .mockResolvedValue({
+          isConnected: true,
+          isEnabled: true,
+          connectedAt: "2026-01-01",
+        });
+      mockRequestTelegramToken.mockResolvedValue({
+        deepLink: "https://t.me/bot?start=abc",
+      });
+      vi.spyOn(window, "open").mockImplementation(() => null);
+
+      const { act } = await import("@testing-library/react");
+
+      render(
+        <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+      );
+
+      // Flush the initial status fetch promise
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(
+        screen.getByRole("button", { name: /Connect/i })
+      ).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /Connect/i }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // Advance one poll interval (3_000ms) and flush the resulting promise
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_100);
+      });
+
+      expect(screen.getByText("Connected")).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
   });
 });

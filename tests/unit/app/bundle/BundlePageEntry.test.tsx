@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BundlePageClient } from "../../../../src/app/bundle/BundlePageClient";
 import { BundlePageEntry } from "../../../../src/app/bundle/BundlePageEntry";
 import { render, screen } from "../../../test-utils";
 
@@ -16,11 +17,11 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/bundle",
 }));
 
-// Mock BundlePageClient
+// Mock BundlePageClient - captures all props for inspection
 vi.mock("../../../../src/app/bundle/BundlePageClient", () => ({
-  BundlePageClient: vi.fn(({ userId }) => (
-    <div data-testid="bundle-page-client" data-user-id={userId}>
-      BundlePageClient with userId: {userId}
+  BundlePageClient: vi.fn(props => (
+    <div data-testid="bundle-page-client" data-user-id={props.userId}>
+      BundlePageClient with userId: {props.userId}
     </div>
   )),
 }));
@@ -200,6 +201,88 @@ describe("BundlePageEntry", () => {
 
       // Should not crash even with undefined search params
       expect(() => render(<BundlePageEntry />)).not.toThrow();
+    });
+  });
+
+  describe("Optional Parameters", () => {
+    beforeEach(() => {
+      vi.mocked(BundlePageClient).mockClear();
+    });
+
+    it("passes walletId to BundlePageClient when present", () => {
+      mockGet.mockImplementation((key: string) => {
+        const params: Record<string, string> = {
+          userId: "0xUser",
+          walletId: "0xWallet",
+        };
+        return params[key] ?? null;
+      });
+
+      render(<BundlePageEntry />);
+
+      const calledProps = vi.mocked(BundlePageClient).mock.calls[0][0];
+      expect(calledProps).toEqual(
+        expect.objectContaining({ userId: "0xUser", walletId: "0xWallet" })
+      );
+    });
+
+    it("passes etlJobId to BundlePageClient when present", () => {
+      mockGet.mockImplementation((key: string) => {
+        const params: Record<string, string> = {
+          userId: "0xUser",
+          etlJobId: "job-123",
+        };
+        return params[key] ?? null;
+      });
+
+      render(<BundlePageEntry />);
+
+      const calledProps = vi.mocked(BundlePageClient).mock.calls[0][0];
+      expect(calledProps).toEqual(
+        expect.objectContaining({ userId: "0xUser", etlJobId: "job-123" })
+      );
+    });
+
+    it("passes isNewUser=true when searchParam is 'true'", () => {
+      mockGet.mockImplementation((key: string) => {
+        const params: Record<string, string> = {
+          userId: "0xUser",
+          isNewUser: "true",
+        };
+        return params[key] ?? null;
+      });
+
+      render(<BundlePageEntry />);
+
+      const calledProps = vi.mocked(BundlePageClient).mock.calls[0][0];
+      expect(calledProps).toEqual(
+        expect.objectContaining({ userId: "0xUser", isNewUser: true })
+      );
+    });
+
+    it("does not pass walletId when null", () => {
+      mockGet.mockImplementation((key: string) => {
+        if (key === "userId") return "0xUser";
+        return null;
+      });
+
+      render(<BundlePageEntry />);
+
+      const calledProps = vi.mocked(BundlePageClient).mock.calls[0][0];
+      expect(calledProps).not.toHaveProperty("walletId");
+    });
+
+    it("does not pass isNewUser when param is not 'true'", () => {
+      mockGet.mockImplementation((key: string) => {
+        if (key === "userId") return "0xUser";
+        if (key === "isNewUser") return "false";
+        return null;
+      });
+
+      render(<BundlePageEntry />);
+
+      const calledProps = vi.mocked(BundlePageClient).mock.calls[0][0];
+      expect(calledProps).not.toHaveProperty("isNewUser");
     });
   });
 });

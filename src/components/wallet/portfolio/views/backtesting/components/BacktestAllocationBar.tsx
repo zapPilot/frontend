@@ -3,16 +3,16 @@
 import type { ReactElement } from "react";
 
 import {
-  type BacktestConstituentsSource,
-  mapBacktestToUnified,
   UnifiedAllocationBar,
+  type UnifiedSegment,
 } from "@/components/wallet/portfolio/components/allocation";
+import type { BacktestPortfolioAllocation } from "@/types/backtesting";
 
 import { getStrategyColor } from "../utils/strategyDisplay";
 
 export interface BacktestAllocationBarProps {
   displayName: string;
-  constituents: BacktestConstituentsSource;
+  allocation: BacktestPortfolioAllocation;
   strategyId?: string;
   index?: number | undefined;
 }
@@ -25,13 +25,25 @@ export interface BacktestAllocationBarProps {
  */
 export function BacktestAllocationBar({
   displayName,
-  constituents,
+  allocation,
   strategyId,
   index,
 }: BacktestAllocationBarProps): ReactElement | null {
-  const segments = mapBacktestToUnified(constituents);
+  const segments: UnifiedSegment[] = [
+    {
+      category: "btc" as const,
+      label: "SPOT",
+      percentage: allocation.spot * 100,
+      color: "#f59e0b",
+    },
+    {
+      category: "stable" as const,
+      label: "STABLE",
+      percentage: allocation.stable * 100,
+      color: "#10b981",
+    },
+  ].filter(segment => segment.percentage > 0);
 
-  // Don't render if no segments
   if (segments.length === 0) {
     return null;
   }

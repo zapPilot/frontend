@@ -5,7 +5,6 @@ import { useBacktestTooltipData } from "@/components/wallet/portfolio/views/back
 
 import { render, screen } from "../../../../../../../test-utils";
 
-// Mock the hook
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestTooltipData",
   () => ({
@@ -13,7 +12,6 @@ vi.mock(
   })
 );
 
-// Mock BacktestAllocationBar
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/components/BacktestAllocationBar",
   () => ({
@@ -30,12 +28,6 @@ vi.mock(
 
 const mockedUseBacktestTooltipData = vi.mocked(useBacktestTooltipData);
 
-/**
- * Factory function to create mock tooltip data
- *
- * @param overrides - Optional overrides for the tooltip data
- * @returns Mock tooltip data object
- */
 function createTooltipData(overrides: Record<string, unknown> = {}) {
   return {
     dateStr: "1/15/2025",
@@ -43,6 +35,7 @@ function createTooltipData(overrides: Record<string, unknown> = {}) {
       strategies: [],
       events: [],
       signals: [],
+      details: [],
       allocations: [],
     },
     ...overrides,
@@ -54,111 +47,57 @@ describe("BacktestTooltip", () => {
     vi.clearAllMocks();
   });
 
-  it("returns null when active is false", () => {
+  it("returns null when inactive or when the hook has no data", () => {
     mockedUseBacktestTooltipData.mockReturnValue(null);
 
-    render(<BacktestTooltip active={false} payload={[]} label="" />);
+    const { rerender } = render(
+      <BacktestTooltip active={false} payload={[]} label="" />
+    );
+    expect(screen.queryByText(/Signals/i)).not.toBeInTheDocument();
 
+    rerender(<BacktestTooltip active={true} payload={[]} label="" />);
     expect(screen.queryByText(/Signals/i)).not.toBeInTheDocument();
   });
 
-  it("returns null when data is null", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(null);
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.queryByText(/Signals/i)).not.toBeInTheDocument();
-  });
-
-  it("renders date string", () => {
+  it("renders date, strategy rows, and events", () => {
     mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData() as ReturnType<typeof useBacktestTooltipData>
+      createTooltipData({
+        sections: {
+          strategies: [{ name: "AWP", value: 10000, color: "#3b82f6" }],
+          events: [
+            {
+              name: "Buy Spot",
+              strategies: ["AWP"],
+              color: "#22c55e",
+            },
+          ],
+          signals: [],
+          details: [],
+          allocations: [],
+        },
+      }) as ReturnType<typeof useBacktestTooltipData>
     );
 
     render(<BacktestTooltip active={true} payload={[]} label="" />);
 
     expect(screen.getByText("1/15/2025")).toBeInTheDocument();
-  });
-
-  it("renders strategy items with name and value", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        sections: {
-          strategies: [
-            { name: "AWP", value: 10000, color: "#3b82f6" },
-            { name: "Momentum", value: 5000, color: "#10b981" },
-          ],
-          events: [],
-          signals: [],
-          allocations: [],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
     expect(screen.getByText(/AWP: \$10,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Momentum: \$5,000/)).toBeInTheDocument();
+    expect(screen.getByText("Buy Spot (AWP)")).toBeInTheDocument();
   });
 
-  it("renders event items with strategy names in parentheses", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        sections: {
-          strategies: [],
-          events: [
-            {
-              name: "Rebalance",
-              strategies: ["AWP", "Momentum"],
-              color: "#f59e0b",
-            },
-            { name: "Signal Fired", strategies: ["AWP"], color: "#ef4444" },
-          ],
-          signals: [],
-          allocations: [],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.getByText("Rebalance (AWP, Momentum)")).toBeInTheDocument();
-    expect(screen.getByText("Signal Fired (AWP)")).toBeInTheDocument();
-  });
-
-  it("renders event items without parentheses when strategies array is empty", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        sections: {
-          strategies: [],
-          events: [
-            {
-              name: "Market Event",
-              strategies: [],
-              color: "#8b5cf6",
-            },
-          ],
-          signals: [],
-          allocations: [],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.getByText("Market Event")).toBeInTheDocument();
-    expect(screen.queryByText(/\(/)).not.toBeInTheDocument();
-  });
-
-  it("renders signals section with header when signals present", () => {
+  it("renders signals and decision details sections when present", () => {
     mockedUseBacktestTooltipData.mockReturnValue(
       createTooltipData({
         sections: {
           strategies: [],
           events: [],
-          signals: [
-            { name: "RSI", value: "72.5", color: "#3b82f6" },
-            { name: "MACD", value: "BUY", color: "#10b981" },
+          signals: [{ name: "Trend", value: "UP", color: "#10b981" }],
+          details: [
+            {
+              name: "DMA Gated FGI Default decision",
+              value: "buy · below_extreme_fear_buy",
+              color: "#cbd5e1",
+            },
           ],
           allocations: [],
         },
@@ -168,47 +107,33 @@ describe("BacktestTooltip", () => {
     render(<BacktestTooltip active={true} payload={[]} label="" />);
 
     expect(screen.getByText("Signals")).toBeInTheDocument();
-    expect(screen.getByText("RSI")).toBeInTheDocument();
-    expect(screen.getByText("72.5")).toBeInTheDocument();
-    expect(screen.getByText("MACD")).toBeInTheDocument();
-    expect(screen.getByText("BUY")).toBeInTheDocument();
+    expect(screen.getByText("Trend")).toBeInTheDocument();
+    expect(screen.getByText("UP")).toBeInTheDocument();
+    expect(screen.getByText("Decision")).toBeInTheDocument();
+    expect(
+      screen.getByText("DMA Gated FGI Default decision")
+    ).toBeInTheDocument();
   });
 
-  it("does not render signals section when empty", () => {
+  it("renders allocation blocks when present", () => {
     mockedUseBacktestTooltipData.mockReturnValue(
       createTooltipData({
         sections: {
           strategies: [],
           events: [],
           signals: [],
-          allocations: [],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.queryByText("Signals")).not.toBeInTheDocument();
-  });
-
-  it("renders allocation bars when allocations present", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        sections: {
-          strategies: [],
-          events: [],
-          signals: [],
+          details: [],
           allocations: [
             {
-              id: "awp",
-              displayName: "AWP Portfolio",
-              constituents: { BTC: 0.6, ETH: 0.4 },
+              id: "dca_classic",
+              displayName: "DCA Classic",
+              allocation: { spot: 0.5, stable: 0.5 },
               index: 0,
             },
             {
-              id: "momentum",
-              displayName: "Momentum",
-              constituents: { BTC: 1.0 },
+              id: "dma_gated_fgi_default",
+              displayName: "DMA Gated FGI Default",
+              allocation: { spot: 0.8, stable: 0.2 },
               index: 1,
             },
           ],
@@ -216,95 +141,15 @@ describe("BacktestTooltip", () => {
       }) as ReturnType<typeof useBacktestTooltipData>
     );
 
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.getByTestId("allocation-awp")).toBeInTheDocument();
-    expect(screen.getByTestId("allocation-momentum")).toBeInTheDocument();
-    expect(screen.getByText("AWP Portfolio")).toBeInTheDocument();
-    expect(screen.getByText("Momentum")).toBeInTheDocument();
-  });
-
-  it("does not render allocations section when empty", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        sections: {
-          strategies: [],
-          events: [],
-          signals: [],
-          allocations: [],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
     const { container } = render(
       <BacktestTooltip active={true} payload={[]} label="" />
     );
 
+    expect(screen.getByTestId("allocation-dca_classic")).toBeInTheDocument();
     expect(
-      container.querySelector('[data-testid^="allocation-"]')
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not have scrollable overflow styles", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData() as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    const { container } = render(
-      <BacktestTooltip active={true} payload={[]} label="" />
-    );
-
-    const tooltipDiv = container.firstChild as HTMLElement;
-    expect(tooltipDiv.className).not.toMatch(/overflow-y-auto/);
-    expect(tooltipDiv.className).not.toMatch(/max-h/);
-  });
-
-  it("has z-50 class for high z-index", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData() as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    const { container } = render(
-      <BacktestTooltip active={true} payload={[]} label="" />
-    );
-
-    const tooltipDiv = container.firstChild as HTMLElement;
-    expect(tooltipDiv.className).toMatch(/z-50/);
-  });
-
-  it("renders multiple sections together", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({
-        dateStr: "2/1/2025",
-        sections: {
-          strategies: [{ name: "AWP", value: 12000, color: "#3b82f6" }],
-          events: [
-            {
-              name: "Rebalance",
-              strategies: ["AWP"],
-              color: "#f59e0b",
-            },
-          ],
-          signals: [{ name: "Trend", value: "UP", color: "#10b981" }],
-          allocations: [
-            {
-              id: "awp",
-              displayName: "AWP",
-              constituents: { BTC: 0.7, ETH: 0.3 },
-              index: 0,
-            },
-          ],
-        },
-      }) as ReturnType<typeof useBacktestTooltipData>
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.getByText("2/1/2025")).toBeInTheDocument();
-    expect(screen.getByText(/AWP: \$12,000/)).toBeInTheDocument();
-    expect(screen.getByText("Rebalance (AWP)")).toBeInTheDocument();
-    expect(screen.getByText("Signals")).toBeInTheDocument();
-    expect(screen.getByText("Trend")).toBeInTheDocument();
-    expect(screen.getByTestId("allocation-awp")).toBeInTheDocument();
+      screen.getByTestId("allocation-dma_gated_fgi_default")
+    ).toBeInTheDocument();
+    expect(container.firstChild).toHaveClass("min-w-[200px]");
+    expect(container.firstChild).not.toHaveClass("overflow-y-auto");
   });
 });

@@ -165,9 +165,12 @@ pnpm run type-check   # TypeScript type checking
 pnpm test             # Run all Vitest tests
 pnpm run test:unit    # Unit tests only
 pnpm run test:e2e     # Playwright end-to-end tests
-pnpm run test:coverage # Coverage report with thresholds
+pnpm run test:coverage # Coverage report with thresholds (validated on Node 20)
 pnpm run test:safe    # Memory-optimized test runner
 ```
+
+Coverage runs use sequential Vitest batches by default. Set `VITEST_COVERAGE_BATCH_SIZE=<n>` to
+lower the batch size further if a local machine is still memory constrained.
 
 ## Environment Setup
 
@@ -193,8 +196,12 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
    ```bash
    git clone <repository-url>
    cd frontend
+   nvm use
    pnpm install
    ```
+
+   The repo includes `.nvmrc` and CI runs on Node 20. Newer Node majors may work, but coverage and
+   test automation are only validated against Node 20.
 
 2. **Environment Configuration**:
 

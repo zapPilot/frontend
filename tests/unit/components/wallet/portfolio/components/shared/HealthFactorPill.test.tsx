@@ -84,4 +84,72 @@ describe("HealthFactorPill", () => {
     // and has the correct classes/structure implied by the high risk
     expect(screen.getByText("1.05")).toBeInTheDocument();
   });
+
+  it("hides tooltip on mouse leave", async () => {
+    // Use desktop width so hover behavior is active
+    Object.defineProperty(window, "innerWidth", { value: 1024 });
+
+    render(
+      <HealthFactorPill riskMetrics={mockRiskMetrics} isOwnBundle={true} />
+    );
+
+    const pill = screen.getByRole("status");
+    fireEvent.mouseEnter(pill);
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
+
+    fireEvent.mouseLeave(pill);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("toggles tooltip via keyboard Enter key", () => {
+    render(
+      <HealthFactorPill riskMetrics={mockRiskMetrics} isOwnBundle={true} />
+    );
+
+    const pill = screen.getByRole("status");
+
+    // Enter key shows tooltip
+    fireEvent.keyDown(pill, { key: "Enter" });
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    // Enter key hides tooltip
+    fireEvent.keyDown(pill, { key: "Enter" });
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("toggles tooltip via keyboard Space key", () => {
+    render(
+      <HealthFactorPill riskMetrics={mockRiskMetrics} isOwnBundle={true} />
+    );
+
+    const pill = screen.getByRole("status");
+
+    // Space key shows tooltip
+    fireEvent.keyDown(pill, { key: " " });
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+  });
+
+  it("ignores irrelevant keys in keyboard handler", () => {
+    render(
+      <HealthFactorPill riskMetrics={mockRiskMetrics} isOwnBundle={true} />
+    );
+
+    const pill = screen.getByRole("status");
+
+    // Tab key should not show tooltip
+    fireEvent.keyDown(pill, { key: "Tab" });
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("renders with onViewDetails callback", () => {
+    const onViewDetails = vi.fn();
+    render(
+      <HealthFactorPill
+        riskMetrics={mockRiskMetrics}
+        isOwnBundle={true}
+        onViewDetails={onViewDetails}
+      />
+    );
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
 });
