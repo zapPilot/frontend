@@ -21,13 +21,10 @@ import { useDropdownMenu } from "./hooks/useDropdownMenu";
 import { useEmailSubscription } from "./hooks/useEmailSubscription";
 import { useWalletOperations } from "./hooks/useWalletOperations";
 import type { WalletManagerProps } from "./types/wallet.types";
-
-/** Get wallet manager description based on connection and ownership state */
-function getWalletDescription(isConnected: boolean, isOwner: boolean): string {
-  if (!isConnected) return "No wallet connected";
-  if (isOwner) return "Manage your wallet bundle";
-  return "Viewing wallet bundle";
-}
+import {
+  getWalletDescription,
+  getWalletManagerIdentity,
+} from "./walletManagerUtils";
 
 type WalletOperationsState = ReturnType<typeof useWalletOperations>;
 type EmailSubscriptionState = ReturnType<typeof useEmailSubscription>;
@@ -258,30 +255,27 @@ function WalletManagerComponent({
   onEmailSubscribed,
 }: WalletManagerProps): ReactElement | null {
   const { userInfo, loading, error, isConnected, refetch } = useUser();
+  const { realUserId, viewingUserId, isOwnerView } = getWalletManagerIdentity(
+    urlUserId,
+    userInfo?.userId
+  );
 
-  // User identification logic
-  const realUserId = userInfo?.userId; // Authenticated user (for operations)
-  const viewingUserId = urlUserId || realUserId; // Which user's bundle to view
-  const isOwner = realUserId && realUserId === viewingUserId; // Can user edit?
-
-  // Custom hooks
   const walletOperations = useWalletOperations({
-    viewingUserId: viewingUserId || "",
-    realUserId: realUserId || "",
-    isOwner: !!isOwner,
+    viewingUserId,
+    realUserId,
+    isOwner: isOwnerView,
     isOpen,
   });
 
   const emailSubscription = useEmailSubscription({
-    viewingUserId: viewingUserId || "",
-    realUserId: realUserId || "",
+    viewingUserId,
+    realUserId,
     isOpen,
     onEmailSubscribed,
   });
 
   const dropdownMenu = useDropdownMenu();
 
-  // Async retry button for error state
   const { handleRetry, isRetrying } = useAsyncRetryButton({
     onRetry: async () => {
       await refetch();
@@ -317,7 +311,6 @@ function WalletManagerComponent({
 
   if (!isOpen) return null;
 
-  const isOwnerView = Boolean(isOwner);
   const isBusy = isWalletManagerBusy(loading, walletOperations.isRefreshing);
   const showContent = !isBusy && !error;
   const walletSectionProps: WalletManagerSectionProps = {

@@ -1,0 +1,104 @@
+import type { Dispatch, SetStateAction } from "react";
+
+import { getErrorMessage } from "@/utils";
+import { walletLogger } from "@/utils/logger";
+
+export interface SimplifiedWalletAccount {
+  address: string;
+  isConnected: boolean;
+  balance?: string;
+}
+
+export interface SimplifiedChain {
+  id: number;
+  name: string;
+  symbol: string;
+}
+
+export interface WalletError {
+  message: string;
+  code?: string;
+}
+
+interface WalletChainSource {
+  id: number;
+  name?: string;
+  nativeCurrency?: {
+    symbol?: string;
+  };
+}
+
+interface WalletItem {
+  getAccount: () => { address?: string } | undefined | null;
+}
+
+export const getWalletAddress = (walletItem: WalletItem): string =>
+  walletItem.getAccount()?.address ?? "";
+
+export const buildWalletList = (
+  connectedWallets: WalletItem[],
+  activeAddress: string | undefined
+): { address: string; isActive: boolean }[] =>
+  connectedWallets
+    .map(walletItem => {
+      const address = getWalletAddress(walletItem);
+
+      return {
+        address,
+        isActive: address === activeAddress,
+      };
+    })
+    .filter(walletItem => Boolean(walletItem.address));
+
+export const buildWalletAccount = (
+  address: string | undefined,
+  balanceDisplayValue: string | undefined
+): SimplifiedWalletAccount | null => {
+  if (!address) {
+    return null;
+  }
+
+  return {
+    address,
+    isConnected: true,
+    balance: balanceDisplayValue ?? "0",
+  };
+};
+
+export const buildWalletChain = (
+  chain: WalletChainSource | null | undefined
+): SimplifiedChain | null => {
+  if (!chain) {
+    return null;
+  }
+
+  return {
+    id: chain.id,
+    name: chain.name ?? `Chain ${chain.id}`,
+    symbol: chain.nativeCurrency?.symbol ?? "ETH",
+  };
+};
+
+export const createChainSwitchTarget = (chainId: number) => ({
+  id: chainId,
+  name: `Chain ${chainId}`,
+  rpc: `https://rpc-${chainId}.example.com`,
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+});
+
+export const handleWalletOperationError = (
+  setError: Dispatch<SetStateAction<WalletError | null>>,
+  error: unknown,
+  fallbackMessage: string,
+  code: string,
+  logPrefix: string
+): never => {
+  const errorMessage = getErrorMessage(error, fallbackMessage);
+  setError({ message: errorMessage, code });
+  walletLogger.error(logPrefix, error);
+  throw error;
+};

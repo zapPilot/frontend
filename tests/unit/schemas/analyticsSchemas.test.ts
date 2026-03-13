@@ -4,8 +4,10 @@ import { ZodError } from "zod";
 import {
   dailyYieldReturnsResponseSchema,
   landingPageResponseSchema,
+  type PoolPerformanceResponse,
   poolPerformanceResponseSchema,
   protocolYieldBreakdownSchema,
+  type ProtocolYieldToday,
   protocolYieldTodaySchema,
   protocolYieldWindowSchema,
   safeValidateUnifiedDashboardResponse,
@@ -14,9 +16,18 @@ import {
   validatePoolPerformanceResponse,
   validateUnifiedDashboardResponse,
   validateYieldReturnsSummaryResponse,
+  type YieldReturnsSummaryResponse,
   yieldReturnsSummaryResponseSchema,
   yieldWindowSummarySchema,
 } from "@/schemas/api/analyticsSchemas";
+
+const assertAnalyticsSchemaExportTypes = <
+  _TProtocolYieldToday extends ProtocolYieldToday,
+  _TYieldReturnsSummaryResponse extends YieldReturnsSummaryResponse,
+  _TPoolPerformanceResponse extends PoolPerformanceResponse,
+>() => undefined;
+
+assertAnalyticsSchemaExportTypes();
 
 describe("analyticsSchemas", () => {
   describe("protocolYieldWindowSchema", () => {

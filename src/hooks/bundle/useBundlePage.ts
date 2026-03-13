@@ -12,7 +12,28 @@ import {
   getBundleUser,
   isOwnBundle as isBundleOwned,
 } from "@/services/bundleService";
-import { logger } from "@/utils/logger";
+
+import {
+  buildBundlePageUrl,
+  buildUserBundleParams,
+  computeIsDifferentUser,
+  computeRedirectUrl,
+  computeShowEmailBanner,
+  computeShowQuickSwitch,
+  EMPTY_CONNECTED_WALLETS,
+  findWalletByAddress,
+  noopSwitchActiveWallet,
+  performWalletSwitchAndRefresh,
+  shouldAttemptAutoSwitch,
+  shouldRedirectDisconnectedOwner,
+} from "./useBundlePageUtils";
+
+export {
+  computeIsDifferentUser,
+  computeRedirectUrl,
+  computeShowEmailBanner,
+  computeShowQuickSwitch,
+} from "./useBundlePageUtils";
 
 interface UseBundlePageResult {
   isOwnBundle: boolean;
@@ -20,7 +41,6 @@ interface UseBundlePageResult {
   bundleUser: BundleUser | null;
   bundleNotFound: boolean;
   showConnectCTA: boolean;
-  // Header banners
   switchPrompt: {
     show: boolean;
     onStay: () => void;
@@ -31,7 +51,6 @@ interface UseBundlePageResult {
     onSubscribe: () => void;
     onDismiss: () => void;
   };
-  // Footer overlays
   overlays: {
     showQuickSwitch: boolean;
     isWalletManagerOpen: boolean;
@@ -41,175 +60,30 @@ interface UseBundlePageResult {
   };
 }
 
-interface ConnectedWalletItem {
-  address: string;
-  isActive?: boolean;
-}
-
-const EMPTY_WALLETS: ConnectedWalletItem[] = [];
-
-function noopSwitchActiveWallet(): Promise<void> {
-  return Promise.resolve();
-}
-
-async function invalidateWalletSwitchQueries(
-  queryClient: QueryClient
-): Promise<void> {
-  await queryClient.invalidateQueries({
-    queryKey: ["portfolio"],
-  });
-  await queryClient.invalidateQueries({
-    queryKey: ["wallets"],
-  });
-}
-
-function shouldAttemptAutoSwitch(
-  walletId: string | undefined,
-  isConnected: boolean,
-  currentUserId: string | undefined,
-  viewedUserId: string
-): walletId is string {
-  return Boolean(walletId && isConnected && currentUserId === viewedUserId);
-}
-
-function findWalletByAddress(
-  connectedWallets: ConnectedWalletItem[],
-  walletId: string
-): ConnectedWalletItem | undefined {
-  const normalizedWalletId = walletId.toLowerCase();
-  return connectedWallets.find(
-    walletItem => walletItem.address.toLowerCase() === normalizedWalletId
-  );
-}
-
-async function performWalletSwitchAndRefresh(
-  walletId: string,
-  switchActiveWallet: (walletId: string) => Promise<void>,
-  queryClient: QueryClient
-): Promise<void> {
-  try {
-    await switchActiveWallet(walletId);
-    await invalidateWalletSwitchQueries(queryClient);
-    logger.info("Cache invalidated after wallet switch");
-  } catch (err) {
-    logger.error("Failed to auto-switch wallet:", err);
-  }
-}
-
-function buildBundlePageUrl(searchParams: URLSearchParams): string {
-  const queryString = searchParams.toString();
-  if (!queryString) {
-    return "/bundle";
-  }
-
-  return `/bundle?${queryString}`;
-}
-
-function useSafeQueryClient(fallback: QueryClient): QueryClient {
+const useSafeQueryClient = (fallback: QueryClient): QueryClient => {
   try {
     return useQueryClient();
   } catch {
     return fallback;
   }
-}
+};
 
-function useSafeWalletProvider(): ReturnType<typeof useWalletProvider> | null {
+const useSafeWalletProvider = (): ReturnType<
+  typeof useWalletProvider
+> | null => {
   try {
     return useWalletProvider();
   } catch {
     return null;
   }
-}
+};
 
-// Pure helpers extracted for clarity and testability
-
-/**
- * Determines if the connected user is viewing a different user's bundle.
- * Returns false if currentUserId is undefined (e.g., during loading).
- * Callers should combine with loading state check to avoid showing banner prematurely.
- *
- * @param isConnected - Whether a wallet is connected
- * @param currentUserId - The connected user's ID (may be undefined during loading)
- * @param viewedUserId - The bundle owner's user ID from the URL
- * @returns True if user is connected AND has loaded data AND viewing different user's bundle
- */
-export function computeIsDifferentUser(
-  isConnected: boolean,
-  currentUserId: string | undefined,
-  viewedUserId: string
-): boolean {
-  return Boolean(
-    isConnected && currentUserId && currentUserId !== viewedUserId
-  );
-}
-
-export function computeShowQuickSwitch(
-  isConnected: boolean,
-  isOwnBundle: boolean,
-  currentUserId: string | undefined
-): boolean {
-  return Boolean(isConnected && !isOwnBundle && currentUserId);
-}
-
-export function computeShowEmailBanner(
-  isConnected: boolean,
-  isOwnBundle: boolean,
-  email: string | undefined,
-  emailBannerDismissed: boolean
-): boolean {
-  return Boolean(isConnected && isOwnBundle && !email && !emailBannerDismissed);
-}
-
-export function computeRedirectUrl(search: string): string {
-  if (!search) {
-    return "/";
-  }
-
-  if (search.startsWith("?")) {
-    return `/${search}`;
-  }
-
-  return `/?${search}`;
-}
-
-function shouldRedirectDisconnectedOwner(
-  isConnected: boolean,
-  currentUserId: string | undefined,
-  viewedUserId: string
-): boolean {
-  return !isConnected && currentUserId === viewedUserId;
-}
-
-function buildUserBundleParams(userInfo: {
-  userId?: string;
-  etlJobId?: string | null | undefined;
-}): URLSearchParams {
-  const params = new URLSearchParams(window.location.search);
-  if (!userInfo.userId) {
-    return params;
-  }
-
-  params.set("userId", userInfo.userId);
-  if (userInfo.etlJobId) {
-    params.set("etlJobId", userInfo.etlJobId);
-  } else {
-    params.delete("etlJobId");
-  }
-
-  return params;
-}
+const handleStayOnViewedBundle = (): void => {
+  return undefined;
+};
 
 /**
  * Hook for managing bundle page state and visibility logic.
- *
- * @param userId - The bundle owner's user ID from URL
- * @param walletId - Optional wallet ID for auto-switch (V22 Phase 2A)
- * @returns Bundle page state including banner visibility
- *
- * Note: Banner visibility depends on:
- * - User data must be loaded (not in loading state)
- * - User must be connected
- * - Connected user must be different from bundle owner
  */
 export function useBundlePage(
   userId: string,
@@ -220,7 +94,8 @@ export function useBundlePage(
   const queryClient = useSafeQueryClient(fallbackQueryClient);
   const { userInfo, isConnected, connectedWallet, loading } = useUser();
   const walletContext = useSafeWalletProvider();
-  const connectedWallets = walletContext?.connectedWallets ?? EMPTY_WALLETS;
+  const connectedWallets =
+    walletContext?.connectedWallets ?? EMPTY_CONNECTED_WALLETS;
   const switchActiveWallet =
     walletContext?.switchActiveWallet ?? noopSwitchActiveWallet;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
@@ -236,7 +111,6 @@ export function useBundlePage(
     }
 
     const targetWallet = findWalletByAddress(connectedWallets, walletId);
-
     if (!targetWallet || targetWallet.isActive) {
       return;
     }
@@ -247,36 +121,14 @@ export function useBundlePage(
       queryClient
     );
   }, [
-    walletId,
-    isConnected,
-    userInfo,
-    userId,
     connectedWallets,
-    switchActiveWallet,
+    isConnected,
     queryClient,
-  ]);
-
-  const isDifferentUser = computeIsDifferentUser(
-    isConnected,
+    switchActiveWallet,
+    userId,
     userInfo?.userId,
-    userId
-  );
-
-  const showSwitchPrompt = !loading && isDifferentUser;
-
-  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
-  const bundleUrl = generateBundleUrl(userId);
-  const showQuickSwitch = computeShowQuickSwitch(
-    isConnected,
-    isOwnBundle,
-    userInfo?.userId
-  );
-  const showEmailBanner = computeShowEmailBanner(
-    isConnected,
-    isOwnBundle,
-    userInfo?.email,
-    emailBannerDismissed
-  );
+    walletId,
+  ]);
 
   useEffect(() => {
     if (!userId) {
@@ -284,36 +136,28 @@ export function useBundlePage(
       return;
     }
 
-    const user = getBundleUser(userId);
-    setBundleUser(user);
+    setBundleUser(getBundleUser(userId));
     setBundleNotFound(false);
   }, [userId]);
 
   useEffect(() => {
     if (
-      shouldRedirectDisconnectedOwner(isConnected, userInfo?.userId, userId)
+      !shouldRedirectDisconnectedOwner(isConnected, userInfo?.userId, userId)
     ) {
-      const newUrl = computeRedirectUrl(window.location.search);
-      router.replace(newUrl);
+      return;
     }
-  }, [
-    isConnected,
-    userInfo?.userId,
-    userId,
-    connectedWallet, // Track wallet changes for reactivity
-    router,
-  ]);
+
+    router.replace(computeRedirectUrl(window.location.search));
+  }, [connectedWallet, isConnected, router, userId, userInfo?.userId]);
 
   const handleSwitchToMyBundle = useCallback((): void => {
     if (!userInfo?.userId) {
       return;
     }
 
-    const params = buildUserBundleParams(userInfo);
+    const params = buildUserBundleParams(window.location.search, userInfo);
     router.replace(buildBundlePageUrl(params));
   }, [router, userInfo]);
-
-  const handleStayHere = useCallback((): void => undefined, []);
 
   const openWalletManager = useCallback((): void => {
     setIsWalletManagerOpen(true);
@@ -327,24 +171,37 @@ export function useBundlePage(
     setEmailBannerDismissed(true);
   }, []);
 
+  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
+
   return {
     isOwnBundle,
-    bundleUrl,
+    bundleUrl: generateBundleUrl(userId),
     bundleUser,
     bundleNotFound,
     showConnectCTA: !isConnected,
     switchPrompt: {
-      show: showSwitchPrompt,
-      onStay: handleStayHere,
+      show:
+        !loading &&
+        computeIsDifferentUser(isConnected, userInfo?.userId, userId),
+      onStay: handleStayOnViewedBundle,
       onSwitch: handleSwitchToMyBundle,
     },
     emailBanner: {
-      show: showEmailBanner,
+      show: computeShowEmailBanner(
+        isConnected,
+        isOwnBundle,
+        userInfo?.email,
+        emailBannerDismissed
+      ),
       onSubscribe: openWalletManager,
       onDismiss: handleDismissEmailBanner,
     },
     overlays: {
-      showQuickSwitch,
+      showQuickSwitch: computeShowQuickSwitch(
+        isConnected,
+        isOwnBundle,
+        userInfo?.userId
+      ),
       isWalletManagerOpen,
       openWalletManager,
       closeWalletManager,
