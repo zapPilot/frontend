@@ -5,5 +5,5 @@ pnpm run format
 pnpm exec lint-staged
 pnpm run type-check
 pnpm run deadcode:check
-pnpm run dup:all
+pnpm run dup:check
 pnpm run test:safeall

@@ -98,7 +98,6 @@ NEXT_PUBLIC_INTENT_ENGINE_URL=      # Transaction execution API
 
 ```bash
 pnpm run dev              # Start dev server (Turbopack default)
-pnpm run dev:webpack      # Use Webpack if Turbopack issues
 pnpm run lint:fix         # Auto-fix linting issues
 pnpm run format           # Format all files
 ```

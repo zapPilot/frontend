@@ -18,10 +18,13 @@ export {
   calculateDataFreshness,
   type DataFreshness,
   formatAddress,
+  formatChartAxisDate,
   formatChartDate,
   formatCurrency,
+  formatCurrencyAxis,
   formatNumber,
   formatRelativeTime,
+  formatSentiment,
   formatters,
   type FreshnessState,
 } from "./formatters";

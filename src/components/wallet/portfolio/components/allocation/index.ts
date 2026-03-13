@@ -1,10 +1,4 @@
-// Legacy components (will be deprecated after migration)
-export { AllocationBars } from "./AllocationBars";
-export { AllocationBarTooltip } from "./AllocationBarTooltip";
 export { AllocationLegend } from "./AllocationLegend";
-export { TargetAllocationBar } from "./TargetAllocationBar";
-
-// Unified Allocation Bar (new)
 export { UnifiedAllocationBar } from "./UnifiedAllocationBar";
 
 // Type exports

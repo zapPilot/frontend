@@ -16,5 +16,5 @@
 
 - `npm run deadcode:check`
 - `npm run lint`
-- `npm run dup:all`
+- `npm run dup:check`
 - `npm run test:safeall`

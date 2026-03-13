@@ -14,6 +14,11 @@ import {
 } from "recharts";
 
 import { BaseCard } from "@/components/ui/BaseCard";
+import {
+  formatChartAxisDate,
+  formatCurrencyAxis,
+  formatSentiment,
+} from "@/utils";
 
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { CHART_SIGNALS, getPrimaryStrategyId } from "../utils/chartHelpers";
@@ -21,11 +26,6 @@ import {
   getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
-import {
-  formatChartDate,
-  formatCurrencyAxis,
-  formatSentiment,
-} from "./backtestChartFormatters";
 import { BacktestChartLegend } from "./BacktestChartLegend";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
 
@@ -140,7 +140,7 @@ export const BacktestChart = memo(function BacktestChart({
               tick={axisTick("#6b7280")}
               {...AXIS_DEFAULTS}
               minTickGap={30}
-              tickFormatter={formatChartDate}
+              tickFormatter={formatChartAxisDate}
             />
 
             <YAxis

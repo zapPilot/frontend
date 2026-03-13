@@ -85,14 +85,15 @@ vi.mock(
   })
 );
 
-vi.mock(
-  "@/components/wallet/portfolio/views/backtesting/components/backtestChartFormatters",
-  () => ({
-    formatChartDate: (v: string) => v,
+vi.mock("@/utils", async () => {
+  const actual = await vi.importActual("@/utils");
+  return {
+    ...actual,
+    formatChartAxisDate: (v: string) => v,
     formatCurrencyAxis: (v: number) => `$${v}`,
     formatSentiment: (v: number) => `${v}`,
-  })
-);
+  };
+});
 
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay",

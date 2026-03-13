@@ -207,6 +207,46 @@ export function formatChartDate(date: string | Date): string {
 }
 
 // =============================================================================
+// CHART AXIS FORMATTERS (backtest / compact chart tick labels)
+// =============================================================================
+
+/**
+ * Format a date for chart axis ticks (compact: "Mar 26").
+ *
+ * @param value - Date string or timestamp
+ * @returns Formatted date like "Mar 26"
+ */
+export function formatChartAxisDate(value: string | number): string {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    year: "2-digit",
+  });
+}
+
+/**
+ * Format a currency value for Y-axis ticks (compact: "$42k").
+ *
+ * @param value - Dollar amount
+ * @returns Formatted string like "$42k"
+ */
+export function formatCurrencyAxis(value: string | number): string {
+  return `$${(Number(value) / 1000).toFixed(0)}k`;
+}
+
+/**
+ * Format a sentiment score for axis ticks.
+ *
+ * @param value - Sentiment score (0–100)
+ * @returns Label string: "Fear", "Neutral", "Greed", or the numeric value
+ */
+export function formatSentiment(value: number): string {
+  if (value === 0) return "Fear";
+  if (value === 50) return "Neutral";
+  if (value === 100) return "Greed";
+  return String(value);
+}
+
+// =============================================================================
 // DATA FRESHNESS
 // =============================================================================
 

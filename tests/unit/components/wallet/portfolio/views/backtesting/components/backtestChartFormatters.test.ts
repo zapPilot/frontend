@@ -1,38 +1,38 @@
 import {
-  formatChartDate,
+  formatChartAxisDate,
   formatCurrencyAxis,
   formatSentiment,
-} from "@/components/wallet/portfolio/views/backtesting/components/backtestChartFormatters";
+} from "@/utils";
 
-describe("backtestChartFormatters", () => {
-  describe("formatChartDate", () => {
+describe("chart axis formatters", () => {
+  describe("formatChartAxisDate", () => {
     it("should format date string to short month and 2-digit year", () => {
-      const result = formatChartDate("2024-01-15");
+      const result = formatChartAxisDate("2024-01-15");
       expect(result).toMatch(/Jan.*24/);
     });
 
     it("should format timestamp number to short month and 2-digit year", () => {
       const timestamp = new Date("2024-06-15").getTime();
-      const result = formatChartDate(timestamp);
+      const result = formatChartAxisDate(timestamp);
       expect(result).toMatch(/Jun.*24/);
     });
 
     it("should handle epoch timestamp", () => {
-      const result = formatChartDate(0);
+      const result = formatChartAxisDate(0);
       expect(result).toMatch(/Jan|Dec/); // Epoch is either Jan 1970 or Dec 1969 depending on timezone
     });
 
     it("should handle numeric string timestamp", () => {
       const timestamp = new Date("2024-12-31").getTime();
-      const result = formatChartDate(timestamp);
+      const result = formatChartAxisDate(timestamp);
       expect(result).toMatch(/Dec.*24/);
     });
 
     it("should handle various date formats", () => {
-      const isoDate = formatChartDate("2024-03-15T10:30:00Z");
+      const isoDate = formatChartAxisDate("2024-03-15T10:30:00Z");
       expect(isoDate).toMatch(/Mar.*24/);
 
-      const shortDate = formatChartDate("2024-07-04");
+      const shortDate = formatChartAxisDate("2024-07-04");
       expect(shortDate).toMatch(/Jul.*24/);
     });
   });

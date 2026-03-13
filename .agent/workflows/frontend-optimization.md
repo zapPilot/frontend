@@ -32,7 +32,7 @@ _Note: This script runs type-check, deadcode checks, linting, duplication checks
 
 Identify gaps and add tests.
 
-1. Run `npm run test:safe:coverage` to generate the coverage report.
+1. Run `pnpm run test:coverage` to generate the coverage report.
 2. Analyze the report (usually in `coverage/index.html` or output summary).
 3. Create or update unit tests in `tests/unit/` to cover uncovered logic.
 4. Ensure all new tests pass.
