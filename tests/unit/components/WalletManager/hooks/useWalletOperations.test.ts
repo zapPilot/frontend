@@ -79,11 +79,17 @@ describe("useWalletOperations", () => {
     vi.mocked(fetchWallets).mockResolvedValue([]);
   });
 
-  it("initializes with empty state", () => {
+  it("initializes with empty state", async () => {
+    vi.mocked(fetchWallets).mockImplementation(
+      () => new Promise(() => undefined)
+    );
+
     const { result } = renderHook(() => useWalletOperations(defaultParams));
 
+    await waitFor(() => {
+      expect(result.current.isRefreshing).toBe(true);
+    });
     expect(result.current.wallets).toEqual([]);
-    expect(result.current.isRefreshing).toBe(true); // Initially refreshing
     expect(result.current.isAdding).toBe(false);
   });
 
@@ -173,7 +179,9 @@ describe("useWalletOperations", () => {
   });
 
   it("editingWallet state management", () => {
-    const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOpen: false })
+    );
 
     act(() => {
       result.current.setEditingWallet({ id: "w1", label: "Test" });
@@ -478,7 +486,9 @@ describe("useWalletOperations", () => {
     } as any);
     vi.mocked(fetchWallets).mockResolvedValue([]);
 
-    const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOpen: false })
+    );
 
     // Should not throw error and use empty array as default
     expect(result.current).toBeDefined();
@@ -504,7 +514,9 @@ describe("useWalletOperations", () => {
   });
 
   it("setValidationError updates validation error state", () => {
-    const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOpen: false })
+    );
 
     act(() => {
       result.current.setValidationError("Invalid format");
@@ -520,7 +532,9 @@ describe("useWalletOperations", () => {
   });
 
   it("setNewWallet updates new wallet state", () => {
-    const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOpen: false })
+    );
 
     act(() => {
       result.current.setNewWallet({

@@ -10,10 +10,20 @@ import { describe, expect, it } from "vitest";
 
 import { ChartIndicator } from "@/components/charts/ChartIndicator";
 
+function renderChartIndicator(
+  hoveredPoint: Parameters<typeof ChartIndicator>[0]["hoveredPoint"]
+) {
+  return render(
+    <svg>
+      <ChartIndicator hoveredPoint={hoveredPoint} />
+    </svg>
+  );
+}
+
 describe("ChartIndicator", () => {
   it("renders nothing when no hoveredPoint", () => {
-    const { container } = render(<ChartIndicator hoveredPoint={null} />);
-    expect(container).toBeEmptyDOMElement();
+    const { container } = renderChartIndicator(null);
+    expect(container.querySelector("svg")?.childElementCount).toBe(0);
   });
 
   describe("Single Circle Variant (Default)", () => {
@@ -26,7 +36,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       const svgGroup = screen.getByRole("img");
       expect(svgGroup).toBeInTheDocument();
@@ -52,7 +62,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      render(<ChartIndicator hoveredPoint={point} />);
+      renderChartIndicator(point);
 
       const svgGroup = screen.getByRole("img");
       expect(svgGroup).toHaveAttribute(
@@ -72,7 +82,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       // Should have extra pulse circle
       const circles = container.querySelectorAll("circle");
@@ -101,7 +111,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       const circles = container.querySelectorAll("circle");
       // 3 significant assets (>1%) -> 3 circles
@@ -121,7 +131,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       const circles = container.querySelectorAll("circle");
       expect(circles.length).toBe(1);
@@ -140,7 +150,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       // Check for path (flag) and line (pole)
       expect(container.querySelector("path")).toBeInTheDocument();
@@ -164,7 +174,7 @@ describe("ChartIndicator", () => {
         y: 10,
       };
 
-      const { container } = render(<ChartIndicator hoveredPoint={point} />);
+      const { container } = renderChartIndicator(point);
 
       expect(container.querySelector("path")).not.toBeInTheDocument(); // No flag
     });

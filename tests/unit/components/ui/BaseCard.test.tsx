@@ -3,30 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { BaseCard } from "../../../../src/components/ui/BaseCard";
 
-// Mock framer-motion
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: vi.fn(
-      ({
-        children,
-        whileHover,
-        whileTap,
-        initial,
-        animate,
-        transition,
-        ...props
-      }: {
-        children: React.ReactNode;
-        whileHover?: any;
-        whileTap?: any;
-        initial?: any;
-        animate?: any;
-        transition?: any;
-        [key: string]: any;
-      }) => <div {...props}>{children}</div>
-    ),
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 describe("BaseCard", () => {
   describe("Snapshot Tests - UI Design Freeze", () => {

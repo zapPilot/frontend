@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletMenu } from "@/components/wallet/portfolio/components/navigation/WalletMenu";
@@ -23,6 +23,13 @@ function createMockWalletProvider(
 }
 
 let mockWalletProviderState = createMockWalletProvider();
+
+async function flushMenuAction(action: () => void): Promise<void> {
+  await act(async () => {
+    action();
+    await Promise.resolve();
+  });
+}
 
 vi.mock("thirdweb/react", () => ({
   useConnectModal: () => ({
@@ -187,36 +194,39 @@ describe("WalletMenu Component", () => {
       expect(button).toHaveAttribute("aria-expanded", "false");
     });
 
-    it("copies address to clipboard when copy button is clicked", () => {
+    it("copies address to clipboard when copy button is clicked", async () => {
       render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);
       fireEvent.click(screen.getByTestId("unified-wallet-menu-button"));
 
       const copyButton = screen.getByText("Copy");
-      fireEvent.click(copyButton);
+      await flushMenuAction(() => {
+        fireEvent.click(copyButton);
+      });
 
       // Mock clipboard resolves immediately
       expect(mockClipboard.writeText).toHaveBeenCalledWith(mockAddress);
     });
 
-    it("shows 'Copied' feedback immediately after clicking copy", () => {
+    it("shows 'Copied' feedback immediately after clicking copy", async () => {
       render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);
       fireEvent.click(screen.getByTestId("unified-wallet-menu-button"));
 
       const copyButton = screen.getByText("Copy");
-      fireEvent.click(copyButton);
+      await flushMenuAction(() => {
+        fireEvent.click(copyButton);
+      });
 
-      // The "Copied" feedback should appear after clicking
-      // Note: Testing the 2-second revert is complex with fake timers + async state,
-      // so we just verify the copy action triggers the mock
-      expect(mockClipboard.writeText).toHaveBeenCalled();
+      expect(screen.getByText("Copied")).toBeInTheDocument();
     });
 
-    it("calls disconnect when Disconnect button is clicked", () => {
+    it("calls disconnect when Disconnect button is clicked", async () => {
       render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);
       fireEvent.click(screen.getByTestId("unified-wallet-menu-button"));
 
       const disconnectButton = screen.getByText("Disconnect");
-      fireEvent.click(disconnectButton);
+      await flushMenuAction(() => {
+        fireEvent.click(disconnectButton);
+      });
 
       // Mock disconnect resolves immediately
       expect(mockDisconnect).toHaveBeenCalled();

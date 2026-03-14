@@ -3,16 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 
-// Mock framer-motion to avoid animation issues
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, style, ...props }: any) => (
-      <div style={style} {...props}>
-        {children}
-      </div>
-    ),
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock sub-components to verify correct switching
 vi.mock("@/components/charts/tooltipContent", () => ({

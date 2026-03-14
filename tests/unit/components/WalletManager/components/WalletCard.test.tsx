@@ -6,12 +6,12 @@ import { WalletCard } from "@/components/WalletManager/components/WalletCard";
 import type { WalletOperations } from "@/components/WalletManager/types/wallet.types";
 import type { WalletData } from "@/lib/validation/walletUtils";
 
-// Mock framer-motion
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

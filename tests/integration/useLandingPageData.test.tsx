@@ -22,6 +22,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { useLandingPageData } from "../../src/hooks/queries/analytics/usePortfolioQuery";
+import { queryKeys } from "../../src/lib/state/queryClient";
 import type {
   LandingPageResponse,
   PoolDetail,
@@ -548,6 +549,17 @@ describe("useLandingPageData - Edge Cases", () => {
     expect(analyticsService.getLandingPagePortfolioData).not.toHaveBeenCalled();
   });
 
+  it("disables fetching while ETL is in progress", () => {
+    const { QueryWrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useLandingPageData("test-user", true), {
+      wrapper: QueryWrapper,
+    });
+
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(result.current.data).toBeUndefined();
+    expect(analyticsService.getLandingPagePortfolioData).not.toHaveBeenCalled();
+  });
+
   it("handles missing APR data in pools", async () => {
     const mockPools: PoolDetail[] = [
       {
@@ -776,6 +788,34 @@ describe("useLandingPageData - Refetch Behavior", () => {
     await waitFor(() => {
       expect(result.current.data?.pool_details).toHaveLength(3);
     });
+  });
+
+  it("uses the expected query key and refetch interval when enabled", async () => {
+    const mockResponse = createMockLandingPageResponse(2);
+    vi.mocked(analyticsService.getLandingPagePortfolioData).mockResolvedValue(
+      mockResponse
+    );
+
+    const { QueryWrapper, queryClient } = createQueryWrapper();
+
+    renderHook(() => useLandingPageData("test-user"), {
+      wrapper: QueryWrapper,
+    });
+
+    await waitFor(() => {
+      expect(analyticsService.getLandingPagePortfolioData).toHaveBeenCalledWith(
+        "test-user"
+      );
+    });
+
+    const query = queryClient.getQueryCache().find({
+      queryKey: queryKeys.portfolio.landingPage("test-user"),
+    });
+
+    expect(query?.queryKey).toEqual(
+      queryKeys.portfolio.landingPage("test-user")
+    );
+    expect(query?.options.refetchInterval).toBe(5 * 60 * 1000);
   });
 });
 

@@ -1,6 +1,3 @@
-/**
- * Unit tests for useTokenBalanceQuery hook
- */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -8,55 +5,59 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
 
-// Use vi.hoisted to create mocks that are hoisted with vi.mock
 const { mockGetTokenBalance } = vi.hoisted(() => ({
   mockGetTokenBalance: vi.fn(),
 }));
+let mockAccount: { address: string } | undefined;
 
-// Mock WalletProvider
 vi.mock("@/providers/WalletProvider", () => ({
-  useWalletProvider: vi.fn(() => ({
-    account: { address: "0x1234567890abcdef1234567890abcdef12345678" },
-  })),
+  useWalletProvider: () => ({
+    account: mockAccount,
+  }),
 }));
 
-// Mock transactionServiceMock
 vi.mock("@/services", () => ({
   transactionServiceMock: {
     getTokenBalance: mockGetTokenBalance,
   },
 }));
 
-// Create test query wrapper
-function createTestQueryWrapper() {
+const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
     },
   });
-  const TestQueryWrapper = ({ children }: { children: ReactNode }) => (
+
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  TestQueryWrapper.displayName = "TestQueryWrapper";
-  return TestQueryWrapper;
-}
+
+  Wrapper.displayName = "TokenBalanceQueryWrapper";
+
+  return { Wrapper, queryClient };
+};
 
 describe("useTokenBalanceQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAccount = {
+      address: "0x1234567890abcdef1234567890abcdef12345678",
+    };
     mockGetTokenBalance.mockResolvedValue({
       balance: "1000000000000000000",
       usdValue: 2500,
     });
   });
 
-  it("should fetch token balance when chainId and tokenAddress are provided", async () => {
+  it("fetches token balance when chain, token, and account are present", async () => {
     const chainId = 42161;
     const tokenAddress = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
+    const { Wrapper } = createWrapper();
 
     const { result } = renderHook(
       () => useTokenBalanceQuery(chainId, tokenAddress),
-      { wrapper: createTestQueryWrapper() }
+      { wrapper: Wrapper }
     );
 
     await waitFor(() => {
@@ -70,59 +71,120 @@ describe("useTokenBalanceQuery", () => {
     });
   });
 
-  it("should not fetch when chainId is undefined", async () => {
+  it("uses the connected wallet address in the query key", async () => {
+    const chainId = 1;
+    const tokenAddress = "0xtoken";
+    const { Wrapper, queryClient } = createWrapper();
+
+    renderHook(() => useTokenBalanceQuery(chainId, tokenAddress), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      expect(mockGetTokenBalance).toHaveBeenCalledWith(chainId, tokenAddress);
+    });
+
+    const query = queryClient.getQueryCache().find({
+      queryKey: [
+        "token-balance",
+        chainId,
+        tokenAddress,
+        mockAccount?.address ?? "no-account",
+      ],
+    });
+
+    expect(query?.queryKey).toEqual([
+      "token-balance",
+      chainId,
+      tokenAddress,
+      mockAccount?.address ?? "no-account",
+    ]);
+  });
+
+  it("does not fetch when chainId is undefined", () => {
+    const { Wrapper, queryClient } = createWrapper();
+
     const { result } = renderHook(
       () => useTokenBalanceQuery(undefined, "0xtoken"),
-      { wrapper: createTestQueryWrapper() }
+      { wrapper: Wrapper }
     );
 
-    // Query should be disabled
     expect(result.current.fetchStatus).toBe("idle");
     expect(mockGetTokenBalance).not.toHaveBeenCalled();
+    expect(queryClient.getQueryCache().findAll()[0]?.queryKey).toEqual([
+      "token-balance",
+      undefined,
+      "0xtoken",
+      mockAccount?.address ?? "no-account",
+    ]);
   });
 
-  it("should not fetch when tokenAddress is undefined", async () => {
+  it("does not fetch when tokenAddress is undefined", () => {
+    const { Wrapper, queryClient } = createWrapper();
+
     const { result } = renderHook(
       () => useTokenBalanceQuery(42161, undefined),
-      { wrapper: createTestQueryWrapper() }
+      { wrapper: Wrapper }
     );
 
-    // Query should be disabled
     expect(result.current.fetchStatus).toBe("idle");
     expect(mockGetTokenBalance).not.toHaveBeenCalled();
+    expect(queryClient.getQueryCache().findAll()[0]?.queryKey).toEqual([
+      "token-balance",
+      42161,
+      undefined,
+      mockAccount?.address ?? "no-account",
+    ]);
   });
 
-  it("should respect enabled option", async () => {
+  it("does not fetch when the connected account is missing", () => {
+    mockAccount = undefined;
+    const { Wrapper, queryClient } = createWrapper();
+
+    const { result } = renderHook(
+      () => useTokenBalanceQuery(42161, "0xtoken"),
+      { wrapper: Wrapper }
+    );
+
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(mockGetTokenBalance).not.toHaveBeenCalled();
+    expect(queryClient.getQueryCache().findAll()[0]?.queryKey).toEqual([
+      "token-balance",
+      42161,
+      "0xtoken",
+      "no-account",
+    ]);
+  });
+
+  it("respects the enabled option override", () => {
+    const { Wrapper } = createWrapper();
+
     const { result } = renderHook(
       () =>
         useTokenBalanceQuery(42161, "0xtoken", {
           enabled: false,
         }),
-      { wrapper: createTestQueryWrapper() }
+      { wrapper: Wrapper }
     );
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(mockGetTokenBalance).not.toHaveBeenCalled();
   });
 
-  it("should throw error when called without required params in queryFn", async () => {
-    // This tests the error branch inside queryFn
-    // We need to mock the hook to bypass the enabled check
-    mockGetTokenBalance.mockRejectedValue(
-      new Error("Missing chain or token for balance lookup")
-    );
+  it("propagates service errors for valid enabled queries", async () => {
+    const mockError = new Error("Balance lookup failed");
+    mockGetTokenBalance.mockRejectedValue(mockError);
+    const { Wrapper } = createWrapper();
 
     const { result } = renderHook(
       () => useTokenBalanceQuery(42161, "0xtoken"),
-      { wrapper: createTestQueryWrapper() }
+      { wrapper: Wrapper }
     );
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
 
-    expect(result.current.error?.message).toBe(
-      "Missing chain or token for balance lookup"
-    );
+    expect(result.current.error).toBe(mockError);
   });
 });

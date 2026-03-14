@@ -29,61 +29,71 @@ let capturedFgiActiveDot:
 // Mock recharts — jsdom has no SVG layout engine.
 // The mocks capture formatter/activeDot callbacks so tests can invoke them
 // directly to cover those otherwise-unreachable code paths.
-vi.mock("recharts", () => {
+vi.mock("recharts", async () => {
+  const { createRechartsChartContainer, createRechartsMockComponent } =
+    await import("../../../../../../../utils/rechartsMocks");
   const Box = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  const ComposedChart = createRechartsChartContainer();
+  const XAxis = createRechartsMockComponent<{
+    tickFormatter?: (val: string) => string;
+  }>(({ tickFormatter }) => {
+    if (tickFormatter) {
+      capturedXAxisTickFormatter = tickFormatter;
+    }
+
+    return null;
+  });
+  const YAxis = createRechartsMockComponent<{
+    tickFormatter?: (val: number) => string;
+    orientation?: string;
+  }>(({ tickFormatter, orientation }) => {
+    if (tickFormatter && !orientation) {
+      capturedPriceTickFormatter = tickFormatter;
+    }
+
+    return null;
+  });
+  const Tooltip = createRechartsMockComponent<{
+    formatter?: (
+      value: string | number | (string | number)[],
+      name: string | number,
+      props: {
+        payload?: { sentiment_value?: number | null; regime?: string | null };
+      }
+    ) => [string | number, string | number];
+  }>(({ formatter }) => {
+    if (formatter) {
+      capturedTooltipFormatter = formatter;
+    }
+
+    return null;
+  });
+  const Line = createRechartsMockComponent<{
+    activeDot?:
+      | ((props: {
+          cx?: number;
+          cy?: number;
+          payload?: { regime?: string | null };
+        }) => ReactNode)
+      | object;
+  }>(({ activeDot }) => {
+    if (typeof activeDot === "function") {
+      capturedFgiActiveDot = activeDot;
+    }
+
+    return null;
+  });
+
   return {
     ResponsiveContainer: Box,
-    ComposedChart: Box,
-    // Capture tickFormatter from XAxis (snapshot_date axis) and YAxis (price axis)
-    XAxis: ({ tickFormatter }: { tickFormatter?: (val: string) => string }) => {
-      if (tickFormatter) capturedXAxisTickFormatter = tickFormatter;
-      return null;
-    },
-    YAxis: ({
-      tickFormatter,
-      orientation,
-    }: {
-      tickFormatter?: (val: number) => string;
-      orientation?: string;
-    }) => {
-      // The left price axis has no orientation prop (defaults to left); capture its formatter
-      if (tickFormatter && !orientation)
-        capturedPriceTickFormatter = tickFormatter;
-      return null;
-    },
+    ComposedChart,
+    XAxis,
+    YAxis,
     CartesianGrid: () => null,
-    // Capture the tooltip formatter so tests can invoke it directly
-    Tooltip: ({
-      formatter,
-    }: {
-      formatter?: (
-        value: string | number | (string | number)[],
-        name: string | number,
-        props: {
-          payload?: { sentiment_value?: number | null; regime?: string | null };
-        }
-      ) => [string | number, string | number];
-    }) => {
-      if (formatter) capturedTooltipFormatter = formatter;
-      return null;
-    },
+    Tooltip,
     Legend: () => null,
     ReferenceArea: () => null,
-    // Capture activeDot from the FGI line (the one that receives a function, not an object)
-    Line: ({
-      activeDot,
-    }: {
-      activeDot?:
-        | ((props: {
-            cx?: number;
-            cy?: number;
-            payload?: { regime?: string | null };
-          }) => ReactNode)
-        | object;
-    }) => {
-      if (typeof activeDot === "function") capturedFgiActiveDot = activeDot;
-      return null;
-    },
+    Line,
   };
 });
 

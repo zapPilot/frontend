@@ -49,7 +49,7 @@ describe("useTransactionData", () => {
     const { result } = renderHook(
       () =>
         useTransactionData({
-          isOpen: true,
+          isOpen: false,
           chainId: 1,
           tokenAddress: undefined,
           amount: "",

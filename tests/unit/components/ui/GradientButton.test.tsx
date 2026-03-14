@@ -3,36 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { GradientButton } from "../../../../src/components/ui/GradientButton";
 
-// Mock framer-motion
-vi.mock("framer-motion", () => ({
-  motion: {
-    button: vi.fn(
-      ({
-        children,
-        onClick,
-        disabled,
-        whileHover,
-        whileTap,
-        ...props
-      }: {
-        children: React.ReactNode;
-        onClick: () => void;
-        disabled: boolean;
-        whileHover?: any;
-        whileTap?: any;
-        [key: string]: any;
-      }) => (
-        <button
-          onClick={disabled ? undefined : onClick}
-          disabled={disabled}
-          {...props}
-        >
-          {children}
-        </button>
-      )
-    ),
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock React.memo to avoid memoization issues in tests
 vi.mock("react", async () => {

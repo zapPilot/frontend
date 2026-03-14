@@ -5,7 +5,7 @@
  * Tests context provision, ThirdWeb integration, state management, and error handling.
  */
 
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -48,6 +48,23 @@ vi.mock("@/utils/logger", () => ({
 vi.mock("@/utils/thirdweb", () => ({
   default: { clientId: "test-client-id" },
 }));
+
+async function invokeWalletProviderAction<T>(
+  action: () => Promise<T>
+): Promise<{ value: T | undefined; error: unknown }> {
+  let value: T | undefined;
+  let error: unknown;
+
+  await act(async () => {
+    try {
+      value = await action();
+    } catch (caughtError) {
+      error = caughtError;
+    }
+  });
+
+  return { value, error };
+}
 
 describe("WalletProvider", () => {
   // Mock wallet objects
@@ -386,7 +403,7 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await result.current.connect();
+      await invokeWalletProviderAction(() => result.current.connect());
 
       expect(mockConnect).toHaveBeenCalledWith(mockWallet1);
     });
@@ -402,9 +419,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.connect()).rejects.toThrow(
-        "No wallet available"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.connect()
       );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("No wallet available");
 
       await waitFor(() => {
         expect(result.current.error).toEqual({
@@ -425,7 +445,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.connect()).rejects.toThrow("User rejected");
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.connect()
+      );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("User rejected");
 
       await waitFor(() => {
         expect(result.current.error).toEqual({
@@ -450,11 +475,15 @@ describe("WalletProvider", () => {
       });
 
       // First attempt fails
-      await expect(result.current.connect()).rejects.toThrow("First error");
+      const firstAttempt = await invokeWalletProviderAction(() =>
+        result.current.connect()
+      );
+      expect(firstAttempt.error).toBeInstanceOf(Error);
+      expect((firstAttempt.error as Error).message).toBe("First error");
       expect(result.current.error).toBeDefined();
 
       // Second attempt succeeds
-      await result.current.connect();
+      await invokeWalletProviderAction(() => result.current.connect());
       expect(result.current.error).toBeNull();
     });
   });
@@ -471,7 +500,7 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await result.current.disconnect();
+      await invokeWalletProviderAction(() => result.current.disconnect());
 
       expect(mockDisconnect).toHaveBeenCalledWith(mockWallet1);
     });
@@ -489,9 +518,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.disconnect()).rejects.toThrow(
-        "Disconnect failed"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.disconnect()
       );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("Disconnect failed");
 
       await waitFor(() => {
         expect(result.current.error).toEqual({
@@ -512,7 +544,7 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await result.current.disconnect();
+      await invokeWalletProviderAction(() => result.current.disconnect());
 
       expect(mockDisconnect).not.toHaveBeenCalled();
     });
@@ -529,7 +561,7 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await result.current.switchChain(137);
+      await invokeWalletProviderAction(() => result.current.switchChain(137));
 
       expect(mockSwitchChain).toHaveBeenCalledWith({
         id: 137,
@@ -555,9 +587,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.switchChain(137)).rejects.toThrow(
-        "User rejected chain switch"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.switchChain(137)
       );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("User rejected chain switch");
     });
   });
 
@@ -576,12 +611,15 @@ describe("WalletProvider", () => {
         ),
       });
 
-      const signature = await result.current.signMessage("Hello, world!");
+      const { error, value } = await invokeWalletProviderAction(() =>
+        result.current.signMessage("Hello, world!")
+      );
 
       expect(mockSignMessage).toHaveBeenCalledWith({
         message: "Hello, world!",
       });
-      expect(signature).toBe("0xsignature");
+      expect(error).toBeUndefined();
+      expect(value).toBe("0xsignature");
     });
 
     it("should throw error when no account is connected", async () => {
@@ -593,9 +631,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.signMessage("test")).rejects.toThrow(
-        "No account connected"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.signMessage("test")
       );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("No account connected");
     });
 
     it("should throw error on signing failure", async () => {
@@ -614,9 +655,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(result.current.signMessage("test")).rejects.toThrow(
-        "User rejected signing"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.signMessage("test")
       );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("User rejected signing");
     });
   });
 
@@ -632,8 +676,10 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await result.current.switchActiveWallet(
-        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+      await invokeWalletProviderAction(() =>
+        result.current.switchActiveWallet(
+          "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+        )
       );
 
       expect(mockSetActiveWallet).toHaveBeenCalledWith(mockWallet2);
@@ -648,9 +694,12 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(
+      const { error } = await invokeWalletProviderAction(() =>
         result.current.switchActiveWallet("0xnonexistent")
-      ).rejects.toThrow("Wallet 0xnonexistent not found");
+      );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("Wallet 0xnonexistent not found");
 
       await waitFor(() => {
         expect(result.current.error).toEqual({
@@ -673,11 +722,14 @@ describe("WalletProvider", () => {
         ),
       });
 
-      await expect(
+      const { error } = await invokeWalletProviderAction(() =>
         result.current.switchActiveWallet(
           "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
         )
-      ).rejects.toThrow("Switch failed");
+      );
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("Switch failed");
 
       await waitFor(() => {
         expect(result.current.error).toEqual({
@@ -703,13 +755,17 @@ describe("WalletProvider", () => {
       });
 
       // Trigger an error
-      await expect(result.current.connect()).rejects.toThrow(
-        "Connection failed"
+      const { error } = await invokeWalletProviderAction(() =>
+        result.current.connect()
       );
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("Connection failed");
       expect(result.current.error).toBeDefined();
 
       // Clear the error
-      result.current.clearError();
+      act(() => {
+        result.current.clearError();
+      });
 
       await waitFor(() => {
         expect(result.current.error).toBeNull();

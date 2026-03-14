@@ -3,42 +3,29 @@ import { describe, expect, it, vi } from "vitest";
 
 import { StickyBannerShell } from "@/components/layout/banners/StickyBannerShell";
 
-// Mock framer-motion
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: vi.fn(
-      ({
-        children,
-        whileHover,
-        whileTap,
-        initial,
-        animate,
-        transition,
-        ...props
-      }: {
-        children: React.ReactNode;
-        whileHover?: any;
-        whileTap?: any;
-        initial?: any;
-        animate?: any;
-        transition?: any;
-        [key: string]: any;
-      }) => <div {...props}>{children}</div>
-    ),
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock BaseCard used by StickyBannerShell
 vi.mock("@/components/ui", () => ({
   BaseCard: ({
     children,
     className,
-    ...props
+    borderRadius: _borderRadius,
+    padding: _padding,
+    variant: _variant,
   }: {
     children: React.ReactNode;
     className?: string;
+    borderRadius?: string;
+    padding?: string;
+    variant?: string;
   }) => (
-    <div className={className} data-testid="base-card" {...props}>
+    <div className={className} data-testid="base-card">
       {children}
     </div>
   ),

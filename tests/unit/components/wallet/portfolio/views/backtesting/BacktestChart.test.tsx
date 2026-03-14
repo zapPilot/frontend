@@ -17,51 +17,66 @@ import { BacktestChart } from "@/components/wallet/portfolio/views/backtesting/c
 let capturedTooltipContent:
   | ((props: {
       active?: boolean;
-      payload?: any[];
+      payload?: unknown[];
       label?: string;
     }) => ReactNode)
   | null = null;
 let capturedTooltipProps: Record<string, unknown> | null = null;
 
 // Mock recharts — jsdom has no SVG layout engine
-vi.mock("recharts", () => {
+vi.mock("recharts", async () => {
+  const { createRechartsChartContainer, createRechartsMockComponent } =
+    await import("../../../../../../utils/rechartsMocks");
   const Box = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  const ComposedChart = createRechartsChartContainer();
+  const Area = createRechartsMockComponent<{
+    name?: string;
+    dataKey?: string;
+    strokeDasharray?: string;
+  }>(({ name, dataKey, strokeDasharray }) => (
+    <div
+      data-testid={`area-${dataKey}`}
+      data-name={name}
+      data-stroke-dasharray={strokeDasharray || ""}
+    />
+  ));
+  const Line = createRechartsMockComponent<{
+    name?: string;
+    dataKey?: string;
+  }>(({ name, dataKey }) => (
+    <div data-testid={`line-${dataKey}`} data-name={name} />
+  ));
+  const Scatter = createRechartsMockComponent<{
+    name?: string;
+  }>(({ name }) => <div data-testid={`scatter-${name}`} />);
+  const Tooltip = createRechartsMockComponent<{
+    content?: (props: {
+      active?: boolean;
+      payload?: unknown[];
+      label?: string;
+    }) => ReactNode;
+    wrapperStyle?: Record<string, unknown>;
+    allowEscapeViewBox?: Record<string, unknown>;
+  }>(props => {
+    capturedTooltipProps = props;
+
+    if (props.content) {
+      capturedTooltipContent = props.content;
+    }
+
+    return null;
+  });
+
   return {
     ResponsiveContainer: Box,
-    ComposedChart: Box,
-    Area: ({
-      name,
-      dataKey,
-      strokeDasharray,
-    }: {
-      name?: string;
-      dataKey?: string;
-      strokeDasharray?: string;
-    }) => (
-      <div
-        data-testid={`area-${dataKey}`}
-        data-name={name}
-        data-stroke-dasharray={strokeDasharray || ""}
-      />
-    ),
-    Line: ({ name, dataKey }: { name?: string; dataKey?: string }) => (
-      <div data-testid={`line-${dataKey}`} data-name={name} />
-    ),
-    Scatter: ({ name }: { name?: string }) => (
-      <div data-testid={`scatter-${name}`} />
-    ),
+    ComposedChart,
+    Area,
+    Line,
+    Scatter,
     XAxis: () => null,
     YAxis: () => null,
     CartesianGrid: () => null,
-    Tooltip: (props: {
-      content?: any;
-      wrapperStyle?: Record<string, unknown>;
-    }) => {
-      capturedTooltipProps = props;
-      const { content } = props;
-      if (content) capturedTooltipContent = content;
-      return null;
-    },
+    Tooltip,
   };
 });
 

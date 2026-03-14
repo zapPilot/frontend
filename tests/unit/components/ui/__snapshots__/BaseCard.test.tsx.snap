@@ -4,7 +4,6 @@ exports[`BaseCard > Snapshot Tests - UI Design Freeze > should match snapshot wi
 <div
   class="glass-morphism p-4 rounded-3xl border border-gray-800"
   data-testid="card"
-  exit="[object Object]"
 >
   Small padding
 </div>
@@ -14,7 +13,6 @@ exports[`BaseCard > Snapshot Tests - UI Design Freeze > should match snapshot wi
 <div
   class="glass-morphism text-center p-6 rounded-3xl border border-gray-800"
   data-testid="card"
-  exit="[object Object]"
 >
   Empty state content
 </div>
@@ -24,7 +22,6 @@ exports[`BaseCard > Snapshot Tests - UI Design Freeze > should match snapshot wi
 <div
   class="glass-morphism p-6 rounded-3xl border border-gray-800"
   data-testid="card"
-  exit="[object Object]"
 >
   Error content
 </div>
@@ -34,7 +31,6 @@ exports[`BaseCard > Snapshot Tests - UI Design Freeze > should match snapshot wi
 <div
   class="glass-morphism p-6 rounded-3xl border border-gray-800"
   data-testid="card"
-  exit="[object Object]"
 >
   Glass content
 </div>
@@ -44,7 +40,6 @@ exports[`BaseCard > Snapshot Tests - UI Design Freeze > should match snapshot wi
 <div
   class="bg-gray-900/50 p-6 rounded-3xl border border-gray-800"
   data-testid="card"
-  exit="[object Object]"
 >
   Solid content
 </div>

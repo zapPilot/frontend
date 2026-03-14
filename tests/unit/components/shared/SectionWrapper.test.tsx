@@ -4,33 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import type { SectionState } from "@/types/portfolio-progressive";
 
-// Mock framer-motion
-vi.mock("framer-motion", () => ({
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-  motion: {
-    div: vi.fn(
-      ({
-        children,
-        initial,
-        animate,
-        exit,
-        transition,
-        variants,
-        ...props
-      }: {
-        children: React.ReactNode;
-        initial?: any;
-        animate?: any;
-        exit?: any;
-        transition?: any;
-        variants?: any;
-        [key: string]: any;
-      }) => <div {...props}>{children}</div>
-    ),
-  },
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

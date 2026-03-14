@@ -114,22 +114,12 @@ vi.mock("@/providers/ToastProvider", () => ({
   ToastProvider: ({ children }: any) => <>{children}</>,
 }));
 
-// Mock framer-motion to avoid animation issues in tests
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
-        {children}
-      </div>
-    ),
-    button: ({ children, className, ...props }: any) => (
-      <button className={className} {...props}>
-        {children}
-      </button>
-    ),
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}));
+vi.mock("framer-motion", async () => {
+  const { setupFramerMotionMocks } =
+    await import("../../../../utils/framerMotionMocks");
+
+  return setupFramerMotionMocks();
+});
 
 // Mock child components to simplify testing
 vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({

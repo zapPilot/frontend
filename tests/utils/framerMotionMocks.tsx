@@ -3,97 +3,91 @@
  * Strips animation logic while preserving component structure
  */
 
-import type { ComponentProps, ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
+
+type MotionElement = keyof JSX.IntrinsicElements;
+type MotionProps<T extends MotionElement> = JSX.IntrinsicElements[T] & {
+  children?: ReactNode;
+};
+
+const MOTION_PROP_KEYS = new Set([
+  "animate",
+  "custom",
+  "drag",
+  "dragConstraints",
+  "dragElastic",
+  "dragMomentum",
+  "dragTransition",
+  "exit",
+  "initial",
+  "layout",
+  "layoutId",
+  "onAnimationComplete",
+  "onAnimationStart",
+  "onDrag",
+  "onDragEnd",
+  "onDragStart",
+  "onPan",
+  "onPanEnd",
+  "onPanStart",
+  "onUpdate",
+  "onViewportEnter",
+  "onViewportLeave",
+  "transformTemplate",
+  "transition",
+  "variants",
+  "viewport",
+  "whileFocus",
+  "whileHover",
+  "whileInView",
+  "whileTap",
+]);
+
+const stripMotionProps = (
+  props: Record<string, unknown>
+): Record<string, unknown> => {
+  return Object.fromEntries(
+    Object.entries(props).filter(([key]) => !MOTION_PROP_KEYS.has(key))
+  );
+};
 
 /**
- * Type-safe motion component props
+ * Create a motion mock for a specific intrinsic element.
+ *
+ * @param element - The intrinsic element tag to render.
+ * @returns A mock motion component that strips animation-only props.
+ *
+ * @example
+ * const motionDiv = createMockMotionComponent("div");
  */
-type MotionDivProps = ComponentProps<"div"> & {
-  children?: ReactNode;
-  initial?: Record<string, unknown>;
-  animate?: Record<string, unknown>;
-  exit?: Record<string, unknown>;
-  transition?: Record<string, unknown>;
-  whileHover?: Record<string, unknown>;
-  whileTap?: Record<string, unknown>;
-};
+export const createMockMotionComponent = <T extends MotionElement>(
+  element: T
+) => {
+  const MockMotionComponent = ({
+    children,
+    ...props
+  }: MotionProps<T>): ReactNode => {
+    return createElement(
+      element,
+      stripMotionProps(props as Record<string, unknown>),
+      children
+    );
+  };
 
-type MotionLineProps = ComponentProps<"line"> & {
-  initial?: Record<string, unknown>;
-  animate?: Record<string, unknown>;
-  exit?: Record<string, unknown>;
-  transition?: Record<string, unknown>;
-};
+  MockMotionComponent.displayName = `MockMotion${element}`;
 
-type MotionCircleProps = ComponentProps<"circle"> & {
-  initial?: Record<string, unknown>;
-  animate?: Record<string, unknown>;
-  exit?: Record<string, unknown>;
-  transition?: Record<string, unknown>;
-};
-
-type MotionGProps = ComponentProps<"g"> & {
-  children?: ReactNode;
-  initial?: Record<string, unknown>;
-  animate?: Record<string, unknown>;
-  exit?: Record<string, unknown>;
-  transition?: Record<string, unknown>;
+  return MockMotionComponent;
 };
 
 /**
- * Mock Framer Motion components that render as plain DOM elements
- * Strips animation props while preserving all other attributes
+ * Mock Framer Motion components that render as plain DOM elements.
  */
 export const mockFramerMotion = {
-  /**
-   * Mock motion.div component
-   */
-  div: ({
-    children,
-    initial,
-    animate,
-    exit,
-    transition,
-    whileHover,
-    whileTap,
-    ...rest
-  }: MotionDivProps) => {
-    return <div {...rest}>{children}</div>;
-  },
-
-  /**
-   * Mock motion.line component
-   */
-  line: ({ initial, animate, exit, transition, ...rest }: MotionLineProps) => {
-    return <line {...rest} />;
-  },
-
-  /**
-   * Mock motion.circle component
-   */
-  circle: ({
-    initial,
-    animate,
-    exit,
-    transition,
-    ...rest
-  }: MotionCircleProps) => {
-    return <circle {...rest} />;
-  },
-
-  /**
-   * Mock motion.g component
-   */
-  g: ({
-    children,
-    initial,
-    animate,
-    exit,
-    transition,
-    ...rest
-  }: MotionGProps) => {
-    return <g {...rest}>{children}</g>;
-  },
+  button: createMockMotionComponent("button"),
+  circle: createMockMotionComponent("circle"),
+  div: createMockMotionComponent("div"),
+  g: createMockMotionComponent("g"),
+  line: createMockMotionComponent("line"),
 };
 
 /**

@@ -34,55 +34,65 @@ const mockResponse = {
   last_updated: "2025-02-07T12:00:00Z",
 };
 
-function createWrapper() {
+const BORROWING_POSITIONS_CACHE_MS = 12 * 60 * 60 * 1000;
+
+const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  }
-  return Wrapper;
-}
+
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  Wrapper.displayName = "BorrowingPositionsWrapper";
+
+  return { Wrapper, queryClient };
+};
 
 describe("useBorrowingPositions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should be disabled by default when enabled is not passed", () => {
-    const wrapper = createWrapper();
-    renderHook(() => useBorrowingPositions("user-123"), { wrapper });
+  it("is disabled by default when enabled is not passed", () => {
+    const { Wrapper } = createWrapper();
+    renderHook(() => useBorrowingPositions("user-123"), { wrapper: Wrapper });
 
     expect(getBorrowingPositions).not.toHaveBeenCalled();
   });
 
-  it("should be disabled when userId is undefined", () => {
-    const wrapper = createWrapper();
-    renderHook(() => useBorrowingPositions(undefined, true), { wrapper });
+  it("uses the empty query key path when userId is missing", () => {
+    const { Wrapper, queryClient } = createWrapper();
+
+    renderHook(() => useBorrowingPositions(undefined, true), {
+      wrapper: Wrapper,
+    });
 
     expect(getBorrowingPositions).not.toHaveBeenCalled();
+    expect(queryClient.getQueryCache().findAll()[0]?.queryKey).toEqual([]);
   });
 
-  it("should fetch borrowing positions when enabled with valid userId", async () => {
+  it("fetches borrowing positions when enabled with a valid userId", async () => {
     vi.mocked(getBorrowingPositions).mockResolvedValue(mockResponse);
+    const { Wrapper } = createWrapper();
 
-    const wrapper = createWrapper();
-    renderHook(() => useBorrowingPositions("user-123", true), { wrapper });
+    renderHook(() => useBorrowingPositions("user-123", true), {
+      wrapper: Wrapper,
+    });
 
     await waitFor(() => {
       expect(getBorrowingPositions).toHaveBeenCalledWith("user-123");
     });
   });
 
-  it("should return data on success", async () => {
+  it("returns data on success", async () => {
     vi.mocked(getBorrowingPositions).mockResolvedValue(mockResponse);
+    const { Wrapper } = createWrapper();
 
-    const wrapper = createWrapper();
     const { result } = renderHook(
       () => useBorrowingPositions("user-123", true),
-      { wrapper }
+      { wrapper: Wrapper }
     );
 
     await waitFor(() => {
@@ -92,40 +102,57 @@ describe("useBorrowingPositions", () => {
     expect(result.current.data).toEqual(mockResponse);
   });
 
-  it("should log error and rethrow on failure", async () => {
-    const mockError = new Error("API request failed");
-    vi.mocked(getBorrowingPositions).mockRejectedValue(mockError);
+  it("applies the expected cache and retry configuration", async () => {
+    vi.mocked(getBorrowingPositions).mockResolvedValue(mockResponse);
+    const { Wrapper, queryClient } = createWrapper();
 
-    const wrapper = createWrapper();
-    const { result } = renderHook(
-      () => useBorrowingPositions("user-123", true),
-      { wrapper }
-    );
+    renderHook(() => useBorrowingPositions("user-123", true), {
+      wrapper: Wrapper,
+    });
 
-    await waitFor(
-      () => {
-        expect(result.current.isError).toBe(true);
-      },
-      { timeout: 2000 }
-    );
+    await waitFor(() => {
+      expect(getBorrowingPositions).toHaveBeenCalledWith("user-123");
+    });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      "Failed to fetch borrowing positions",
-      expect.objectContaining({
-        error: "API request failed",
-      })
-    );
-    expect(result.current.error).toBeTruthy();
+    const query = queryClient.getQueryCache().find({
+      queryKey: ["portfolio", "borrowing-positions", "user-123"],
+    });
+
+    expect(query?.options.staleTime).toBe(BORROWING_POSITIONS_CACHE_MS);
+    expect(query?.options.gcTime).toBe(BORROWING_POSITIONS_CACHE_MS * 2);
+    expect(query?.options.retry).toBe(1);
   });
 
-  it("should not fetch when enabled transitions from true to false", async () => {
-    vi.mocked(getBorrowingPositions).mockResolvedValue(mockResponse);
+  it("logs the error and rethrows on failure", async () => {
+    const mockError = new Error("API request failed");
+    vi.mocked(getBorrowingPositions).mockRejectedValue(mockError);
+    const { Wrapper } = createWrapper();
 
-    const wrapper = createWrapper();
+    const { result } = renderHook(
+      () => useBorrowingPositions("user-123", true),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => {
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to fetch borrowing positions",
+        expect.objectContaining({
+          error: "API request failed",
+        })
+      );
+    });
+
+    expect(result.current.failureCount).toBeGreaterThan(0);
+  });
+
+  it("does not refetch when enabled transitions from true to false", async () => {
+    vi.mocked(getBorrowingPositions).mockResolvedValue(mockResponse);
+    const { Wrapper } = createWrapper();
+
     const { rerender } = renderHook(
       ({ enabled }) => useBorrowingPositions("user-123", enabled),
       {
-        wrapper,
+        wrapper: Wrapper,
         initialProps: { enabled: true },
       }
     );

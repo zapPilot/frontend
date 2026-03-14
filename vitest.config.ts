@@ -5,17 +5,10 @@ import { defineConfig } from 'vitest/config';
 const enforceCoverageThresholds = process.env['VITEST_ENFORCE_THRESHOLDS'] !== 'false';
 const coverageThresholds = {
   global: {
-    statements: 90,
-    branches: 85,
-    functions: 90,
-    lines: 90,
-  },
-  // Per-file thresholds for critical paths
-  'src/components/wallet/portfolio/modals/ConnectWalletModal.tsx': {
-    branches: 80,
-  },
-  'src/adapters/walletPortfolioDataAdapter.ts': {
-    branches: 80,
+    statements: 95,
+    branches: 95,
+    functions: 95,
+    lines: 95,
   },
 } as const;
 
