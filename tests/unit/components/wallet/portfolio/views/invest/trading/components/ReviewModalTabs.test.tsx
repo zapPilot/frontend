@@ -122,24 +122,16 @@ describe("VariationImpact", () => {
     render(<VariationImpact />);
     expect(screen.getByText("Spot")).toBeInTheDocument();
     expect(screen.getByText("45%")).toBeInTheDocument();
-    expect(screen.getByText("55%")).toBeInTheDocument();
-    expect(screen.getByText("+10%")).toBeInTheDocument();
-  });
-
-  it("renders LP bucket row with correct values", () => {
-    render(<VariationImpact />);
-    expect(screen.getByText("LP")).toBeInTheDocument();
-    expect(screen.getByText("15%")).toBeInTheDocument();
-    expect(screen.getByText("35%")).toBeInTheDocument();
-    expect(screen.getByText("+20%")).toBeInTheDocument();
+    expect(screen.getByText("70%")).toBeInTheDocument();
+    expect(screen.getByText("+25%")).toBeInTheDocument();
   });
 
   it("renders Stable bucket row with correct values", () => {
     render(<VariationImpact />);
     expect(screen.getByText("Stable")).toBeInTheDocument();
-    expect(screen.getByText("40%")).toBeInTheDocument();
-    expect(screen.getByText("10%")).toBeInTheDocument();
-    expect(screen.getByText("-30%")).toBeInTheDocument();
+    expect(screen.getByText("55%")).toBeInTheDocument();
+    expect(screen.getByText("30%")).toBeInTheDocument();
+    expect(screen.getByText("-25%")).toBeInTheDocument();
   });
 
   it("renders pure rebalance summary text", () => {

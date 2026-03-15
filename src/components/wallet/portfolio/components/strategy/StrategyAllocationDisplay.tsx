@@ -1,11 +1,9 @@
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { buildInvestAllocationEntries } from "@/components/wallet/regime/investAllocation";
+import type { RegimeAllocationBreakdown } from "@/types/domain/allocation";
 
 interface StrategyAllocationDisplayProps {
-  targetAllocation: {
-    spot: number;
-    lp: number;
-    stable: number;
-  };
+  targetAllocation: RegimeAllocationBreakdown;
   hideAllocationTarget?: boolean | undefined;
 }
 
@@ -17,10 +15,7 @@ const STYLES = {
 /**
  * StrategyAllocationDisplay - Visualizes target portfolio allocation
  *
- * Displays progress bars for target allocation across:
- * - Spot holdings
- * - LP (Liquidity Provider) positions
- * - Stable coin holdings
+ * Displays progress bars for target allocation across spot and stable buckets.
  *
  * Or shows "Maintain position" message when strategy doesn't change allocation.
  */
@@ -41,25 +36,15 @@ export function StrategyAllocationDisplay({
 
   return (
     <div className={STYLES.allocationContainer}>
-      <ProgressBar
-        label="Target Spot"
-        percentage={targetAllocation.spot}
-        color="purple-500"
-        className="mb-4"
-      />
-
-      <ProgressBar
-        label="Target LP"
-        percentage={targetAllocation.lp}
-        color="blue-500"
-        className="mb-4"
-      />
-
-      <ProgressBar
-        label="Target Stable"
-        percentage={targetAllocation.stable}
-        color="emerald-500"
-      />
+      {buildInvestAllocationEntries(targetAllocation).map((bucket, index) => (
+        <ProgressBar
+          key={bucket.key}
+          label={bucket.progressLabel}
+          percentage={bucket.value}
+          color={bucket.progressColor}
+          className={index < 1 ? "mb-4" : ""}
+        />
+      ))}
     </div>
   );
 }

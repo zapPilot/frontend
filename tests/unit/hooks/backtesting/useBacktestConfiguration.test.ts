@@ -68,7 +68,7 @@ describe("useBacktestConfiguration regressions", () => {
           display_name: "DMA Gated FGI Default",
           description: "Curated DMA-first preset",
           strategy_id: "dma_gated_fgi",
-          params: { signal_id: "dma_gated_fgi" },
+          params: { pacing_k: 5, pacing_r_max: 1 },
           is_benchmark: false,
           is_default: true,
         },

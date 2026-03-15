@@ -1,7 +1,5 @@
 import type { BacktestRequest } from "@/types/backtesting";
 
-import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
-
 type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
 type ValueType = string | number | boolean;
 
@@ -15,23 +13,6 @@ function parseJsonObject(json: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
-}
-
-function findRegimeConfig(
-  configs: Record<string, unknown>[]
-): Record<string, unknown> | undefined {
-  return configs.find(c => c["strategy_id"] !== DCA_CLASSIC_STRATEGY_ID);
-}
-
-function parseConfigsArray(json: string): {
-  parsed: Record<string, unknown>;
-  configs: Record<string, unknown>[];
-} | null {
-  const parsed = parseJsonObject(json);
-  if (!parsed || !Array.isArray(parsed["configs"])) {
-    return null;
-  }
-  return { parsed, configs: parsed["configs"] as Record<string, unknown>[] };
 }
 
 export function patchBacktestConfig(
@@ -119,75 +100,4 @@ export function updateJsonField(
 
   parsed[key] = value;
   return JSON.stringify(parsed, null, 2);
-}
-
-/**
- * Read a param from the first non-DCA config inside the JSON editor value.
- *
- * @param json - Raw JSON string from the editor
- * @param param - Parameter name within the regime config's `params` object
- * @param fallback - Default value when the config or param is missing
- * @returns The string param value or fallback
- *
- * @example
- * ```ts
- * parseRegimeParam(editorValue, "signal_id", "dma_gated_fgi")
- * ```
- */
-export function parseRegimeParam(
-  json: string,
-  param: string,
-  fallback: string
-): string {
-  const result = parseConfigsArray(json);
-  if (!result) return fallback;
-
-  const config = findRegimeConfig(result.configs);
-  const params = config?.["params"] as Record<string, unknown> | undefined;
-  const value = params?.[param];
-  return typeof value === "string" ? value : fallback;
-}
-
-/**
- * Write a param into the first non-DCA config inside the JSON editor value.
- * An empty string removes the key (lets the backend use its default).
- *
- * @param json - Raw JSON string from the editor
- * @param param - Parameter name within the regime config's `params` object
- * @param value - New value; empty string deletes the key
- * @returns Updated JSON string, or the original on parse failure
- *
- * @example
- * ```ts
- * updateRegimeParam(editorValue, "signal_id", "fgi")
- * updateRegimeParam(editorValue, "signal_id", "")  // removes key
- * ```
- */
-export function updateRegimeParam(
-  json: string,
-  param: string,
-  value: string
-): string {
-  const result = parseConfigsArray(json);
-  if (!result) return json;
-
-  const config = findRegimeConfig(result.configs);
-  if (!config) {
-    return json;
-  }
-
-  if (!config["params"]) {
-    config["params"] = {};
-  }
-
-  const params = config["params"] as Record<string, unknown>;
-  if (value) {
-    params[param] = value;
-  } else {
-    config["params"] = Object.fromEntries(
-      Object.entries(params).filter(([key]) => key !== param)
-    );
-  }
-
-  return JSON.stringify(result.parsed, null, 2);
 }

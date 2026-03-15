@@ -17,8 +17,7 @@ import { PortfolioComposition } from "@/components/wallet/portfolio/components/s
 vi.mock("@/components/wallet/regime/regimeData", () => ({
   getRegimeAllocation: vi.fn().mockReturnValue({
     spot: 40,
-    lp: 20,
-    stable: 40,
+    stable: 60,
   }),
 }));
 

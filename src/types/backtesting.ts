@@ -15,14 +15,6 @@ export interface BacktestCompareParamsV3 {
   buy_sideways_window_days?: number;
   buy_sideways_max_range?: number;
   buy_leg_caps?: number[];
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  signal_id?: string;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  signal_params?: Record<string, unknown>;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  pacing_params?: Record<string, unknown>;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  execution_params?: Record<string, unknown>;
 }
 
 export interface BacktestCompareConfigV3 {
@@ -209,12 +201,6 @@ export interface BacktestStrategyCatalogEntryV3 {
   param_schema: Record<string, unknown>;
   default_params: Record<string, unknown>;
   supports_daily_suggestion: boolean;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  id?: BacktestStrategyIdV3;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  hyperparam_schema?: Record<string, unknown>;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  recommended_params?: Record<string, unknown>;
 }
 
 export interface BacktestStrategyCatalogResponseV3 {

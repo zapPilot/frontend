@@ -1,4 +1,5 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import { EMPTY_INVEST_ALLOCATION } from "@/components/wallet/regime/investAllocation";
 import {
   getRegimeAllocation,
   type Regime,
@@ -6,6 +7,7 @@ import {
 } from "@/components/wallet/regime/regimeData";
 import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
+import type { RegimeAllocationBreakdown } from "@/types/domain/allocation";
 import type {
   SectionState,
   SentimentData,
@@ -85,12 +87,11 @@ export function determineActiveDirection(
 export function resolveTargetAllocation(
   activeStrategy: Regime["strategies"][keyof Regime["strategies"]] | undefined,
   displayRegime: Regime | undefined
-): { spot: number; lp: number; stable: number } {
+): RegimeAllocationBreakdown {
   const allocationAfter = activeStrategy?.useCase?.allocationAfter;
   if (allocationAfter) {
     return {
       spot: allocationAfter.spot,
-      lp: allocationAfter.lp,
       stable: allocationAfter.stable,
     };
   }
@@ -99,5 +100,5 @@ export function resolveTargetAllocation(
     return getRegimeAllocation(displayRegime);
   }
 
-  return { spot: 0, lp: 0, stable: 0 };
+  return EMPTY_INVEST_ALLOCATION;
 }

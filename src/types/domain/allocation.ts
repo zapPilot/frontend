@@ -5,7 +5,7 @@
  * Two distinct allocation types exist for different use cases:
  *
  * 1. AllocationBreakdown - Portfolio/transaction operations (crypto/stable)
- * 2. RegimeAllocationBreakdown - Strategy display (spot/lp/stable)
+ * 2. RegimeAllocationBreakdown - Invest strategy display (spot/stable)
  *
  * @see Phase 8 - Type System Consolidation
  */
@@ -43,11 +43,10 @@ export const allocationBreakdownSchema = z.object({
 /**
  * Schema for regime strategy allocations
  * Used in: regime transitions, strategy visualization
- * Split: spot crypto, liquidity pool positions, stablecoins
+ * Split: spot crypto and stablecoins
  */
 export const regimeAllocationBreakdownSchema = z.object({
   spot: z.number().min(0).max(100),
-  lp: z.number().min(0).max(100),
   stable: z.number().min(0).max(100),
 });
 

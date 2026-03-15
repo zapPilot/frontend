@@ -29,8 +29,9 @@ const mockStrategyConfigs = {
       description: "Curated DMA-first preset",
       strategy_id: "dma_gated_fgi" as const,
       params: {
-        signal_id: "dma_gated_fgi",
-        pacing_params: { k: 5, r_max: 1 },
+        cross_cooldown_days: 30,
+        pacing_k: 5,
+        pacing_r_max: 1,
       },
       is_benchmark: false,
       is_default: true,
@@ -51,8 +52,9 @@ const mockCatalog = {
       description: "DMA-first strategy",
       param_schema: {},
       default_params: {
-        signal_id: "fgi",
-        pacing_params: { k: 3, r_max: 1 },
+        cross_cooldown_days: 14,
+        pacing_k: 3,
+        pacing_r_max: 1,
       },
       supports_daily_suggestion: true,
     },
@@ -136,7 +138,7 @@ describe("useBacktestConfiguration", () => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(500);
       expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
-      expect(parsed.configs[1].params.signal_id).toBe("fgi");
+      expect(parsed.configs[1].params.pacing_k).toBe(3);
     });
   });
 
@@ -231,9 +233,9 @@ describe("useBacktestConfiguration", () => {
     });
 
     await waitFor(() => {
-      // catalog fallback was used: signal_id from catalog default_params
+      // catalog fallback was used: default params from the DMA catalog entry
       const parsed = JSON.parse(result.current.editorValue);
-      expect(parsed.configs[1].params.signal_id).toBe("fgi");
+      expect(parsed.configs[1].params.pacing_k).toBe(3);
     });
   });
 
@@ -264,8 +266,9 @@ describe("useBacktestConfiguration", () => {
                 config_id: "dma_gated_fgi_default",
                 strategy_id: "dma_gated_fgi",
                 params: {
-                  signal_id: "dma_gated_fgi",
-                  pacing_params: { k: 5, r_max: 1 },
+                  cross_cooldown_days: 30,
+                  pacing_k: 5,
+                  pacing_r_max: 1,
                 },
               },
             ],
@@ -292,8 +295,9 @@ describe("useBacktestConfiguration", () => {
           config_id: "dma_gated_fgi_default",
           strategy_id: "dma_gated_fgi",
           params: {
-            signal_id: "dma_gated_fgi",
-            pacing_params: { k: 5, r_max: 1 },
+            cross_cooldown_days: 30,
+            pacing_k: 5,
+            pacing_r_max: 1,
           },
         },
       ],
@@ -472,10 +476,10 @@ describe("useBacktestConfiguration", () => {
   });
 
   // -------------------------------------------------------------------------
-  // normalizeParams – all optional fields present (including execution_params)
+  // normalizeParams – supported DMA public params
   // -------------------------------------------------------------------------
 
-  it("includes execution_params when provided in params", () => {
+  it("includes supported DMA public params when provided", () => {
     mockPendingDefaults();
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
@@ -491,10 +495,13 @@ describe("useBacktestConfiguration", () => {
               config_id: "dma_gated_fgi_default",
               strategy_id: "dma_gated_fgi",
               params: {
-                signal_id: "fgi",
-                signal_params: { threshold: 30 },
-                pacing_params: { k: 5, r_max: 1 },
-                execution_params: { slippage: 0.01 },
+                cross_cooldown_days: 21,
+                cross_on_touch: false,
+                pacing_k: 5,
+                pacing_r_max: 1,
+                buy_sideways_window_days: 7,
+                buy_sideways_max_range: 0.08,
+                buy_leg_caps: [0.05, 0.1, 0.2],
               },
             },
           ],
@@ -511,10 +518,13 @@ describe("useBacktestConfiguration", () => {
         configs: [
           expect.objectContaining({
             params: {
-              signal_id: "fgi",
-              signal_params: { threshold: 30 },
-              pacing_params: { k: 5, r_max: 1 },
-              execution_params: { slippage: 0.01 },
+              cross_cooldown_days: 21,
+              cross_on_touch: false,
+              pacing_k: 5,
+              pacing_r_max: 1,
+              buy_sideways_window_days: 7,
+              buy_sideways_max_range: 0.08,
+              buy_leg_caps: [0.05, 0.1, 0.2],
             },
           }),
         ],
@@ -841,7 +851,7 @@ describe("useBacktestConfiguration", () => {
 
     const parsed = JSON.parse(result.current.editorValue);
     // catalog fallback: dma_gated_fgi default_params from mockCatalog
-    expect(parsed.configs[1].params.signal_id).toBe("fgi");
+    expect(parsed.configs[1].params.pacing_k).toBe(3);
     expect(result.current.editorError).toBeNull();
   });
 
@@ -923,10 +933,10 @@ describe("useBacktestConfiguration", () => {
   });
 
   // -------------------------------------------------------------------------
-  // normalizeParams – only signal_params present (other optional fields absent)
+  // normalizeParams – single supported param
   // -------------------------------------------------------------------------
 
-  it("includes only signal_params in params when other optional param fields are absent", () => {
+  it("includes a single supported param when other optional fields are absent", () => {
     mockPendingDefaults();
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
@@ -942,7 +952,7 @@ describe("useBacktestConfiguration", () => {
               config_id: "dma_gated_fgi_default",
               strategy_id: "dma_gated_fgi",
               params: {
-                signal_params: { lookback: 20 },
+                pacing_k: 4,
               },
             },
           ],
@@ -958,7 +968,7 @@ describe("useBacktestConfiguration", () => {
       expect.objectContaining({
         configs: [
           expect.objectContaining({
-            params: { signal_params: { lookback: 20 } },
+            params: { pacing_k: 4 },
           }),
         ],
       })

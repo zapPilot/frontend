@@ -2,45 +2,20 @@
 
 import { ArrowRight } from "lucide-react";
 
+import { buildInvestAllocationComparison } from "@/components/wallet/regime/investAllocation";
+
 // --- Helpers ---
 
 const PORTFOLIO_STATE = {
-  current: { spot: 0.45, lp: 0.15, stable: 0.4 },
-  target: { spot: 0.55, lp: 0.35, stable: 0.1 },
+  current: { spot: 0.45, stable: 0.55 },
+  target: { spot: 0.7, stable: 0.3 },
 } as const;
 
-const SEGMENTS = [
-  {
-    key: "spot" as const,
-    label: "BTC",
-    dotClass: "bg-orange-500",
-    currentClass:
-      "bg-orange-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-orange-500",
-    targetClass:
-      "bg-orange-500 w-full relative group/segment flex items-center justify-center",
-  },
-  {
-    key: "lp" as const,
-    label: "LP",
-    dotClass: "bg-purple-500",
-    currentClass:
-      "bg-purple-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-purple-500",
-    targetClass:
-      "bg-purple-500 w-full relative group/segment flex items-center justify-center",
-  },
-  {
-    key: "stable" as const,
-    label: "Stable",
-    dotClass: "bg-emerald-500",
-    currentClass:
-      "bg-emerald-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-emerald-500",
-    targetClass:
-      "bg-emerald-500 w-full relative group/segment flex items-center justify-center",
-  },
-];
-
 export function ImpactVisual() {
-  const { current, target } = PORTFOLIO_STATE;
+  const rows = buildInvestAllocationComparison(
+    PORTFOLIO_STATE.current,
+    PORTFOLIO_STATE.target
+  );
 
   return (
     <div className="space-y-6">
@@ -50,11 +25,11 @@ export function ImpactVisual() {
         </h4>
         {/* Simple Legend */}
         <div className="flex gap-3 text-[10px] font-medium uppercase tracking-wide">
-          {SEGMENTS.map(seg => (
-            <div key={seg.key} className="flex items-center gap-1.5">
-              <div className={`w-2 h-2 rounded-full ${seg.dotClass}`} />
+          {rows.map(row => (
+            <div key={row.key} className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${row.dotClass}`} />
               <span className="text-gray-600 dark:text-gray-400">
-                {seg.label}
+                {row.label}
               </span>
             </div>
           ))}
@@ -68,11 +43,11 @@ export function ImpactVisual() {
             Current
           </div>
           <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-sm opacity-80 ring-1 ring-black/5 dark:ring-white/10">
-            {SEGMENTS.map(seg => (
+            {rows.map(row => (
               <div
-                key={seg.key}
-                style={{ height: `${current[seg.key] * 100}%` }}
-                className={seg.currentClass}
+                key={row.key}
+                style={{ height: `${row.current * 100}%` }}
+                className={row.currentClass}
               />
             ))}
           </div>
@@ -89,14 +64,14 @@ export function ImpactVisual() {
             Target
           </div>
           <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-lg ring-2 ring-indigo-500/20">
-            {SEGMENTS.map(seg => (
+            {rows.map(row => (
               <div
-                key={seg.key}
-                style={{ height: `${target[seg.key] * 100}%` }}
-                className={seg.targetClass}
+                key={row.key}
+                style={{ height: `${row.target * 100}%` }}
+                className={row.targetClass}
               >
                 <span className="text-[10px] font-bold text-white shadow-sm">
-                  {(target[seg.key] * 100).toFixed(0)}%
+                  {(row.target * 100).toFixed(0)}%
                 </span>
               </div>
             ))}

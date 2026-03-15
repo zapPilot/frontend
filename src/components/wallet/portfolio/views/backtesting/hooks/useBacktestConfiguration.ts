@@ -29,10 +29,6 @@ const backtestParamsSchema = z
     buy_sideways_window_days: z.coerce.number().int().positive().optional(),
     buy_sideways_max_range: z.coerce.number().nonnegative().optional(),
     buy_leg_caps: z.array(z.coerce.number()).optional(),
-    signal_id: z.string().optional(),
-    signal_params: z.record(z.string(), z.unknown()).optional(),
-    pacing_params: z.record(z.string(), z.unknown()).optional(),
-    execution_params: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 

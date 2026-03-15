@@ -51,7 +51,7 @@ describe("buildDefaultPayloadFromPresets", () => {
         config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
         strategy_id: DMA_GATED_FGI_STRATEGY_ID,
         is_default: true,
-        params: { signal_id: "dma_gated_fgi" },
+        params: { pacing_k: 5, pacing_r_max: 1 },
       }),
     ];
 
@@ -69,7 +69,7 @@ describe("buildDefaultPayloadFromPresets", () => {
         {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-          params: { signal_id: "dma_gated_fgi" },
+          params: { pacing_k: 5, pacing_r_max: 1 },
         },
       ],
     });
@@ -115,8 +115,9 @@ describe("buildDefaultPayloadFromCatalog", () => {
           description: "DMA-first strategy",
           param_schema: {},
           default_params: {
-            signal_id: "dma_gated_fgi",
-            pacing_params: { k: 5, r_max: 1 },
+            cross_cooldown_days: 30,
+            pacing_k: 5,
+            pacing_r_max: 1,
           },
           supports_daily_suggestion: true,
         },
@@ -138,8 +139,9 @@ describe("buildDefaultPayloadFromCatalog", () => {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
           params: {
-            signal_id: "dma_gated_fgi",
-            pacing_params: { k: 5, r_max: 1 },
+            cross_cooldown_days: 30,
+            pacing_k: 5,
+            pacing_r_max: 1,
           },
         },
       ],

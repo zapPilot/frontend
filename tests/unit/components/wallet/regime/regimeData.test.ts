@@ -118,9 +118,8 @@ describe("getRegimeAllocation", () => {
     const allocation = getRegimeAllocation(neutralRegime);
 
     expect(allocation).toEqual({
-      spot: 70,
-      lp: 0,
-      stable: 30,
+      spot: 50,
+      stable: 50,
     });
   });
 
@@ -130,9 +129,8 @@ describe("getRegimeAllocation", () => {
 
     expect(allocation).toBeDefined();
     expect(allocation.spot).toBeDefined();
-    expect(allocation.lp).toBeDefined();
     expect(allocation.stable).toBeDefined();
-    expect(allocation.spot + allocation.lp + allocation.stable).toBe(100);
+    expect(allocation.spot + allocation.stable).toBe(100);
   });
 
   it("should throw error when regime has no valid strategy with allocation", () => {
@@ -197,9 +195,21 @@ describe("getRegimeAllocation", () => {
 
       expect(allocation).toBeDefined();
       expect(allocation.spot).toBeGreaterThanOrEqual(0);
-      expect(allocation.lp).toBeGreaterThanOrEqual(0);
       expect(allocation.stable).toBeGreaterThanOrEqual(0);
-      expect(allocation.spot + allocation.lp + allocation.stable).toBe(100);
+      expect(allocation.spot + allocation.stable).toBe(100);
+    }
+  });
+
+  it("should not reference liquidity pools in regime narratives", () => {
+    for (const regime of regimes) {
+      const strategies = Object.values(regime.strategies);
+
+      for (const strategy of strategies) {
+        expect(strategy.useCase?.zapAction ?? "").not.toMatch(
+          /liquidity pool/i
+        );
+        expect(strategy.useCase?.zapAction ?? "").not.toMatch(/\blp\b/i);
+      }
     }
   });
 });

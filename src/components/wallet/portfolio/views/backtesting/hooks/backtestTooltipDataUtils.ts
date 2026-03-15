@@ -4,6 +4,7 @@ import type {
 } from "@/types/backtesting";
 import { formatCurrency } from "@/utils";
 
+import { hasBacktestAllocation } from "../backtestBuckets";
 import { CHART_SIGNALS } from "../utils/chartHelpers";
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
@@ -97,9 +98,6 @@ const getOrderedStrategyIds = (
   return [...sortedExistingIds, ...remainingIds];
 };
 
-const hasAllocationData = (allocation: BacktestPortfolioAllocation): boolean =>
-  allocation.spot > 0 || allocation.stable > 0;
-
 const buildAllocationBlock = (
   strategyId: string,
   strategies: StrategiesRecord | undefined,
@@ -107,7 +105,7 @@ const buildAllocationBlock = (
 ): AllocationBlock | null => {
   const strategy = strategies?.[strategyId];
   const allocation = strategy?.portfolio?.allocation;
-  if (!allocation || !hasAllocationData(allocation)) {
+  if (!allocation || !hasBacktestAllocation(allocation)) {
     return null;
   }
 

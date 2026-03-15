@@ -1,3 +1,4 @@
+import { toInvestCompositionTarget } from "@/components/wallet/regime/investAllocation";
 import {
   getRegimeAllocation,
   type RegimeId,
@@ -30,10 +31,7 @@ export function getTargetAllocation(regimeId: RegimeId): TargetAllocation {
   }
 
   const allocation = getRegimeAllocation(regime);
-  return {
-    crypto: allocation.spot + allocation.lp,
-    stable: allocation.stable,
-  };
+  return toInvestCompositionTarget(allocation);
 }
 
 export interface RegimeStrategyInfo {

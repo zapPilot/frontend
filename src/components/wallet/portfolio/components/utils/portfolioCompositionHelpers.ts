@@ -10,13 +10,13 @@ import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /**
  * Build target crypto assets from regime breakdown for empty state
- * Uses BTC for Spot allocation and ETH for LP allocation
+ * Maps all invest spot exposure to BTC for the empty-state target visual.
  */
 export function buildTargetCryptoAssets(
   regime: Regime
 ): AllocationConstituent[] {
   const breakdown = getRegimeAllocation(regime);
-  const totalCrypto = breakdown.spot + breakdown.lp;
+  const totalCrypto = breakdown.spot;
 
   if (totalCrypto === 0) {
     return [];
@@ -24,27 +24,13 @@ export function buildTargetCryptoAssets(
 
   const assets: AllocationConstituent[] = [];
 
-  // Add Spot (BTC) if present
-  if (breakdown.spot > 0) {
-    assets.push({
-      asset: "BTC",
-      symbol: "BTC",
-      name: "Bitcoin (Spot)",
-      value: (breakdown.spot / totalCrypto) * 100,
-      color: ASSET_COLORS.BTC,
-    });
-  }
-
-  // Add LP (ETH) if present
-  if (breakdown.lp > 0) {
-    assets.push({
-      asset: "ETH",
-      symbol: "ETH",
-      name: "Ethereum (LP)",
-      value: (breakdown.lp / totalCrypto) * 100,
-      color: ASSET_COLORS.ETH,
-    });
-  }
+  assets.push({
+    asset: "BTC",
+    symbol: "BTC",
+    name: "Bitcoin (Spot)",
+    value: (breakdown.spot / totalCrypto) * 100,
+    color: ASSET_COLORS.BTC,
+  });
 
   return assets;
 }

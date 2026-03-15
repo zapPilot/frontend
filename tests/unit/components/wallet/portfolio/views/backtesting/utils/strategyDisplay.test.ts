@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  calculatePercentages,
   getStrategyColor,
   getStrategyDisplayName,
 } from "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay";
@@ -43,53 +42,6 @@ describe("strategyDisplay", () => {
       expect(getStrategyColor("dma_gated_fgi_default")).toBe(
         getStrategyColor("dma_gated_fgi_default")
       );
-    });
-  });
-
-  describe("calculatePercentages", () => {
-    it("handles numeric constituents", () => {
-      const result = calculatePercentages({
-        spot: 500,
-        stable: 300,
-        lp: 200,
-      });
-
-      expect(result.spot).toBeCloseTo(50);
-      expect(result.stable).toBeCloseTo(30);
-      expect(result.lp).toBeCloseTo(20);
-    });
-
-    it("handles record-based spot and lp values", () => {
-      const result = calculatePercentages({
-        spot: { BTC: 300, ETH: 200 },
-        stable: 300,
-        lp: { "BTC-USDC": 150, "ETH-USDC": 50 },
-      });
-
-      expect(result.spot).toBeCloseTo(50);
-      expect(result.stable).toBeCloseTo(30);
-      expect(result.lp).toBeCloseTo(20);
-    });
-
-    it("handles missing lp (undefined)", () => {
-      const result = calculatePercentages({
-        spot: 600,
-        stable: 400,
-      });
-
-      expect(result.spot).toBeCloseTo(60);
-      expect(result.stable).toBeCloseTo(40);
-      expect(result.lp).toBeCloseTo(0);
-    });
-
-    it("returns zeros when the total is zero", () => {
-      expect(
-        calculatePercentages({
-          spot: 0,
-          stable: 0,
-          lp: 0,
-        })
-      ).toEqual({ spot: 0, stable: 0, lp: 0 });
     });
   });
 });

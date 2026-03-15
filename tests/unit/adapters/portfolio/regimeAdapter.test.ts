@@ -21,16 +21,13 @@ vi.mock("@/components/wallet/regime/regimeData", () => ({
     { id: "quad4", name: "Quad 4" },
   ],
   getRegimeAllocation: vi.fn((regime: { id: string }) => {
-    const allocations: Record<
-      string,
-      { spot: number; lp: number; stable: number }
-    > = {
-      quad1: { spot: 60, lp: 10, stable: 30 },
-      quad2: { spot: 40, lp: 10, stable: 50 },
-      quad3: { spot: 20, lp: 10, stable: 70 },
-      quad4: { spot: 30, lp: 10, stable: 60 },
+    const allocations: Record<string, { spot: number; stable: number }> = {
+      quad1: { spot: 70, stable: 30 },
+      quad2: { spot: 50, stable: 50 },
+      quad3: { spot: 30, stable: 70 },
+      quad4: { spot: 45, stable: 55 },
     };
-    return allocations[regime.id] || { spot: 25, lp: 25, stable: 50 };
+    return allocations[regime.id] || { spot: 50, stable: 50 };
   }),
 }));
 
@@ -49,26 +46,26 @@ vi.mock("@/lib/domain/strategySelector", () => ({
 describe("getTargetAllocation", () => {
   it("should return correct allocation for quad1", () => {
     const result = getTargetAllocation("quad1");
-    expect(result.crypto).toBe(70); // spot + lp = 60 + 10
+    expect(result.crypto).toBe(70);
     expect(result.stable).toBe(30);
   });
 
   it("should return correct allocation for quad2", () => {
     const result = getTargetAllocation("quad2");
-    expect(result.crypto).toBe(50); // 40 + 10
+    expect(result.crypto).toBe(50);
     expect(result.stable).toBe(50);
   });
 
   it("should return correct allocation for quad3", () => {
     const result = getTargetAllocation("quad3");
-    expect(result.crypto).toBe(30); // 20 + 10
+    expect(result.crypto).toBe(30);
     expect(result.stable).toBe(70);
   });
 
   it("should return correct allocation for quad4", () => {
     const result = getTargetAllocation("quad4");
-    expect(result.crypto).toBe(40); // 30 + 10
-    expect(result.stable).toBe(60);
+    expect(result.crypto).toBe(45);
+    expect(result.stable).toBe(55);
   });
 
   it("should return neutral allocation (50/50) for unknown regime", () => {

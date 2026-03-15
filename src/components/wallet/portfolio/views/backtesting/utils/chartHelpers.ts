@@ -1,5 +1,9 @@
-import type { BacktestTimelinePoint } from "@/types/backtesting";
+import type {
+  BacktestBucket,
+  BacktestTimelinePoint,
+} from "@/types/backtesting";
 
+import { getBacktestTransferDirection } from "../backtestBuckets";
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
@@ -58,12 +62,17 @@ type BacktestStrategy = NonNullable<
   BacktestTimelinePoint["strategies"][string]
 >;
 
-function classifyTransfer(from: string, to: string): SignalKey | null {
-  if (from === "stable" && to === "spot") {
+function classifyTransfer(
+  from: BacktestBucket,
+  to: BacktestBucket
+): SignalKey | null {
+  const direction = getBacktestTransferDirection(from, to);
+
+  if (direction === "stable_to_spot") {
     return "buy_spot";
   }
 
-  if (from === "spot" && to === "stable") {
+  if (direction === "spot_to_stable") {
     return "sell_spot";
   }
 

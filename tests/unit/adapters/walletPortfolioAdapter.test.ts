@@ -136,9 +136,9 @@ describe("walletPortfolioAdapter", () => {
       // Allocations
       expect(result.currentAllocation.crypto).toBe(80); // (20k + 15k + 5k) / 50k * 100
       expect(result.currentAllocation.stable).toBe(20); // 10k / 50k * 100
-      expect(result.targetAllocation.crypto).toBe(70); // Greed regime target (Balanced LP: 70/30)
-      expect(result.targetAllocation.stable).toBe(30);
-      expect(result.delta).toBe(10); // |80 - 70|
+      expect(result.targetAllocation.crypto).toBe(45); // Greed regime target (Take Profit: 45/55)
+      expect(result.targetAllocation.stable).toBe(55);
+      expect(result.delta).toBe(35); // |80 - 45|
 
       // Portfolio details
       expect(result.positions).toBe(2);
@@ -221,8 +221,8 @@ describe("walletPortfolioAdapter", () => {
       expect(result.sentimentValue).toBe(50);
       expect(result.sentimentStatus).toBe("Neutral");
       expect(result.currentRegime).toBe("n");
-      expect(result.targetAllocation.crypto).toBe(70); // Neutral regime (Heavy Spot: 70/30)
-      expect(result.targetAllocation.stable).toBe(30);
+      expect(result.targetAllocation.crypto).toBe(50); // Neutral regime (Balanced: 50/50)
+      expect(result.targetAllocation.stable).toBe(50);
     });
 
     it("should handle empty portfolio correctly", () => {

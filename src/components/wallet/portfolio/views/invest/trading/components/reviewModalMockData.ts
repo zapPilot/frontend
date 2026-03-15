@@ -1,5 +1,7 @@
 import { Cpu, Globe, ShieldCheck, Zap } from "lucide-react";
 
+import { buildInvestAllocationComparison } from "@/components/wallet/regime/investAllocation";
+
 export const MOCK_STRATEGY = {
   regime: {
     label: "Extreme Fear",
@@ -29,11 +31,14 @@ export const MOCK_STRATEGY = {
   },
 };
 
-export const MOCK_ALLOCATION = [
-  { bucket: "Spot", current: 0.45, target: 0.55 },
-  { bucket: "LP", current: 0.15, target: 0.35 },
-  { bucket: "Stable", current: 0.4, target: 0.1 },
-];
+export const MOCK_ALLOCATION = buildInvestAllocationComparison(
+  { spot: 0.45, stable: 0.55 },
+  { spot: 0.7, stable: 0.3 }
+).map(({ label, current, target }) => ({
+  bucket: label,
+  current,
+  target,
+}));
 
 export const MOCK_ROUTE = [
   {

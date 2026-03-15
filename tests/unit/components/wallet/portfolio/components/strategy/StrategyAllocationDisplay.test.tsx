@@ -6,15 +6,13 @@ import { StrategyAllocationDisplay } from "@/components/wallet/portfolio/compone
 describe("StrategyAllocationDisplay", () => {
   const targetAllocation = {
     spot: 40,
-    lp: 30,
-    stable: 30,
+    stable: 60,
   };
 
-  it("should render all allocation bars", () => {
+  it("should render both allocation bars", () => {
     render(<StrategyAllocationDisplay targetAllocation={targetAllocation} />);
 
     expect(screen.getByText("Target Spot")).toBeInTheDocument();
-    expect(screen.getByText("Target LP")).toBeInTheDocument();
     expect(screen.getByText("Target Stable")).toBeInTheDocument();
   });
 
@@ -22,7 +20,7 @@ describe("StrategyAllocationDisplay", () => {
     render(<StrategyAllocationDisplay targetAllocation={targetAllocation} />);
 
     expect(screen.getByText("40%")).toBeInTheDocument();
-    expect(screen.getAllByText("30%")).toHaveLength(2); // LP and Stable both 30%
+    expect(screen.getByText("60%")).toBeInTheDocument();
   });
 
   it("should render progress bars with correct widths", () => {
@@ -31,12 +29,11 @@ describe("StrategyAllocationDisplay", () => {
     );
 
     const progressBars = container.querySelectorAll(
-      ".bg-purple-500, .bg-blue-500, .bg-emerald-500"
+      ".bg-orange-500, .bg-emerald-500"
     );
 
     expect(progressBars[0]).toHaveStyle({ width: "40%" }); // Spot
-    expect(progressBars[1]).toHaveStyle({ width: "30%" }); // LP
-    expect(progressBars[2]).toHaveStyle({ width: "30%" }); // Stable
+    expect(progressBars[1]).toHaveStyle({ width: "60%" }); // Stable
   });
 
   it("should show maintain position message when hideAllocationTarget is true", () => {
@@ -54,13 +51,12 @@ describe("StrategyAllocationDisplay", () => {
   it("should handle zero allocations", () => {
     const zeroAllocation = {
       spot: 0,
-      lp: 0,
       stable: 100,
     };
 
     render(<StrategyAllocationDisplay targetAllocation={zeroAllocation} />);
 
-    expect(screen.getAllByText("0%")).toHaveLength(2); // Spot and LP both 0%
+    expect(screen.getByText("0%")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
   });
 
@@ -69,8 +65,7 @@ describe("StrategyAllocationDisplay", () => {
       <StrategyAllocationDisplay targetAllocation={targetAllocation} />
     );
 
-    expect(container.querySelector(".bg-purple-500")).toBeInTheDocument(); // Spot
-    expect(container.querySelector(".bg-blue-500")).toBeInTheDocument(); // LP
+    expect(container.querySelector(".bg-orange-500")).toBeInTheDocument(); // Spot
     expect(container.querySelector(".bg-emerald-500")).toBeInTheDocument(); // Stable
   });
 

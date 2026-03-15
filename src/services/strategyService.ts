@@ -61,13 +61,12 @@ export async function getStrategyConfigs(): Promise<StrategyConfigsResponse> {
  * Get daily strategy suggestion for a user's portfolio.
  *
  * Returns regime-aware allocation recommendations based on:
- * - Current portfolio allocation mapped to strategy buckets (spot, lp, stable)
+ * - Current portfolio allocation mapped to strategy buckets (spot, stable)
  * - Market regime history pattern matching
  * - Drift calculation from current to target allocation
  *
  * **Bucket Mapping:**
- * - spot: BTC + ETH + altcoins (excluding LP positions)
- * - lp: Liquidity provider positions (ETH-USDC and BTC-USDC pairs only)
+ * - spot: Non-stable crypto exposure
  * - stable: Stablecoins (USDC, USDT, DAI, etc.)
  *
  * **Note:** This is a read-only suggestion. No transactions are executed.
@@ -87,10 +86,8 @@ export async function getStrategyConfigs(): Promise<StrategyConfigsResponse> {
  *   regime_history_days: 60  // 60 days of history
  * });
  *
- * // Check if rebalancing is recommended
- * if (suggestion.drift.needs_rebalance) {
- *   console.log('Recommended actions:', suggestion.suggested_actions);
- * }
+ * // Inspect the recommended action
+ * console.log(suggestion.decision.action, suggestion.decision.target_allocation);
  * ```
  */
 export async function getDailySuggestion(

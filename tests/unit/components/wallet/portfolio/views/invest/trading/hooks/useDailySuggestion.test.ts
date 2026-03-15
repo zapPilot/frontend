@@ -17,32 +17,65 @@ vi.mock("@/services/strategyService", () => ({
 
 const mockUserId = "user-123";
 const mockSuggestionResponse: DailySuggestionResponse = {
-  user_id: mockUserId,
-  timestamp: "2024-01-15T12:00:00Z",
-  current_allocation: {
-    spot: 0.5,
-    lp: 0.3,
-    stable: 0.2,
+  as_of: "2024-01-15",
+  config_id: "dma_gated_fgi_default",
+  strategy_id: "dma_gated_fgi",
+  market: {
+    date: "2024-01-15",
+    token_price: { btc: 42000 },
+    sentiment: 25,
+    sentiment_label: "fear",
   },
-  target_allocation: {
-    spot: 0.6,
-    lp: 0.2,
-    stable: 0.2,
-  },
-  drift: {
-    needs_rebalance: true,
-    total_drift: 0.15,
-  },
-  suggested_actions: [
-    {
-      action: "increase",
-      bucket: "spot",
-      amount: 0.1,
+  portfolio: {
+    spot_usd: 5000,
+    stable_usd: 5000,
+    total_value: 10000,
+    allocation: {
+      spot: 0.5,
+      stable: 0.5,
     },
-  ],
-  regime_context: {
-    current_regime: "bullish",
-    confidence: 0.85,
+  },
+  signal: {
+    id: "dma_gated_fgi",
+    regime: "fear",
+    raw_value: 25,
+    confidence: 0.8,
+    details: {
+      dma: {
+        dma_200: 41000,
+        distance: 0.024,
+        zone: "above",
+        cross_event: null,
+        cooldown_active: false,
+        cooldown_remaining_days: 0,
+        cooldown_blocked_zone: null,
+        fgi_slope: -1,
+      },
+    },
+  },
+  decision: {
+    action: "buy",
+    reason: "fear_accumulate",
+    rule_group: "dma_fgi",
+    target_allocation: {
+      spot: 0.6,
+      stable: 0.4,
+    },
+    immediate: false,
+  },
+  execution: {
+    event: "rebalance",
+    transfers: [
+      {
+        from_bucket: "stable",
+        to_bucket: "spot",
+        amount_usd: 1000,
+      },
+    ],
+    blocked_reason: null,
+    step_count: 1,
+    steps_remaining: 0,
+    interval_days: 3,
   },
 };
 

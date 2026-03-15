@@ -9,10 +9,10 @@ import type { RegimeAllocationBreakdown } from "@/types/domain/allocation";
  * Internal constant used by regime strategies
  */
 const ALLOCATION_STATES = {
-  HEAVY_STABLE: { spot: 10, lp: 20, stable: 70 },
-  HEAVY_SPOT: { spot: 70, lp: 0, stable: 30 },
-  PROFIT_TAKEN: { spot: 0, lp: 30, stable: 70 },
-  BALANCED_LP: { spot: 60, lp: 10, stable: 30 },
+  DEFENSIVE: { spot: 30, stable: 70 },
+  BALANCED: { spot: 50, stable: 50 },
+  ACCUMULATE: { spot: 70, stable: 30 },
+  TAKE_PROFIT: { spot: 45, stable: 55 },
 } as const satisfies Record<string, RegimeAllocationBreakdown>;
 
 // Internal constant used by regime strategies
@@ -96,11 +96,12 @@ export const regimes: Regime[] = [
         ...PHILOSOPHIES.BUFFETT_FEARFUL,
         useCase: {
           scenario: "Bitcoin drops 33% from recent highs. FGI drops to 15.",
-          userIntent: "I want to DCA into BTC/ETH without timing the bottom.",
+          userIntent:
+            "I want to build spot exposure without trying to call the exact bottom.",
           zapAction:
-            "Aggressively accumulates Bitcoin while prices are low. Shifts capital from stablecoins to crypto over 10 days to capture the bottom.",
-          allocationBefore: ALLOCATION_STATES.HEAVY_STABLE,
-          allocationAfter: ALLOCATION_STATES.HEAVY_SPOT,
+            "Aggressively shifts capital from stable reserves into spot over 10 days while fear is extreme.",
+          allocationBefore: ALLOCATION_STATES.DEFENSIVE,
+          allocationAfter: ALLOCATION_STATES.ACCUMULATE,
         },
       },
     },
@@ -121,11 +122,11 @@ export const regimes: Regime[] = [
         useCase: {
           scenario:
             "Bitcoin stabilizes after bouncing 12% from recent lows. FGI rises to 35.",
-          userIntent: "I want to hold my positions during early recovery.",
+          userIntent: "I want to hold my spot exposure during early recovery.",
           zapAction:
-            "Maintains your position to catch the recovery. Zero rebalancing unless risk spikes.",
-          allocationBefore: ALLOCATION_STATES.HEAVY_SPOT,
-          allocationAfter: ALLOCATION_STATES.HEAVY_SPOT,
+            "Maintains elevated spot exposure while recovery is still fragile. Zero rebalancing unless risk spikes.",
+          allocationBefore: ALLOCATION_STATES.ACCUMULATE,
+          allocationAfter: ALLOCATION_STATES.ACCUMULATE,
           hideAllocationTarget: true,
         },
       },
@@ -133,11 +134,12 @@ export const regimes: Regime[] = [
         ...PHILOSOPHIES.ROTHSCHILD_BLOOD,
         useCase: {
           scenario: "Bitcoin drops 8% from recent peak. FGI falls to 35.",
-          userIntent: "I want to increase spot exposure as market fear grows.",
+          userIntent:
+            "I want to add spot exposure as fear grows, but not in one oversized trade.",
           zapAction:
-            "Gradually shifts heavily into spot Bitcoin. Unwinds Liquidity Pool positions to remove impermanent loss risk.",
-          allocationBefore: ALLOCATION_STATES.PROFIT_TAKEN,
-          allocationAfter: ALLOCATION_STATES.HEAVY_STABLE,
+            "Starts rotating stable reserves back into spot in measured steps as the market gets cheaper.",
+          allocationBefore: ALLOCATION_STATES.TAKE_PROFIT,
+          allocationAfter: ALLOCATION_STATES.BALANCED,
         },
       },
     },
@@ -157,11 +159,12 @@ export const regimes: Regime[] = [
         ...PHILOSOPHIES.LIVERMORE_SITTING,
         useCase: {
           scenario: "FGI hovers between 46-54 for weeks.",
-          userIntent: "I don't want to overtrade or pay fees.",
+          userIntent:
+            "I don't want to overtrade while the market is indecisive.",
           zapAction:
-            "Zero rebalancing. Monitors borrowing rates and auto-repays debt if costs get too high. Enjoy the break.",
-          allocationBefore: ALLOCATION_STATES.HEAVY_SPOT,
-          allocationAfter: ALLOCATION_STATES.HEAVY_SPOT,
+            "Keeps the portfolio near an even split between spot and stable reserves. Zero rebalancing unless drift becomes meaningful.",
+          allocationBefore: ALLOCATION_STATES.BALANCED,
+          allocationAfter: ALLOCATION_STATES.BALANCED,
           hideAllocationTarget: true,
         },
       },
@@ -183,11 +186,11 @@ export const regimes: Regime[] = [
         useCase: {
           scenario: "FGI rises to 65 during a bull run.",
           userIntent:
-            "I want to lock in gains while keeping exposure and earning fees.",
+            "I want to lock in gains without fully exiting the market.",
           zapAction:
-            "Locks in gains by moving spot Bitcoin into yield-bearing Liquidity Pools. Earns fees while the market chops sideways.",
-          allocationBefore: ALLOCATION_STATES.HEAVY_SPOT,
-          allocationAfter: ALLOCATION_STATES.BALANCED_LP,
+            "Gradually trims spot exposure into stable reserves while momentum remains positive.",
+          allocationBefore: ALLOCATION_STATES.ACCUMULATE,
+          allocationAfter: ALLOCATION_STATES.TAKE_PROFIT,
         },
       },
       fromRight: {
@@ -196,9 +199,9 @@ export const regimes: Regime[] = [
           scenario: "Bitcoin corrects 25% from peak. FGI drops to 65.",
           userIntent: "I want to avoid catching falling knives.",
           zapAction:
-            "Sits tight. Your portfolio was already de-risked before the drop.",
-          allocationBefore: ALLOCATION_STATES.PROFIT_TAKEN,
-          allocationAfter: ALLOCATION_STATES.PROFIT_TAKEN,
+            "Sits tight. The portfolio is already partially de-risked, so no extra selling is needed.",
+          allocationBefore: ALLOCATION_STATES.TAKE_PROFIT,
+          allocationAfter: ALLOCATION_STATES.TAKE_PROFIT,
           hideAllocationTarget: true,
         },
       },
@@ -221,9 +224,9 @@ export const regimes: Regime[] = [
           scenario: "Bitcoin rallies 67% from recent lows. FGI hits 92.",
           userIntent: "I want to take profits but keep some exposure.",
           zapAction:
-            "Takes maximum profits. Sells 50% of crypto into stablecoins to lock in generational wealth before the crash.",
-          allocationBefore: ALLOCATION_STATES.BALANCED_LP,
-          allocationAfter: ALLOCATION_STATES.PROFIT_TAKEN,
+            "Takes larger profits by shifting more spot into stable reserves before euphoria unwinds.",
+          allocationBefore: ALLOCATION_STATES.TAKE_PROFIT,
+          allocationAfter: ALLOCATION_STATES.DEFENSIVE,
         },
       },
     },
@@ -266,7 +269,6 @@ export function getRegimeAllocation(regime: Regime) {
   if (target) {
     return {
       spot: target.spot,
-      lp: target.lp,
       stable: target.stable,
     };
   }

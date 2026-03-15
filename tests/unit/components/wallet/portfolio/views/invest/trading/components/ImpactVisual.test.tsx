@@ -17,11 +17,10 @@ describe("ImpactVisual", () => {
     expect(screen.getByText("Allocation Impact")).toBeInTheDocument();
   });
 
-  it("renders three legend items: BTC, LP, Stable", () => {
+  it("renders two legend items: Spot and Stable", () => {
     render(<ImpactVisual />);
 
-    expect(screen.getByText("BTC")).toBeInTheDocument();
-    expect(screen.getByText("LP")).toBeInTheDocument();
+    expect(screen.getByText("Spot")).toBeInTheDocument();
     expect(screen.getByText("Stable")).toBeInTheDocument();
   });
 
@@ -32,13 +31,11 @@ describe("ImpactVisual", () => {
     expect(screen.getByText("Target")).toBeInTheDocument();
   });
 
-  it("renders target percentages (55%, 35%, 10%)", () => {
+  it("renders target percentages (70%, 30%)", () => {
     render(<ImpactVisual />);
 
-    // Target percentages for spot, lp, and stable
-    expect(screen.getByText("55%")).toBeInTheDocument();
-    expect(screen.getByText("35%")).toBeInTheDocument();
-    expect(screen.getByText("10%")).toBeInTheDocument();
+    expect(screen.getByText("70%")).toBeInTheDocument();
+    expect(screen.getByText("30%")).toBeInTheDocument();
   });
 
   it("renders ArrowRight connector", () => {

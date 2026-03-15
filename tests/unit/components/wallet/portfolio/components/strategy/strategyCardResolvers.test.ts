@@ -264,27 +264,27 @@ describe("strategyCardResolvers", () => {
           scenario: "Test scenario",
           userIntent: "Test intent",
           zapAction: "Test action",
-          allocationBefore: { spot: 10, lp: 20, stable: 70 },
-          allocationAfter: { spot: 70, lp: 0, stable: 30 },
+          allocationBefore: { spot: 30, stable: 70 },
+          allocationAfter: { spot: 70, stable: 30 },
         },
       };
 
       const result = resolveTargetAllocation(activeStrategy, undefined);
-      expect(result).toEqual({ spot: 70, lp: 0, stable: 30 });
+      expect(result).toEqual({ spot: 70, stable: 30 });
     });
 
     it("calls getRegimeAllocation when activeStrategy is undefined and displayRegime exists", () => {
       const displayRegime = regimes[0];
-      mockGetRegimeAllocation.mockReturnValue({ spot: 60, lp: 10, stable: 30 });
+      mockGetRegimeAllocation.mockReturnValue({ spot: 60, stable: 40 });
 
       const result = resolveTargetAllocation(undefined, displayRegime);
       expect(mockGetRegimeAllocation).toHaveBeenCalledWith(displayRegime);
-      expect(result).toEqual({ spot: 60, lp: 10, stable: 30 });
+      expect(result).toEqual({ spot: 60, stable: 40 });
     });
 
     it("returns zero allocation when both activeStrategy and displayRegime are undefined", () => {
       const result = resolveTargetAllocation(undefined, undefined);
-      expect(result).toEqual({ spot: 0, lp: 0, stable: 0 });
+      expect(result).toEqual({ spot: 0, stable: 0 });
     });
 
     it("returns zero allocation when activeStrategy has no useCase", () => {
@@ -293,12 +293,12 @@ describe("strategyCardResolvers", () => {
         author: "Test author",
       };
 
-      mockGetRegimeAllocation.mockReturnValue({ spot: 50, lp: 25, stable: 25 });
+      mockGetRegimeAllocation.mockReturnValue({ spot: 50, stable: 50 });
       const displayRegime = regimes[0];
 
       const result = resolveTargetAllocation(activeStrategy, displayRegime);
       expect(mockGetRegimeAllocation).toHaveBeenCalledWith(displayRegime);
-      expect(result).toEqual({ spot: 50, lp: 25, stable: 25 });
+      expect(result).toEqual({ spot: 50, stable: 50 });
     });
 
     it("returns zero allocation when activeStrategy.useCase has no allocationAfter and no displayRegime", () => {
@@ -309,13 +309,13 @@ describe("strategyCardResolvers", () => {
           scenario: "Test scenario",
           userIntent: "Test intent",
           zapAction: "Test action",
-          allocationBefore: { spot: 10, lp: 20, stable: 70 },
-          allocationAfter: { spot: 0, lp: 0, stable: 0 },
+          allocationBefore: { spot: 30, stable: 70 },
+          allocationAfter: { spot: 0, stable: 0 },
         },
       };
 
       const result = resolveTargetAllocation(activeStrategy, undefined);
-      expect(result).toEqual({ spot: 0, lp: 0, stable: 0 });
+      expect(result).toEqual({ spot: 0, stable: 0 });
     });
   });
 });

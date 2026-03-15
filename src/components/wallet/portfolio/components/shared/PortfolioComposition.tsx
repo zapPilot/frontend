@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { type WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
+import { toInvestCompositionTarget } from "@/components/wallet/regime/investAllocation";
 import {
   getRegimeAllocation,
   type Regime,
@@ -92,10 +93,7 @@ function resolveTargetAllocation(
   }
 
   const breakdown = getRegimeAllocation(currentRegime);
-  return {
-    crypto: breakdown.spot + breakdown.lp,
-    stable: breakdown.stable,
-  };
+  return toInvestCompositionTarget(breakdown);
 }
 
 function resolveCurrentSegments(

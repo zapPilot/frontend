@@ -1,10 +1,10 @@
+import { isBacktestTransfer } from "@/components/wallet/portfolio/views/backtesting/backtestBuckets";
 import { DCA_CLASSIC_STRATEGY_ID } from "@/components/wallet/portfolio/views/backtesting/constants";
 import type {
   BacktestTimelinePoint,
   BacktestTransferMetadata,
 } from "@/types/backtesting";
 
-const VALID_BUCKETS = new Set(["spot", "stable"]);
 const EVENT_PADDING = 20;
 
 /**
@@ -20,16 +20,7 @@ export const MIN_CHART_POINTS = 90;
 export const MAX_CHART_POINTS = 150;
 
 function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
-  if (!t || typeof t !== "object") {
-    return false;
-  }
-
-  const transfer = t as Partial<BacktestTransferMetadata>;
-  return (
-    VALID_BUCKETS.has(transfer.from_bucket ?? "") &&
-    VALID_BUCKETS.has(transfer.to_bucket ?? "") &&
-    typeof transfer.amount_usd === "number"
-  );
+  return isBacktestTransfer(t);
 }
 
 function extractTransfers(
