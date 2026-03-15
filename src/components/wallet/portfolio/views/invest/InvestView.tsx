@@ -3,6 +3,7 @@
 import { type JSX, useState } from "react";
 
 import { BacktestingView } from "../BacktestingView";
+import { ConfigManagerView } from "./configManager";
 import { MarketDashboardView } from "./market/MarketDashboardView";
 import { TradingView } from "./trading/TradingView";
 
@@ -14,6 +15,7 @@ const SUB_TABS = [
   { id: "trading", label: "trading" },
   { id: "backtesting", label: "backtesting" },
   { id: "market", label: "market data" },
+  { id: "config-manager", label: "config manager" },
 ] as const;
 
 type SubTab = (typeof SUB_TABS)[number]["id"];
@@ -34,6 +36,8 @@ function renderActiveSubTab(
       return <BacktestingView />;
     case "market":
       return <MarketDashboardView />;
+    case "config-manager":
+      return <ConfigManagerView />;
   }
 }
 

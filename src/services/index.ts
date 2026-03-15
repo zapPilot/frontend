@@ -79,6 +79,15 @@ export {
   getDailySuggestion,
 } from "./strategyService";
 
+// Strategy Admin
+export {
+  createStrategyConfig,
+  getStrategyAdminConfig,
+  getStrategyAdminConfigs,
+  setDefaultStrategyConfig,
+  updateStrategyConfig,
+} from "./strategyAdminService";
+
 // Telegram Integration
 export {
   disconnectTelegram,

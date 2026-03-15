@@ -24,6 +24,10 @@ vi.mock(
   })
 );
 
+vi.mock("@/components/wallet/portfolio/views/invest/configManager", () => ({
+  ConfigManagerView: () => <div data-testid="config-manager-view" />,
+}));
+
 describe("InvestView", () => {
   it("renders trading tab by default", () => {
     render(<InvestView userId="0xabc" />);
@@ -32,12 +36,13 @@ describe("InvestView", () => {
     expect(screen.getByText("0xabc")).toBeDefined();
   });
 
-  it("renders all three tab buttons", () => {
+  it("renders all four tab buttons", () => {
     render(<InvestView userId="0xabc" />);
 
     expect(screen.getByText("market data")).toBeDefined();
     expect(screen.getByText("trading")).toBeDefined();
     expect(screen.getByText("backtesting")).toBeDefined();
+    expect(screen.getByText("config manager")).toBeDefined();
   });
 
   it("switches to market tab on click", () => {
@@ -72,6 +77,15 @@ describe("InvestView", () => {
     render(<InvestView userId={undefined} />);
 
     expect(screen.getByText("no-user")).toBeDefined();
+  });
+
+  it("switches to config manager tab on click", () => {
+    render(<InvestView userId="0xabc" />);
+
+    fireEvent.click(screen.getByText("config manager"));
+
+    expect(screen.getByTestId("config-manager-view")).toBeDefined();
+    expect(screen.queryByTestId("trading-view")).toBeNull();
   });
 
   it("applies active style to the selected tab", () => {
