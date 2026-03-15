@@ -29,7 +29,7 @@ export { MAX_CHART_POINTS, MIN_CHART_POINTS };
 
 /**
  * Legacy test helper retained during the DMA-first migration.
- * The backend now returns DMA values directly inside strategy.signal.dma.
+ * The backend now returns DMA values directly inside strategy.signal.details.dma.
  *
  * @internal
  */

@@ -15,15 +15,6 @@ vi.mock("@/services/strategyService");
 const mockStrategyConfigs = {
   presets: [
     {
-      config_id: "dca_classic",
-      display_name: "DCA Classic",
-      description: "Simple DCA",
-      strategy_id: "dca_classic" as const,
-      params: {},
-      is_benchmark: true,
-      is_default: false,
-    },
-    {
       config_id: "dma_gated_fgi_default",
       display_name: "DMA Gated FGI Default",
       description: "Curated DMA-first preset",
@@ -44,7 +35,7 @@ const mockStrategyConfigs = {
 };
 
 const mockCatalog = {
-  catalog_version: "3.0.0",
+  catalog_version: "2.0.0",
   strategies: [
     {
       strategy_id: "dma_gated_fgi" as const,
@@ -101,8 +92,8 @@ describe("useBacktestConfiguration", () => {
     const parsed = JSON.parse(result.current.editorValue);
     expect(parsed.days).toBe(500);
     expect(parsed.total_capital).toBe(10000);
-    expect(parsed.configs[0].config_id).toBe("dca_classic");
-    expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs).toHaveLength(1);
+    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
   });
 
   it("loads presets, seeds the editor, and auto-runs once", async () => {
@@ -116,7 +107,7 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(90);
-      expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
+      expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
     });
 
     await waitFor(() => {
@@ -137,8 +128,8 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(500);
-      expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
-      expect(parsed.configs[1].params.pacing_k).toBe(3);
+      expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+      expect(parsed.configs[0].params.pacing_k).toBe(3);
     });
   });
 
@@ -235,7 +226,7 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       // catalog fallback was used: default params from the DMA catalog entry
       const parsed = JSON.parse(result.current.editorValue);
-      expect(parsed.configs[1].params.pacing_k).toBe(3);
+      expect(parsed.configs[0].params.pacing_k).toBe(3);
     });
   });
 
@@ -819,7 +810,7 @@ describe("useBacktestConfiguration", () => {
 
     // Should restore catalog-based defaults and clear error
     const parsed = JSON.parse(result.current.editorValue);
-    expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
     expect(result.current.editorError).toBeNull();
   });
 
@@ -851,7 +842,7 @@ describe("useBacktestConfiguration", () => {
 
     const parsed = JSON.parse(result.current.editorValue);
     // catalog fallback: dma_gated_fgi default_params from mockCatalog
-    expect(parsed.configs[1].params.pacing_k).toBe(3);
+    expect(parsed.configs[0].params.pacing_k).toBe(3);
     expect(result.current.editorError).toBeNull();
   });
 
@@ -868,7 +859,7 @@ describe("useBacktestConfiguration", () => {
     });
 
     await waitFor(() => {
-      expect(JSON.parse(result.current.editorValue).configs[1].config_id).toBe(
+      expect(JSON.parse(result.current.editorValue).configs[0].config_id).toBe(
         "dma_gated_fgi_default"
       );
     });
@@ -887,7 +878,7 @@ describe("useBacktestConfiguration", () => {
 
     const parsed = JSON.parse(result.current.editorValue);
     expect(parsed.days).toBe(90);
-    expect(parsed.configs[1].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
     expect(result.current.editorError).toBeNull();
   });
 

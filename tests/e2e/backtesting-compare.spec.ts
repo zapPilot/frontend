@@ -80,15 +80,6 @@ const STRATEGIES_RESPONSE = {
 const STRATEGY_CONFIGS_RESPONSE = {
   presets: [
     {
-      config_id: "dca_classic",
-      display_name: "Classic DCA",
-      description: "Simple dollar-cost averaging baseline",
-      strategy_id: "dca_classic",
-      params: {},
-      is_default: false,
-      is_benchmark: true,
-    },
-    {
       config_id: "dma_gated_fgi_default",
       display_name: "DMA Gated FGI Default",
       description: "Curated DMA-first preset",
@@ -126,7 +117,7 @@ const COMPARE_RESPONSE = {
       },
     },
     dma_gated_fgi_default: {
-      strategy_id: "dma_gated_fgi_default",
+      strategy_id: "dma_gated_fgi",
       display_name: "DMA Gated FGI Default",
       signal_id: "dma_gated_fgi",
       total_invested: 10000,

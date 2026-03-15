@@ -21,7 +21,7 @@ function createResponse() {
         parameters: {},
       },
       dma_gated_fgi_default: {
-        strategy_id: "dma_gated_fgi_default",
+        strategy_id: "dma_gated_fgi",
         display_name: "DMA Gated FGI Default",
         signal_id: "dma_gated_fgi" as const,
         total_invested: 10000,
@@ -72,7 +72,6 @@ function createResponse() {
               step_count: 0,
               steps_remaining: 0,
               interval_days: 0,
-              buy_gate: null,
             },
           },
           dma_gated_fgi_default: {
@@ -86,11 +85,10 @@ function createResponse() {
               },
             },
             signal: {
-              signal_id: "dma_gated_fgi" as const,
+              id: "dma_gated_fgi" as const,
               regime: "fear",
               raw_value: 20,
               confidence: 1,
-              ath_event: null,
               details: {
                 dma: {
                   dma_200: 49500,
@@ -127,7 +125,6 @@ function createResponse() {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           },
         },
@@ -168,7 +165,6 @@ function createResponse() {
               step_count: 0,
               steps_remaining: 0,
               interval_days: 0,
-              buy_gate: null,
             },
           },
           dma_gated_fgi_default: {
@@ -182,11 +178,10 @@ function createResponse() {
               },
             },
             signal: {
-              signal_id: "dma_gated_fgi" as const,
+              id: "dma_gated_fgi" as const,
               regime: "greed",
               raw_value: 75,
               confidence: 1,
-              ath_event: null,
               details: {
                 dma: {
                   dma_200: 50000,
@@ -217,7 +212,6 @@ function createResponse() {
               step_count: 0,
               steps_remaining: 0,
               interval_days: 0,
-              buy_gate: null,
             },
           },
         },

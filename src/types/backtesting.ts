@@ -18,7 +18,7 @@ export interface BacktestCompareParamsV3 {
 }
 
 export interface BacktestCompareConfigV3 {
-  /** Client-provided identifier; becomes the response `strategy_id` key. */
+  /** Client-provided identifier; becomes the response strategies-map key. */
   config_id: string;
   strategy_id: BacktestStrategyIdV3;
   params?: BacktestCompareParamsV3;
@@ -35,6 +35,7 @@ export interface BacktestRequest {
 }
 
 export interface BacktestStrategySummary {
+  /** Canonical backend strategy id (for example `dma_gated_fgi`). */
   strategy_id: string;
   display_name: string;
   signal_id?: string | null;
@@ -43,15 +44,8 @@ export interface BacktestStrategySummary {
   roi_percent: number;
   trade_count: number;
   final_allocation: BacktestPortfolioAllocation;
-
-  // Optional on some payloads.
   max_drawdown_percent?: number | null;
-  sharpe_ratio?: number | null;
-  sortino_ratio?: number | null;
   calmar_ratio?: number | null;
-  volatility?: number | null;
-  beta?: number | null;
-
   parameters: Record<string, unknown>;
 }
 
@@ -90,12 +84,6 @@ export interface BacktestSignal {
   raw_value?: number | null;
   confidence?: number;
   details?: BacktestSignalDetails;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  signal_id?: string;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  ath_event?: "token_ath" | "portfolio_ath" | "both_ath" | null;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  dma?: BacktestDmaSignalDetails | null;
 }
 
 export interface BacktestDecisionDetails {
@@ -122,19 +110,6 @@ export interface BacktestTransferMetadata {
   amount_usd: number;
 }
 
-export interface BacktestBuyGateDiagnostics {
-  buy_strength: number | null;
-  sideways_confirmed: boolean | null;
-  window_days: number | null;
-  range_value: number | null;
-  leg_index: number | null;
-  leg_cap_pct: number | null;
-  leg_cap_usd: number | null;
-  leg_spent_usd: number | null;
-  episode_state: string | null;
-  block_reason: string | null;
-}
-
 export interface BacktestExecutionDiagnostics {
   plugins: Record<string, Record<string, unknown> | null>;
 }
@@ -147,8 +122,6 @@ export interface BacktestExecution {
   steps_remaining: number;
   interval_days: number;
   diagnostics?: BacktestExecutionDiagnostics;
-  /** @deprecated legacy compatibility for client-side mocks/tests */
-  buy_gate?: BacktestBuyGateDiagnostics | null;
 }
 
 export interface BacktestStrategyPoint {
@@ -160,7 +133,7 @@ export interface BacktestStrategyPoint {
 
 /**
  * Dynamic strategy set supporting any number of strategies.
- * Keys are config IDs (strategy_id in the response).
+ * Keys are compare request `config_id` values.
  */
 export type BacktestStrategySet<T> = Record<string, T>;
 

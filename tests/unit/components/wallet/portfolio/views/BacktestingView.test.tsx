@@ -68,7 +68,7 @@ const mockBacktestData = {
       parameters: {},
     },
     dma_gated_fgi_default: {
-      strategy_id: "dma_gated_fgi_default",
+      strategy_id: "dma_gated_fgi",
       display_name: "DMA Gated FGI Default",
       signal_id: "dma_gated_fgi",
       total_invested: 10000,
@@ -121,7 +121,6 @@ const mockBacktestData = {
             step_count: 0,
             steps_remaining: 0,
             interval_days: 0,
-            buy_gate: null,
           },
         },
         dma_gated_fgi_default: {
@@ -135,11 +134,10 @@ const mockBacktestData = {
             },
           },
           signal: {
-            signal_id: "dma_gated_fgi",
+            id: "dma_gated_fgi",
             regime: "neutral",
             raw_value: 50,
             confidence: 1,
-            ath_event: null,
             details: {
               dma: {
                 dma_200: 39500,
@@ -176,7 +174,6 @@ const mockBacktestData = {
             step_count: 1,
             steps_remaining: 2,
             interval_days: 3,
-            buy_gate: null,
           },
         },
       },
@@ -211,7 +208,7 @@ describe("BacktestingView", () => {
     };
     vi.mocked(useBacktestMutation).mockReturnValue(defaultMock as any);
     vi.mocked(backtestingService.getBacktestingStrategiesV3).mockResolvedValue({
-      catalog_version: "3.0.0",
+      catalog_version: "2.0.0",
       strategies: [],
     });
     vi.mocked(strategyService.getStrategyConfigs).mockResolvedValue({

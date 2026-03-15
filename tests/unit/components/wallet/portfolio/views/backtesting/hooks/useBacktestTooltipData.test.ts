@@ -38,7 +38,7 @@ function makeStrategyPoint(overrides: {
     signal:
       overrides.signal !== undefined
         ? overrides.signal
-        : { signal_id: "dma_gated_fgi" },
+        : { id: "dma_gated_fgi" },
     decision: overrides.decision ?? { action: "hold", reason: "baseline" },
     execution: {
       event: null,
@@ -104,7 +104,7 @@ function createTooltipPayload() {
           dma_gated_fgi_default: makeStrategyPoint({
             spot: 9600,
             stable: 2400,
-            signal: { signal_id: "dma_gated_fgi" },
+            signal: { id: "dma_gated_fgi" },
             decision: { action: "buy", reason: "below_extreme_fear_buy" },
             blocked_reason: "cooldown_active",
             buy_gate: { block_reason: "sideways_pending" },
@@ -551,7 +551,7 @@ describe("useBacktestTooltipData", () => {
     it("adds only a decision detail when blocked_reason and buy_gate are null", () => {
       const strategies = {
         my_strat: makeStrategyPoint({
-          signal: { signal_id: "dma_gated_fgi" },
+          signal: { id: "dma_gated_fgi" },
           decision: { action: "hold", reason: "waiting" },
           blocked_reason: null,
           buy_gate: null,
@@ -569,7 +569,7 @@ describe("useBacktestTooltipData", () => {
     it("adds decision + blocked detail when blocked_reason is set", () => {
       const strategies = {
         my_strat: makeStrategyPoint({
-          signal: { signal_id: "dma_gated_fgi" },
+          signal: { id: "dma_gated_fgi" },
           decision: { action: "buy", reason: "signal" },
           blocked_reason: "cooldown_active",
           buy_gate: null,
@@ -588,7 +588,7 @@ describe("useBacktestTooltipData", () => {
     it("adds buy-gate detail when buy_gate.block_reason is set", () => {
       const strategies = {
         my_strat: makeStrategyPoint({
-          signal: { signal_id: "dma_gated_fgi" },
+          signal: { id: "dma_gated_fgi" },
           decision: { action: "buy", reason: "signal" },
           blocked_reason: null,
           buy_gate: { block_reason: "sideways_pending" },

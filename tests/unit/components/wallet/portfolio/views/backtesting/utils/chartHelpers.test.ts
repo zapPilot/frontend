@@ -44,7 +44,6 @@ function createStrategyPoint(
       step_count: 0,
       steps_remaining: 0,
       interval_days: 0,
-      buy_gate: null,
     },
     ...overrides,
   };
@@ -254,11 +253,10 @@ describe("buildChartPoint", () => {
         strategies: {
           dma_gated_fgi_default: createStrategyPoint({
             signal: {
-              signal_id: "dma_gated_fgi",
+              id: "dma_gated_fgi",
               regime: "fear",
               raw_value: 20,
               confidence: 1,
-              ath_event: null,
               details: {
                 dma: {
                   dma_200: 48000,
@@ -299,7 +297,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },
@@ -340,7 +337,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },
@@ -369,7 +365,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 7,
-              buy_gate: null,
             },
           }),
         },
@@ -437,7 +432,6 @@ describe("buildChartPoint", () => {
               step_count: 0,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },
@@ -475,7 +469,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },
@@ -510,7 +503,6 @@ describe("buildChartPoint", () => {
               step_count: 2,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },
@@ -566,7 +558,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
           alpha_strategy: createStrategyPoint({
@@ -592,7 +583,6 @@ describe("buildChartPoint", () => {
               step_count: 1,
               steps_remaining: 0,
               interval_days: 3,
-              buy_gate: null,
             },
           }),
         },

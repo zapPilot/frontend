@@ -82,20 +82,21 @@ const mockSuggestionData = {
     },
   },
   signal: {
-    signal_id: "dma_gated_fgi" as const,
+    id: "dma_gated_fgi" as const,
     regime: "extreme_fear",
     raw_value: 18,
     confidence: 1,
-    ath_event: null,
-    dma: {
-      dma_200: 65000,
-      distance: 0.05,
-      zone: "above" as const,
-      cross_event: null,
-      cooldown_active: false,
-      cooldown_remaining_days: 0,
-      cooldown_blocked_zone: null,
-      fgi_slope: -2,
+    details: {
+      dma: {
+        dma_200: 65000,
+        distance: 0.05,
+        zone: "above" as const,
+        cross_event: null,
+        cooldown_active: false,
+        cooldown_remaining_days: 0,
+        cooldown_blocked_zone: null,
+        fgi_slope: -2,
+      },
     },
   },
   decision: {
@@ -126,7 +127,6 @@ const mockSuggestionData = {
     step_count: 1,
     steps_remaining: 2,
     interval_days: 3,
-    buy_gate: null,
   },
 };
 
@@ -164,22 +164,6 @@ const mockSellSuggestion = {
   },
 };
 
-// Suggestion with no signal — falls back to market.sentiment_label
-const mockNoSignalSuggestion = {
-  ...mockSuggestionData,
-  signal: null,
-  execution: {
-    ...mockSuggestionData.execution,
-    transfers: [],
-    blocked_reason: null,
-  },
-  decision: {
-    ...mockSuggestionData.decision,
-    action: "hold" as const,
-    reason: "no_signal",
-  },
-};
-
 describe("RebalancePanel", () => {
   it("renders skeleton when data is not available", () => {
     vi.mocked(useDailySuggestion).mockReturnValue({
@@ -201,9 +185,10 @@ describe("RebalancePanel", () => {
 
     render(<RebalancePanel userId="0xabc" />);
 
-    expect(useDailySuggestion).toHaveBeenCalledWith("0xabc", {
-      config_id: "dma_gated_fgi_default",
-    });
+    expect(useDailySuggestion).toHaveBeenCalledWith(
+      "0xabc",
+      "dma_gated_fgi_default"
+    );
   });
 
   it("renders transfer-derived trade actions", () => {
@@ -274,48 +259,7 @@ describe("RebalancePanel", () => {
     expect(screen.getByText("Reduce")).toBeDefined();
   });
 
-  it("uses market.sentiment_label for regime display when signal is absent", () => {
-    vi.mocked(useDailySuggestion).mockReturnValue({
-      data: mockNoSignalSuggestion,
-    } as ReturnType<typeof useDailySuggestion>);
-
-    render(<RebalancePanel userId="0xabc" />);
-
-    // sentiment_label = "extreme_fear" → formatted as "extreme fear"
-    expect(screen.getByText("extreme fear")).toBeDefined();
-  });
-
-  it("falls back to 'unknown' regime label when both signal regime and sentiment_label are null", () => {
-    const noLabelSuggestion = {
-      ...mockSuggestionData,
-      signal: null,
-      market: {
-        ...mockSuggestionData.market,
-        sentiment_label: null as unknown as string,
-      },
-      execution: {
-        ...mockSuggestionData.execution,
-        transfers: [],
-        blocked_reason: null,
-      },
-      decision: {
-        ...mockSuggestionData.decision,
-        action: "hold" as const,
-        reason: "no_label",
-      },
-    };
-
-    vi.mocked(useDailySuggestion).mockReturnValue({
-      data: noLabelSuggestion,
-    } as ReturnType<typeof useDailySuggestion>);
-
-    render(<RebalancePanel userId="0xabc" />);
-
-    // formatRegimeLabel(null) → "unknown"
-    expect(screen.getByText("unknown")).toBeDefined();
-  });
-
-  it("calls useDailySuggestion with empty options when defaultPresetId is undefined", async () => {
+  it("calls useDailySuggestion without configId when defaultPresetId is undefined", async () => {
     const { useDefaultPresetId } = vi.mocked(
       await import("@/components/wallet/portfolio/views/invest/trading/hooks/useDefaultPresetId")
     );
@@ -327,6 +271,6 @@ describe("RebalancePanel", () => {
 
     render(<RebalancePanel userId="0xabc" />);
 
-    expect(useDailySuggestion).toHaveBeenCalledWith("0xabc", {});
+    expect(useDailySuggestion).toHaveBeenCalledWith("0xabc", undefined);
   });
 });

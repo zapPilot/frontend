@@ -130,17 +130,12 @@ export function RebalancePanel({ userId }: { userId: string }) {
 
   const defaultPresetId = useDefaultPresetId(true);
 
-  const { data } = useDailySuggestion(
-    userId,
-    defaultPresetId ? { config_id: defaultPresetId } : {}
-  );
+  const { data } = useDailySuggestion(userId, defaultPresetId);
 
   if (!data) return <RebalancePanelSkeleton />;
 
   const tradeActions = buildTradeActions(data);
-  const regimeLabel = formatRegimeLabel(
-    data.signal?.regime ?? data.market.sentiment_label
-  );
+  const regimeLabel = formatRegimeLabel(data.signal.regime);
 
   return (
     <BaseTradingPanel

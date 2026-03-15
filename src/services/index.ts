@@ -75,7 +75,6 @@ export { runBacktest } from "./backtestingService";
 
 // Strategy Suggestions
 export {
-  type DailySuggestionParams,
   type DailySuggestionResponse,
   getDailySuggestion,
 } from "./strategyService";

@@ -31,21 +31,9 @@ export interface DailySuggestionResponse {
   strategy_id: string;
   market: BacktestMarketPoint;
   portfolio: BacktestStrategyPortfolio;
-  signal: BacktestSignal | null;
+  signal: BacktestSignal;
   decision: BacktestDecision;
   execution: BacktestExecution;
-}
-
-/**
- * Request parameters for daily suggestion endpoint.
- */
-export interface DailySuggestionParams {
-  /** Strategy preset id (defaults to backend-recommended preset if omitted) */
-  config_id?: string;
-  /** Minimum drift to recommend rebalancing (default 0.05 = 5%) */
-  drift_threshold?: number;
-  /** Days of regime history for pattern matching (default 30) */
-  regime_history_days?: number;
 }
 
 /**

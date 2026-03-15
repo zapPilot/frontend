@@ -57,7 +57,6 @@ function createTimelinePoint(
                 step_count: 1,
                 steps_remaining: 0,
                 interval_days: 7,
-                buy_gate: null,
               },
             },
           }
@@ -89,7 +88,6 @@ function createTimelinePoint(
           step_count: opts?.withTransfer ? 1 : 0,
           steps_remaining: 0,
           interval_days: 3,
-          buy_gate: null,
         },
       },
     },

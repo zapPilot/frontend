@@ -57,7 +57,6 @@ function createTimelinePoint(
           step_count: 0,
           steps_remaining: 0,
           interval_days: 0,
-          buy_gate: null,
         },
       },
       dma_gated_fgi_default: {
@@ -96,7 +95,6 @@ function createTimelinePoint(
           step_count: opts?.withTransfers ? 1 : 0,
           steps_remaining: 0,
           interval_days: 3,
-          buy_gate: null,
         },
       },
     },
@@ -252,7 +250,17 @@ describe("backtestingService", () => {
   describe("getBacktestingStrategiesV3", () => {
     it("calls the v3 strategies endpoint via GET", async () => {
       const mockStrategies = {
-        strategies: [{ id: "dca_classic", display_name: "DCA Classic" }],
+        catalog_version: "2.0.0",
+        strategies: [
+          {
+            strategy_id: "dca_classic",
+            display_name: "DCA Classic",
+            description: "Baseline",
+            param_schema: { type: "object", additionalProperties: false },
+            default_params: {},
+            supports_daily_suggestion: false,
+          },
+        ],
       };
       analyticsEngineGetSpy.mockResolvedValue(mockStrategies);
 

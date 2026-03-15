@@ -5,25 +5,22 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getDailySuggestion } from "@/services/strategyService";
-import type {
-  DailySuggestionParams,
-  DailySuggestionResponse,
-} from "@/types/strategy";
+import type { DailySuggestionResponse } from "@/types/strategy";
 
 /**
  * Query key factory for strategy suggestions
  */
 export const suggestionKeys = {
   all: ["suggestion"] as const,
-  detail: (userId: string, params?: DailySuggestionParams) =>
-    [...suggestionKeys.all, userId, params] as const,
+  detail: (userId: string, configId?: string) =>
+    [...suggestionKeys.all, userId, configId] as const,
 };
 
 /**
  * Hook for fetching daily strategy suggestion.
  *
  * @param userId - User identifier
- * @param params - Optional parameters for drift threshold and history days
+ * @param configId - Optional preset config_id
  * @param enabled - Whether the query should run (default: true when userId exists)
  * @returns React Query result with suggestion data
  *
@@ -39,16 +36,16 @@ export const suggestionKeys = {
  */
 export function useDailySuggestion(
   userId: string | undefined,
-  params: DailySuggestionParams = {},
+  configId?: string,
   enabled?: boolean
 ) {
   return useQuery<DailySuggestionResponse, Error>({
-    queryKey: suggestionKeys.detail(userId ?? "", params),
+    queryKey: suggestionKeys.detail(userId ?? "", configId),
     queryFn: () => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      return getDailySuggestion(userId, params);
+      return getDailySuggestion(userId, configId);
     },
     enabled: enabled ?? !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes

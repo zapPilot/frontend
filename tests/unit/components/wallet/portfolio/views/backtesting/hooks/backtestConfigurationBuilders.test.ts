@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  DCA_CLASSIC_STRATEGY_ID,
   DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
   DMA_GATED_FGI_DEFAULT_CONFIG_ID,
@@ -40,12 +39,12 @@ describe("FALLBACK_DEFAULTS", () => {
 });
 
 describe("buildDefaultPayloadFromPresets", () => {
-  it("includes benchmark and recommended configs when both are present", () => {
+  it("builds the payload from live presets and keeps the default preset first", () => {
     const presets = [
       createPreset({
-        config_id: "dca_classic",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
+        config_id: "dma_gated_fgi_alt",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        params: { pacing_k: 3, pacing_r_max: 0.8 },
       }),
       createPreset({
         config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
@@ -62,26 +61,30 @@ describe("buildDefaultPayloadFromPresets", () => {
       total_capital: 50000,
       configs: [
         {
-          config_id: "dca_classic",
-          strategy_id: "dca_classic",
-          params: {},
-        },
-        {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
           params: { pacing_k: 5, pacing_r_max: 1 },
+        },
+        {
+          config_id: "dma_gated_fgi_alt",
+          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          params: { pacing_k: 3, pacing_r_max: 0.8 },
         },
       ],
     });
   });
 
-  it("deduplicates benchmark and recommended when they share a config id", () => {
+  it("deduplicates duplicate preset config ids", () => {
     const presets = [
       createPreset({
         config_id: "shared_config",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
         is_default: true,
+      }),
+      createPreset({
+        config_id: "shared_config",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        is_default: false,
       }),
     ];
 
@@ -91,13 +94,13 @@ describe("buildDefaultPayloadFromPresets", () => {
     expect(result.configs[0]?.config_id).toBe("shared_config");
   });
 
-  it("falls back to dca_classic when no curated presets are available", () => {
+  it("falls back to the canonical DMA payload when no presets are available", () => {
     const result = buildDefaultPayloadFromPresets([], TEST_DEFAULTS);
 
     expect(result.configs).toEqual([
       {
-        config_id: DCA_CLASSIC_STRATEGY_ID,
-        strategy_id: DCA_CLASSIC_STRATEGY_ID,
+        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
         params: {},
       },
     ]);
@@ -107,7 +110,7 @@ describe("buildDefaultPayloadFromPresets", () => {
 describe("buildDefaultPayloadFromCatalog", () => {
   it("builds a DCA plus DMA payload from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "3.0.0",
+      catalog_version: "2.0.0",
       strategies: [
         {
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
@@ -131,11 +134,6 @@ describe("buildDefaultPayloadFromCatalog", () => {
       total_capital: 50000,
       configs: [
         {
-          config_id: DCA_CLASSIC_STRATEGY_ID,
-          strategy_id: DCA_CLASSIC_STRATEGY_ID,
-          params: {},
-        },
-        {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
           params: {
@@ -150,13 +148,13 @@ describe("buildDefaultPayloadFromCatalog", () => {
 
   it("uses empty params when the DMA strategy is missing from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "3.0.0",
+      catalog_version: "2.0.0",
       strategies: [],
     };
 
     const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
 
-    expect(result.configs[1]).toEqual({
+    expect(result.configs[0]).toEqual({
       config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
       strategy_id: DMA_GATED_FGI_STRATEGY_ID,
       params: {},

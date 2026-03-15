@@ -89,13 +89,12 @@ describe("useDailySuggestion", () => {
       expect(suggestionKeys.all).toEqual(["suggestion"]);
     });
 
-    it("generates detail key with userId and params", () => {
-      const params = { drift_threshold: 0.1, regime_history_days: 60 };
-      const key = suggestionKeys.detail(mockUserId, params);
-      expect(key).toEqual(["suggestion", mockUserId, params]);
+    it("generates detail key with userId and configId", () => {
+      const key = suggestionKeys.detail(mockUserId, "dma_gated_fgi_default");
+      expect(key).toEqual(["suggestion", mockUserId, "dma_gated_fgi_default"]);
     });
 
-    it("generates detail key without params", () => {
+    it("generates detail key without configId", () => {
       const key = suggestionKeys.detail(mockUserId);
       expect(key).toEqual(["suggestion", mockUserId, undefined]);
     });
@@ -114,15 +113,14 @@ describe("useDailySuggestion", () => {
       });
 
       expect(result.current.data).toEqual(mockSuggestionResponse);
-      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, {});
+      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, undefined);
     });
 
-    it("fetches data with custom params", async () => {
+    it("fetches data for a specific configId", async () => {
       vi.mocked(getDailySuggestion).mockResolvedValue(mockSuggestionResponse);
-      const params = { drift_threshold: 0.15, regime_history_days: 90 };
 
       const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, params),
+        () => useDailySuggestion(mockUserId, "dma_gated_fgi_default"),
         {
           wrapper: QueryClientWrapper,
         }
@@ -132,7 +130,10 @@ describe("useDailySuggestion", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, params);
+      expect(getDailySuggestion).toHaveBeenCalledWith(
+        mockUserId,
+        "dma_gated_fgi_default"
+      );
     });
 
     it("shows loading state initially", () => {
@@ -170,7 +171,7 @@ describe("useDailySuggestion", () => {
 
     it("throws error when userId is undefined and query runs", async () => {
       const { result } = renderHook(
-        () => useDailySuggestion(undefined, {}, true),
+        () => useDailySuggestion(undefined, undefined, true),
         {
           wrapper: QueryClientWrapper,
         }
@@ -200,7 +201,7 @@ describe("useDailySuggestion", () => {
 
     it("respects explicit enabled=false", () => {
       const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, {}, false),
+        () => useDailySuggestion(mockUserId, undefined, false),
         {
           wrapper: QueryClientWrapper,
         }
@@ -215,7 +216,7 @@ describe("useDailySuggestion", () => {
       vi.mocked(getDailySuggestion).mockResolvedValue(mockSuggestionResponse);
 
       const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, {}, true),
+        () => useDailySuggestion(mockUserId, undefined, true),
         {
           wrapper: QueryClientWrapper,
         }
@@ -225,12 +226,12 @@ describe("useDailySuggestion", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, {});
+      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, undefined);
     });
 
     it("disables query when enabled=false overrides userId presence", () => {
       const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, {}, false),
+        () => useDailySuggestion(mockUserId, undefined, false),
         {
           wrapper: QueryClientWrapper,
         }
@@ -241,12 +242,11 @@ describe("useDailySuggestion", () => {
       expect(getDailySuggestion).not.toHaveBeenCalled();
     });
 
-    it("uses correct query key with userId and params", async () => {
+    it("uses correct query key with userId and configId", async () => {
       vi.mocked(getDailySuggestion).mockResolvedValue(mockSuggestionResponse);
-      const params = { drift_threshold: 0.1 };
 
       const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, params),
+        () => useDailySuggestion(mockUserId, "dma_gated_fgi_default"),
         {
           wrapper: QueryClientWrapper,
         }
@@ -292,10 +292,10 @@ describe("useDailySuggestion", () => {
       expect(callCount).toBe(3);
     });
 
-    it("handles empty params object", async () => {
+    it("handles an omitted configId", async () => {
       vi.mocked(getDailySuggestion).mockResolvedValue(mockSuggestionResponse);
 
-      const { result } = renderHook(() => useDailySuggestion(mockUserId, {}), {
+      const { result } = renderHook(() => useDailySuggestion(mockUserId), {
         wrapper: QueryClientWrapper,
       });
 
@@ -303,25 +303,7 @@ describe("useDailySuggestion", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, {});
-    });
-
-    it("handles partial params", async () => {
-      vi.mocked(getDailySuggestion).mockResolvedValue(mockSuggestionResponse);
-      const params = { drift_threshold: 0.1 };
-
-      const { result } = renderHook(
-        () => useDailySuggestion(mockUserId, params),
-        {
-          wrapper: QueryClientWrapper,
-        }
-      );
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
-      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, params);
+      expect(getDailySuggestion).toHaveBeenCalledWith(mockUserId, undefined);
     });
   });
 });

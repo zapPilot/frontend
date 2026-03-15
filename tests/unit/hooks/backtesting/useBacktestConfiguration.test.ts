@@ -55,15 +55,6 @@ describe("useBacktestConfiguration regressions", () => {
     resolvePresets?.({
       presets: [
         {
-          config_id: "dca_classic",
-          display_name: "DCA Classic",
-          description: "Simple DCA",
-          strategy_id: "dca_classic",
-          params: {},
-          is_benchmark: true,
-          is_default: false,
-        },
-        {
           config_id: "dma_gated_fgi_default",
           display_name: "DMA Gated FGI Default",
           description: "Curated DMA-first preset",
@@ -79,7 +70,7 @@ describe("useBacktestConfiguration regressions", () => {
       },
     });
     resolveCatalog?.({
-      catalog_version: "3.0.0",
+      catalog_version: "2.0.0",
       strategies: [],
     });
 
@@ -106,7 +97,7 @@ describe("useBacktestConfiguration regressions", () => {
         })
     );
     vi.mocked(getBacktestingStrategiesV3).mockResolvedValue({
-      catalog_version: "3.0.0",
+      catalog_version: "2.0.0",
       strategies: [],
     });
 

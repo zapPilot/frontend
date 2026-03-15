@@ -31,11 +31,6 @@ function createMockResponse(
   return {
     presets: [
       createMockPreset({
-        config_id: "dca_classic",
-        strategy_id: "dca_classic",
-        is_benchmark: true,
-      }),
-      createMockPreset({
         config_id: "dma_gated_fgi_default",
         is_default: true,
       }),
@@ -75,24 +70,6 @@ describe("strategyService", () => {
       expect(result).toEqual(mockResponse);
     });
 
-    it("wraps legacy array responses with fallback defaults", async () => {
-      const legacyPresets: StrategyPreset[] = [
-        createMockPreset({
-          config_id: "dma_gated_fgi_default",
-          is_default: true,
-        }),
-      ];
-      analyticsEngineGetSpy.mockResolvedValue(legacyPresets);
-
-      const result = await getStrategyConfigs();
-
-      expect(result.presets).toEqual(legacyPresets);
-      expect(result.backtest_defaults).toEqual({
-        days: 90,
-        total_capital: 10000,
-      });
-    });
-
     it("propagates HTTP errors", async () => {
       analyticsEngineGetSpy.mockRejectedValue(new Error("Network error"));
 
@@ -120,7 +97,24 @@ describe("strategyService", () => {
           stable: 0.3,
         },
       },
-      signal: null,
+      signal: {
+        id: "dma_gated_fgi",
+        regime: "extreme_fear",
+        raw_value: 18,
+        confidence: 1,
+        details: {
+          dma: {
+            dma_200: 65000,
+            distance: 0.048,
+            zone: "above",
+            cross_event: null,
+            cooldown_active: false,
+            cooldown_remaining_days: 0,
+            cooldown_blocked_zone: null,
+            fgi_slope: -2,
+          },
+        },
+      },
       decision: {
         action: "hold",
         reason: "wait",
@@ -138,7 +132,6 @@ describe("strategyService", () => {
         step_count: 0,
         steps_remaining: 0,
         interval_days: 0,
-        buy_gate: null,
       },
     };
 
@@ -163,28 +156,20 @@ describe("strategyService", () => {
     it("appends config_id to the query string", async () => {
       analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
-      await getDailySuggestion("user-123", {
-        config_id: "dma_gated_fgi_default",
-      });
+      await getDailySuggestion("user-123", "dma_gated_fgi_default");
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
         "/api/v3/strategy/daily-suggestion/user-123?config_id=dma_gated_fgi_default"
       );
     });
 
-    it("filters out undefined params", async () => {
+    it("omits the query string when config_id is undefined", async () => {
       analyticsEngineGetSpy.mockResolvedValue(mockSuggestion);
 
-      await getDailySuggestion("user-123", {
-        config_id: undefined,
-        drift_threshold: 0.05,
-      });
+      await getDailySuggestion("user-123", undefined);
 
-      expect(analyticsEngineGetSpy.mock.calls[0]?.[0]).toContain(
-        "drift_threshold=0.05"
-      );
-      expect(analyticsEngineGetSpy.mock.calls[0]?.[0]).not.toContain(
-        "config_id"
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v3/strategy/daily-suggestion/user-123"
       );
     });
   });
