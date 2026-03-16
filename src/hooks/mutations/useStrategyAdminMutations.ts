@@ -12,11 +12,11 @@ import {
   createStrategyConfig,
   setDefaultStrategyConfig,
   updateStrategyConfig,
-} from "@/services/strategyAdminService";
+} from "@/services";
 import type {
   CreateStrategyConfigRequest,
   UpdateStrategyConfigRequest,
-} from "@/types/strategyAdmin";
+} from "@/types";
 
 function invalidateStrategyConfigs(queryClient: QueryClient) {
   void queryClient.invalidateQueries({

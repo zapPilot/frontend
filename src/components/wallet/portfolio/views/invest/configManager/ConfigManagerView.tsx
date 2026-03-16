@@ -1,16 +1,67 @@
 "use client";
 
-import { type ReactElement, useCallback, useState } from "react";
+import { type ReactElement, useReducer } from "react";
 
 import { Spinner } from "@/components/ui";
 import { useStrategyAdminConfigs } from "@/hooks/queries/strategyAdmin";
-import type { SavedStrategyConfig } from "@/types/strategyAdmin";
+import type { SavedStrategyConfig } from "@/types";
 
 import { ConfigEditorView } from "./ConfigEditorView";
 import { ConfigListView } from "./ConfigListView";
 
 type ViewMode = "list" | "editor";
 type EditorMode = "create" | "edit";
+
+interface NavigationState {
+  viewMode: ViewMode;
+  editorMode: EditorMode;
+  selectedConfigId: string | null;
+  duplicateFrom: SavedStrategyConfig | null;
+}
+
+type NavigationAction =
+  | { type: "edit"; configId: string }
+  | { type: "create" }
+  | { type: "duplicate"; config: SavedStrategyConfig }
+  | { type: "backToList" };
+
+const initialState: NavigationState = {
+  viewMode: "list",
+  editorMode: "create",
+  selectedConfigId: null,
+  duplicateFrom: null,
+};
+
+function navigationReducer(
+  _state: NavigationState,
+  action: NavigationAction
+): NavigationState {
+  switch (action.type) {
+    case "edit":
+      return {
+        viewMode: "editor",
+        editorMode: "edit",
+        selectedConfigId: action.configId,
+        duplicateFrom: null,
+      };
+    case "create":
+      return {
+        viewMode: "editor",
+        editorMode: "create",
+        selectedConfigId: null,
+        duplicateFrom: null,
+      };
+    case "duplicate":
+      return {
+        viewMode: "editor",
+        editorMode: "create",
+        selectedConfigId: null,
+        duplicateFrom: action.config,
+      };
+    case "backToList":
+      return initialState;
+  }
+}
 
 /**
  * Top-level container for the strategy config manager sub-tab.
@@ -21,39 +72,7 @@ type EditorMode = "create" | "edit";
  */
 export function ConfigManagerView(): ReactElement {
   const { data: configs, isLoading, error } = useStrategyAdminConfigs();
-
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [editorMode, setEditorMode] = useState<EditorMode>("create");
-  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
-  const [duplicateFrom, setDuplicateFrom] =
-    useState<SavedStrategyConfig | null>(null);
-
-  const handleEdit = useCallback((configId: string) => {
-    setSelectedConfigId(configId);
-    setEditorMode("edit");
-    setDuplicateFrom(null);
-    setViewMode("editor");
-  }, []);
-
-  const handleCreate = useCallback(() => {
-    setSelectedConfigId(null);
-    setEditorMode("create");
-    setDuplicateFrom(null);
-    setViewMode("editor");
-  }, []);
-
-  const handleDuplicate = useCallback((config: SavedStrategyConfig) => {
-    setSelectedConfigId(null);
-    setEditorMode("create");
-    setDuplicateFrom(config);
-    setViewMode("editor");
-  }, []);
-
-  const handleBackToList = useCallback(() => {
-    setViewMode("list");
-    setSelectedConfigId(null);
-    setDuplicateFrom(null);
-  }, []);
+  const [nav, dispatch] = useReducer(navigationReducer, initialState);
 
   if (isLoading) {
     return (
@@ -74,12 +93,17 @@ export function ConfigManagerView(): ReactElement {
     );
   }
 
-  if (viewMode === "editor") {
+  const handleDuplicate = (config: SavedStrategyConfig) =>
+    dispatch({ type: "duplicate", config });
+
+  const handleBackToList = () => dispatch({ type: "backToList" });
+
+  if (nav.viewMode === "editor") {
     return (
       <ConfigEditorView
-        configId={selectedConfigId}
-        mode={editorMode}
-        duplicateFrom={duplicateFrom}
+        configId={nav.selectedConfigId}
+        mode={nav.editorMode}
+        duplicateFrom={nav.duplicateFrom}
         onCancel={handleBackToList}
         onSaved={handleBackToList}
         onDuplicate={handleDuplicate}
@@ -90,9 +114,9 @@ export function ConfigManagerView(): ReactElement {
   return (
     <ConfigListView
       configs={configs ?? []}
-      onEdit={handleEdit}
+      onEdit={configId => dispatch({ type: "edit", configId })}
       onDuplicate={handleDuplicate}
-      onCreate={handleCreate}
+      onCreate={() => dispatch({ type: "create" })}
     />
   );
 }

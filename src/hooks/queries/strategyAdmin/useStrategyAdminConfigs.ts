@@ -5,8 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
-import { getStrategyAdminConfigs } from "@/services/strategyAdminService";
-import type { SavedStrategyConfig } from "@/types/strategyAdmin";
+import { getStrategyAdminConfigs } from "@/services";
 
 const ADMIN_STALE_TIME = 30 * 1000; // 30 seconds — admin data changes infrequently
 
@@ -29,6 +28,5 @@ export function useStrategyAdminConfigs() {
       return response.configs;
     },
     staleTime: ADMIN_STALE_TIME,
-    select: (configs: SavedStrategyConfig[]) => configs,
   });
 }

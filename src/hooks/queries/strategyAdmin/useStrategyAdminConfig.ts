@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
-import { getStrategyAdminConfig } from "@/services/strategyAdminService";
+import { getStrategyAdminConfig } from "@/services";
 
 /**
  * Fetch a single saved strategy configuration by ID.

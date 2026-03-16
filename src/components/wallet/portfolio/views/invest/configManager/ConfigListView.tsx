@@ -5,7 +5,7 @@ import { type ReactElement, useCallback, useMemo, useState } from "react";
 
 import { useSetDefaultStrategyConfig } from "@/hooks/mutations/useStrategyAdminMutations";
 import { useToast } from "@/providers/ToastProvider";
-import type { SavedStrategyConfig } from "@/types/strategyAdmin";
+import type { SavedStrategyConfig } from "@/types";
 
 import { SetDefaultConfirmModal } from "./SetDefaultConfirmModal";
 
@@ -22,22 +22,23 @@ interface ConfigActionHandlers {
   onSetDefault: (config: SavedStrategyConfig) => void;
 }
 
-const DESKTOP_STYLES = {
-  wrap: "flex justify-end gap-2",
-  edit: "rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors",
-  setDefault:
-    "rounded p-1.5 text-gray-400 hover:bg-emerald-900/50 hover:text-emerald-400 transition-colors",
-  duplicate:
-    "rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors",
-} as const;
-
-const MOBILE_STYLES = {
-  wrap: "flex gap-2 border-t border-gray-800 pt-3",
-  edit: "rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800 transition-colors",
-  setDefault:
-    "rounded-lg border border-emerald-700 px-3 py-1.5 text-xs text-emerald-400 hover:bg-emerald-900/30 transition-colors",
-  duplicate:
-    "rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800 transition-colors",
+const ACTION_STYLES = {
+  desktop: {
+    wrap: "flex justify-end gap-2",
+    edit: "rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors",
+    setDefault:
+      "rounded p-1.5 text-gray-400 hover:bg-emerald-900/50 hover:text-emerald-400 transition-colors",
+    duplicate:
+      "rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors",
+  },
+  mobile: {
+    wrap: "flex gap-2 border-t border-gray-800 pt-3",
+    edit: "rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800 transition-colors",
+    setDefault:
+      "rounded-lg border border-emerald-700 px-3 py-1.5 text-xs text-emerald-400 hover:bg-emerald-900/30 transition-colors",
+    duplicate:
+      "rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800 transition-colors",
+  },
 } as const;
 
 function ConfigActions({
@@ -50,7 +51,7 @@ function ConfigActions({
   variant: "desktop" | "mobile";
 }): ReactElement | null {
   if (config.is_benchmark) return null;
-  const s = variant === "desktop" ? DESKTOP_STYLES : MOBILE_STYLES;
+  const s = ACTION_STYLES[variant];
   const showIcon = variant === "desktop";
   return (
     <div className={s.wrap}>
@@ -124,10 +125,8 @@ export function ConfigListView({
   const { showToast } = useToast();
   const setDefaultMutation = useSetDefaultStrategyConfig();
 
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    targetConfig: SavedStrategyConfig | null;
-  }>({ isOpen: false, targetConfig: null });
+  const [confirmTarget, setConfirmTarget] =
+    useState<SavedStrategyConfig | null>(null);
 
   const currentDefault = useMemo(
     () => configs.find(c => c.is_default),
@@ -135,19 +134,19 @@ export function ConfigListView({
   );
 
   const handleSetDefault = useCallback((config: SavedStrategyConfig) => {
-    setConfirmModal({ isOpen: true, targetConfig: config });
+    setConfirmTarget(config);
   }, []);
 
   const handleConfirmSetDefault = useCallback(async () => {
-    if (!confirmModal.targetConfig) return;
+    if (!confirmTarget) return;
     try {
-      await setDefaultMutation.mutateAsync(confirmModal.targetConfig.config_id);
+      await setDefaultMutation.mutateAsync(confirmTarget.config_id);
       showToast({
         type: "success",
         title: "Default updated",
-        message: `"${confirmModal.targetConfig.display_name}" is now the default configuration.`,
+        message: `"${confirmTarget.display_name}" is now the default configuration.`,
       });
-      setConfirmModal({ isOpen: false, targetConfig: null });
+      setConfirmTarget(null);
     } catch (err) {
       showToast({
         type: "error",
@@ -155,7 +154,7 @@ export function ConfigListView({
         message: err instanceof Error ? err.message : "Unknown error",
       });
     }
-  }, [confirmModal.targetConfig, setDefaultMutation, showToast]);
+  }, [confirmTarget, setDefaultMutation, showToast]);
 
   const actionHandlers: ConfigActionHandlers = useMemo(
     () => ({ onEdit, onDuplicate, onSetDefault: handleSetDefault }),
@@ -265,12 +264,12 @@ export function ConfigListView({
 
       {/* Set Default Confirmation Modal */}
       <SetDefaultConfirmModal
-        isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, targetConfig: null })}
+        isOpen={confirmTarget !== null}
+        onClose={() => setConfirmTarget(null)}
         onConfirm={handleConfirmSetDefault}
         isPending={setDefaultMutation.isPending}
         currentDefaultName={currentDefault?.display_name ?? "None"}
-        targetConfigName={confirmModal.targetConfig?.display_name ?? ""}
+        targetConfigName={confirmTarget?.display_name ?? ""}
       />
     </div>
   );

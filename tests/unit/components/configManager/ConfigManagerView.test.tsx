@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ConfigManagerView } from "@/components/wallet/portfolio/views/invest/configManager/ConfigManagerView";
+import { ConfigManagerView } from "@/components/wallet/portfolio/views/invest/configManager";
 
 import { fireEvent, render, screen, waitFor } from "../../../test-utils";
 

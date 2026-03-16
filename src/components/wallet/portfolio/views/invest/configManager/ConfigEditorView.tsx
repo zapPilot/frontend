@@ -17,10 +17,7 @@ import {
 } from "@/hooks/mutations/useStrategyAdminMutations";
 import { useStrategyAdminConfig } from "@/hooks/queries/strategyAdmin";
 import { useToast } from "@/providers/ToastProvider";
-import type {
-  SavedStrategyConfig,
-  StrategyComposition,
-} from "@/types/strategyAdmin";
+import type { SavedStrategyConfig, StrategyComposition } from "@/types";
 
 interface ConfigEditorViewProps {
   configId: string | null;
