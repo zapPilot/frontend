@@ -1,34 +1,66 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCurrency, formatNumber } from "../../../src/utils/formatters";
+import {
+  calculateDataFreshness,
+  formatCurrency,
+  formatNumber,
+  formatRelativeTime,
+} from "../../../src/utils/formatters";
 
-describe("utils", () => {
+describe("formatters", () => {
   describe("formatCurrency", () => {
-    it("should format currency correctly", () => {
-      expect(formatCurrency(1234.56)).toBe("$1,234.56");
-      expect(formatCurrency(0)).toBe("$0.00");
-      expect(formatCurrency(1000000)).toBe("$1,000,000.00");
+    it.each([
+      { amount: 1234.56, expected: "$1,234.56" },
+      { amount: 0, expected: "$0.00" },
+      { amount: 1_000_000, expected: "$1,000,000.00" },
+    ])("formats $amount as $expected", ({ amount, expected }) => {
+      expect(formatCurrency(amount)).toBe(expected);
     });
 
-    it("should hide currency when isHidden is true", () => {
+    it("returns the hidden placeholder when balances are hidden", () => {
       expect(formatCurrency(1234.56, true)).toBe("••••••••");
     });
   });
 
   describe("formatNumber", () => {
-    it("should format numbers correctly", () => {
-      expect(formatNumber(1234.56)).toBe("1,234.56");
-      expect(formatNumber(0)).toBe("0");
-      expect(formatNumber(1000000)).toBe("1,000,000");
+    it.each([
+      { amount: 1234.56, expected: "1,234.56" },
+      { amount: 0, expected: "0" },
+      { amount: 1_000_000, expected: "1,000,000" },
+      { amount: 1.123456, expected: "1.1235" },
+      { amount: 1.1, expected: "1.1" },
+    ])("formats $amount as $expected", ({ amount, expected }) => {
+      expect(formatNumber(amount)).toBe(expected);
     });
 
-    it("should hide numbers when isHidden is true", () => {
+    it("returns the hidden placeholder when numbers are hidden", () => {
       expect(formatNumber(1234.56, true)).toBe("••••");
     });
+  });
 
-    it("should handle decimal places correctly", () => {
-      expect(formatNumber(1.123456)).toBe("1.1235");
-      expect(formatNumber(1.1)).toBe("1.1");
+  describe("data freshness helpers", () => {
+    it("returns unknown freshness for invalid timestamps", () => {
+      expect(calculateDataFreshness("not-a-date")).toEqual({
+        relativeTime: "Unknown",
+        state: "unknown",
+        hoursSince: Infinity,
+        timestamp: "not-a-date",
+        isCurrent: false,
+      });
+    });
+
+    it("returns unknown relative time for missing timestamps", () => {
+      expect(formatRelativeTime(null)).toBe("Unknown");
+    });
+
+    it("returns unknown freshness when the timestamp is missing", () => {
+      expect(calculateDataFreshness(undefined)).toEqual({
+        relativeTime: "Unknown",
+        state: "unknown",
+        hoursSince: Infinity,
+        timestamp: "",
+        isCurrent: false,
+      });
     });
   });
 });

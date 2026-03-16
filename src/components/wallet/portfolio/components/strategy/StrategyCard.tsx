@@ -38,6 +38,23 @@ const STYLES = {
     "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold border shadow-inner flex-shrink-0",
 } as const;
 
+interface StrategyDetails {
+  author: string | undefined;
+  hideAllocationTarget: boolean | undefined;
+  philosophy: string | undefined;
+  zapAction: string | undefined;
+}
+
+interface StrategyCardViewModel {
+  activeDirection: StrategyDirection;
+  displayConfig: ReturnType<typeof getDisplayConfig>;
+  displayRegime: Regime | undefined;
+  effectiveRegime: Regime | undefined;
+  sentimentDisplay: ReactElement;
+  strategyDetails: StrategyDetails;
+  targetAllocation: ReturnType<typeof resolveTargetAllocation>;
+}
+
 function getCardClassName(isExpanded: boolean): string {
   return `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
 }
@@ -89,13 +106,30 @@ function resolveActiveStrategy(
   );
 }
 
-function resolveStrategyCardData(
+function getStrategyDetails(
+  activeStrategy:
+    | {
+        philosophy?: string;
+        author?: string;
+        useCase?: { zapAction?: string; hideAllocationTarget?: boolean };
+      }
+    | undefined
+): StrategyDetails {
+  return {
+    philosophy: activeStrategy?.philosophy,
+    author: activeStrategy?.author,
+    zapAction: activeStrategy?.useCase?.zapAction,
+    hideAllocationTarget: activeStrategy?.useCase?.hideAllocationTarget,
+  };
+}
+
+function resolveStrategyCardViewModel(
   data: WalletPortfolioDataWithDirection,
   currentRegime: Regime | undefined,
   sentimentSection: SectionState<SentimentData> | undefined,
   selectedRegimeId: string | null,
   selectedDirection: StrategyDirection | null
-) {
+): StrategyCardViewModel | null {
   const effectiveRegime = resolveEffectiveRegime(
     currentRegime,
     sentimentSection
@@ -121,88 +155,31 @@ function resolveStrategyCardData(
     effectiveRegime,
     displayRegime,
     activeDirection,
-    activeStrategy,
     targetAllocation: resolveTargetAllocation(activeStrategy, displayRegime),
     sentimentDisplay: renderSentimentDisplay(
       sentimentSection,
       data.sentimentValue
     ),
     displayConfig: getDisplayConfig(effectiveRegime),
+    strategyDetails: getStrategyDetails(activeStrategy),
   };
 }
 
-function handleCardToggle(
+function isInteractiveCardTarget(event: MouseEvent<HTMLElement>): boolean {
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  return target?.closest('[data-interactive="true"]') !== null;
+}
+
+function toggleCardExpansion(
   event: MouseEvent<HTMLElement>,
   displayRegime: Regime | undefined,
   setIsStrategyExpanded: (value: (previous: boolean) => boolean) => void
 ): void {
-  if (!displayRegime) return;
-  const target = event.target instanceof HTMLElement ? event.target : null;
-  if (target?.closest('[data-interactive="true"]')) return;
-  setIsStrategyExpanded(previous => !previous);
-}
-
-function getActiveStrategyDetails(
-  activeStrategy:
-    | {
-        philosophy?: string;
-        author?: string;
-        useCase?: { zapAction?: string; hideAllocationTarget?: boolean };
-      }
-    | undefined
-): {
-  philosophy: string | undefined;
-  author: string | undefined;
-  zapAction: string | undefined;
-  hideAllocationTarget: boolean | undefined;
-} {
-  return {
-    philosophy: activeStrategy?.philosophy,
-    author: activeStrategy?.author,
-    zapAction: activeStrategy?.useCase?.zapAction,
-    hideAllocationTarget: activeStrategy?.useCase?.hideAllocationTarget,
-  };
-}
-
-interface ExpandedSectionRenderParams {
-  isStrategyExpanded: boolean;
-  displayRegime: Regime | undefined;
-  effectiveRegime: Regime | undefined;
-  activeDirection: StrategyDirection;
-  strategyDetails: ReturnType<typeof getActiveStrategyDetails>;
-  targetAllocation: ReturnType<typeof resolveTargetAllocation>;
-  onSelectRegime: (regimeId: string) => void;
-  onSelectDirection: (direction: StrategyDirection) => void;
-}
-
-function renderExpandedSection({
-  isStrategyExpanded,
-  displayRegime,
-  effectiveRegime,
-  activeDirection,
-  strategyDetails,
-  targetAllocation,
-  onSelectRegime,
-  onSelectDirection,
-}: ExpandedSectionRenderParams): ReactElement | null {
-  if (!isStrategyExpanded || !displayRegime) {
-    return null;
+  if (!displayRegime || isInteractiveCardTarget(event)) {
+    return;
   }
 
-  return (
-    <StrategyCardExpandedContent
-      effectiveRegime={effectiveRegime}
-      displayRegime={displayRegime}
-      activeDirection={activeDirection}
-      strategyPhilosophy={strategyDetails.philosophy}
-      strategyAuthor={strategyDetails.author}
-      zapAction={strategyDetails.zapAction}
-      targetAllocation={targetAllocation}
-      hideAllocationTarget={strategyDetails.hideAllocationTarget}
-      onSelectRegime={onSelectRegime}
-      onSelectDirection={onSelectDirection}
-    />
-  );
+  setIsStrategyExpanded(previous => !previous);
 }
 
 interface StrategyCardHeaderProps {
@@ -385,14 +362,14 @@ export function StrategyCard({
     return <StrategyCardSkeleton />;
   }
 
-  const strategyCardData = resolveStrategyCardData(
+  const viewModel = resolveStrategyCardViewModel(
     data,
     currentRegime,
     sentimentSection,
     selectedRegimeId,
     selectedDirection
   );
-  if (!strategyCardData) {
+  if (!viewModel) {
     return null;
   }
 
@@ -400,15 +377,14 @@ export function StrategyCard({
     effectiveRegime,
     displayRegime,
     activeDirection,
-    activeStrategy,
     targetAllocation,
     sentimentDisplay,
     displayConfig,
-  } = strategyCardData;
-  const strategyDetails = getActiveStrategyDetails(activeStrategy);
+    strategyDetails,
+  } = viewModel;
 
   function handleStrategyCardClick(event: MouseEvent<HTMLDivElement>): void {
-    handleCardToggle(event, displayRegime, setIsStrategyExpanded);
+    toggleCardExpansion(event, displayRegime, setIsStrategyExpanded);
   }
 
   function handleSelectRegime(regimeId: string): void {
@@ -446,16 +422,20 @@ export function StrategyCard({
       />
 
       <AnimatePresence>
-        {renderExpandedSection({
-          isStrategyExpanded,
-          displayRegime,
-          effectiveRegime,
-          activeDirection,
-          strategyDetails,
-          targetAllocation,
-          onSelectRegime: handleSelectRegime,
-          onSelectDirection: handleSelectDirection,
-        })}
+        {isStrategyExpanded && displayRegime ? (
+          <StrategyCardExpandedContent
+            effectiveRegime={effectiveRegime}
+            displayRegime={displayRegime}
+            activeDirection={activeDirection}
+            strategyPhilosophy={strategyDetails.philosophy}
+            strategyAuthor={strategyDetails.author}
+            zapAction={strategyDetails.zapAction}
+            targetAllocation={targetAllocation}
+            hideAllocationTarget={strategyDetails.hideAllocationTarget}
+            onSelectRegime={handleSelectRegime}
+            onSelectDirection={handleSelectDirection}
+          />
+        ) : null}
       </AnimatePresence>
     </motion.div>
   );

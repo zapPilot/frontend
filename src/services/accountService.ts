@@ -34,46 +34,51 @@ export interface EtlJobResponse {
 
 export type { EtlJobStatus } from "@davidtnfsh/etl-contracts";
 
-const mapAccountServiceErrorMessage = (
+const ACCOUNT_SERVICE_ERROR_MESSAGE = "Account service error";
+
+function mapConflictMessage(message: string | undefined): string {
+  if (message?.includes("wallet already belongs to another user")) {
+    return message;
+  }
+
+  if (message?.includes("wallet")) {
+    return "This wallet is already associated with an account.";
+  }
+
+  if (message?.includes("email")) {
+    return "This email address is already in use.";
+  }
+
+  return message ?? ACCOUNT_SERVICE_ERROR_MESSAGE;
+}
+
+function mapAccountServiceErrorMessage(
   status: number | undefined,
   message: string | undefined
-): string => {
-  if (status === 400 && message?.includes("wallet")) {
-    return "Invalid wallet address format. Must be a 42-character Ethereum address.";
+): string {
+  switch (status) {
+    case 400:
+      if (message?.includes("wallet")) {
+        return "Invalid wallet address format. Must be a 42-character Ethereum address.";
+      }
+
+      return message ?? ACCOUNT_SERVICE_ERROR_MESSAGE;
+    case 404:
+      return "User account not found. Please connect your wallet first.";
+    case 409:
+      return mapConflictMessage(message);
+    case 422:
+      return "Invalid request data. Please check your input and try again.";
+    default:
+      return message ?? ACCOUNT_SERVICE_ERROR_MESSAGE;
   }
-
-  if (status === 404) {
-    return "User account not found. Please connect your wallet first.";
-  }
-
-  if (status === 409) {
-    if (message?.includes("wallet already belongs to another user")) {
-      return message;
-    }
-
-    if (message?.includes("wallet")) {
-      return "This wallet is already associated with an account.";
-    }
-
-    if (message?.includes("email")) {
-      return "This email address is already in use.";
-    }
-
-    return message ?? "Account service error";
-  }
-
-  if (status === 422) {
-    return "Invalid request data. Please check your input and try again.";
-  }
-
-  return message ?? "Account service error";
-};
+}
 
 const createAccountServiceError = (error: unknown): AccountServiceError =>
   createServiceError(
     error,
     AccountServiceError,
-    "Account service error",
+    ACCOUNT_SERVICE_ERROR_MESSAGE,
     mapAccountServiceErrorMessage
   );
 
@@ -85,9 +90,9 @@ const logDevelopmentResponse = (label: string, payload: unknown): void => {
   logger.debug(label, JSON.stringify(payload, null, 2));
 };
 
-const validateConnectWalletResponse = (
+function validateConnectWalletResponse(
   response: unknown
-): ConnectWalletResponse => {
+): ConnectWalletResponse {
   const validationResult = connectWalletResponseSchema.safeParse(response);
   if (!validationResult.success) {
     logger.error("❌ Validation failed:", validationResult.error.issues);
@@ -100,50 +105,48 @@ const validateConnectWalletResponse = (
   }
 
   return validationResult.data as ConnectWalletResponse;
-};
+}
 
 const accountApiClient = httpUtils.accountApi;
 const callAccountApi = createServiceCaller(createAccountServiceError);
 
-const requestAccountResource = async <T>(
+async function requestAccountResource<T>(
   request: () => Promise<T>
-): Promise<T> => {
-  return callAccountApi(request) as Promise<T>;
-};
+): Promise<T> {
+  return callAccountApi(request);
+}
 
-const requestAndValidate = async <TResponse, TResult>(
+async function requestAndValidate<TResponse, TResult>(
   request: () => Promise<TResponse>,
   validate: (response: unknown) => TResult
-): Promise<TResult> => {
+): Promise<TResult> {
   const response = await requestAccountResource(request);
   return validate(response);
-};
+}
 
-const getAccountResource = async <T>(path: string): Promise<T> => {
+async function getAccountResource<T>(path: string): Promise<T> {
   return requestAccountResource(() => accountApiClient.get<T>(path));
-};
+}
 
-const postAccountResource = async <T>(
+async function postAccountResource<T>(
   path: string,
   body?: Record<string, unknown>
-): Promise<T> => {
-  if (body) {
-    return requestAccountResource(() => accountApiClient.post<T>(path, body));
-  }
+): Promise<T> {
+  return requestAccountResource(() =>
+    body ? accountApiClient.post<T>(path, body) : accountApiClient.post<T>(path)
+  );
+}
 
-  return requestAccountResource(() => accountApiClient.post<T>(path));
-};
-
-const putAccountResource = async <T>(
+async function putAccountResource<T>(
   path: string,
   body: Record<string, unknown>
-): Promise<T> => {
+): Promise<T> {
   return requestAccountResource(() => accountApiClient.put<T>(path, body));
-};
+}
 
-const deleteAccountResource = async <T>(path: string): Promise<T> => {
+async function deleteAccountResource<T>(path: string): Promise<T> {
   return requestAccountResource(() => accountApiClient.delete<T>(path));
-};
+}
 
 /**
  * Connect wallet and create/retrieve user.
@@ -193,14 +196,12 @@ export async function updateUserEmail(
   );
 }
 
-const deleteUserResource = async (
-  path: string
-): Promise<UpdateEmailResponse> => {
+async function deleteUserResource(path: string): Promise<UpdateEmailResponse> {
   return requestAndValidate(
     () => deleteAccountResource<UpdateEmailResponse>(path),
     validateUpdateEmailResponse
   );
-};
+}
 
 /**
  * Remove user email (unsubscribe from email-based reports).

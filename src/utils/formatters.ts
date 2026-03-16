@@ -48,6 +48,19 @@ export interface AddressFormatOptions {
   ellipsis?: string;
 }
 
+const DEFAULT_CURRENCY_FORMAT_OPTIONS: CurrencyFormatOptions = {
+  currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
+  locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+  threshold: 0.01,
+  showNegative: true,
+};
+
+const DEFAULT_NUMBER_FORMAT_OPTIONS: NumberFormatOptions = {
+  locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+  maximumFractionDigits: 4,
+  minimumFractionDigits: 0,
+};
+
 // =============================================================================
 // INTERNAL HELPERS
 // =============================================================================
@@ -81,17 +94,13 @@ function formatSmartNumber(amount: number): string {
   return amount.toFixed(0);
 }
 
-function resolveFormatOptions<T extends BaseFormatOptions>(
+function normalizeFormatOptions<T extends BaseFormatOptions>(
   optionsOrIsHidden: T | boolean,
-  defaults: T,
-  hiddenPlaceholder: string
-): T | string {
-  const options =
-    typeof optionsOrIsHidden === "boolean"
-      ? { ...defaults, isHidden: optionsOrIsHidden }
-      : { ...defaults, ...optionsOrIsHidden };
-  if (options.isHidden) return hiddenPlaceholder;
-  return options;
+  defaults: T
+): T {
+  return typeof optionsOrIsHidden === "boolean"
+    ? { ...defaults, isHidden: optionsOrIsHidden }
+    : { ...defaults, ...optionsOrIsHidden };
 }
 
 function parseUtcDate(dateString: string): Dayjs | null {
@@ -111,18 +120,13 @@ export function formatCurrency(
   amount: number,
   optionsOrIsHidden: CurrencyFormatOptions | boolean = {}
 ): string {
-  const resolved = resolveFormatOptions(
+  const options = normalizeFormatOptions(
     optionsOrIsHidden,
-    {
-      currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
-      locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
-      threshold: 0.01,
-      showNegative: true,
-    },
-    PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER
+    DEFAULT_CURRENCY_FORMAT_OPTIONS
   );
-  if (typeof resolved === "string") return resolved;
-  const options = resolved;
+  if (options.isHidden) {
+    return PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER;
+  }
 
   const maxDigits = options.maximumFractionDigits ?? 2;
   const minDigits = Math.min(options.minimumFractionDigits ?? 2, maxDigits);
@@ -152,17 +156,13 @@ export function formatNumber(
   amount: number,
   optionsOrIsHidden: NumberFormatOptions | boolean = {}
 ): string {
-  const resolved = resolveFormatOptions(
+  const options = normalizeFormatOptions(
     optionsOrIsHidden,
-    {
-      locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
-      maximumFractionDigits: 4,
-      minimumFractionDigits: 0,
-    },
-    PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER
+    DEFAULT_NUMBER_FORMAT_OPTIONS
   );
-  if (typeof resolved === "string") return resolved;
-  const options = resolved;
+  if (options.isHidden) {
+    return PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER;
+  }
 
   if (options.smartPrecision) {
     return formatSmartNumber(amount);
@@ -268,6 +268,13 @@ const UNKNOWN_FRESHNESS: DataFreshness = {
   isCurrent: false,
 };
 
+function createUnknownFreshness(timestamp = ""): DataFreshness {
+  return {
+    ...UNKNOWN_FRESHNESS,
+    timestamp,
+  };
+}
+
 function getFreshnessState(hours: number): FreshnessState {
   if (hours <= 24) return "fresh";
   if (hours <= 72) return "stale";
@@ -282,7 +289,7 @@ export function calculateDataFreshness(
   try {
     const updateTime = parseUtcDate(lastUpdated);
     if (!updateTime) {
-      return { ...UNKNOWN_FRESHNESS, timestamp: lastUpdated };
+      return createUnknownFreshness(lastUpdated);
     }
 
     const hoursSince = dayjs.utc().diff(updateTime, "hour", true);
@@ -297,7 +304,7 @@ export function calculateDataFreshness(
     };
   } catch (error) {
     logger.error("Error calculating data freshness", error, "formatters");
-    return { ...UNKNOWN_FRESHNESS, timestamp: lastUpdated };
+    return createUnknownFreshness(lastUpdated);
   }
 }
 

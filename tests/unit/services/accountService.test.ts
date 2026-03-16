@@ -5,11 +5,11 @@ import type {
   AddWalletResponse,
   ConnectWalletResponse,
   UpdateEmailResponse,
+  UserCryptoWallet,
   UserProfileResponse,
 } from "@/schemas/api/accountSchemas";
 import * as accountService from "@/services/accountService";
 
-// Mock HTTP utilities
 vi.mock("@/lib/http", () => ({
   httpUtils: {
     accountApi: {
@@ -24,112 +24,151 @@ vi.mock("@/lib/http", () => ({
   },
 }));
 
+const PRIMARY_WALLET = "0x1234567890123456789012345678901234567890";
+const SECONDARY_WALLET = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
+
+function createConnectWalletResponse(
+  overrides: Partial<ConnectWalletResponse> = {}
+): ConnectWalletResponse {
+  return {
+    user_id: "user123",
+    is_new_user: false,
+    ...overrides,
+  };
+}
+
+function createUserProfileResponse(
+  overrides: Partial<UserProfileResponse> = {}
+): UserProfileResponse {
+  return {
+    user: {
+      id: "user123",
+      email: "test@example.com",
+      is_subscribed_to_reports: true,
+      created_at: "2024-01-01T00:00:00Z",
+    },
+    wallets: [
+      {
+        id: "wallet1",
+        user_id: "user123",
+        wallet: PRIMARY_WALLET,
+        label: "Main Wallet",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+function createUpdateEmailResponse(message: string): UpdateEmailResponse {
+  return {
+    success: true,
+    message,
+  };
+}
+
+function createWallets(): UserCryptoWallet[] {
+  return [
+    {
+      id: "wallet1",
+      user_id: "user123",
+      wallet: PRIMARY_WALLET,
+      label: "Main Wallet",
+      created_at: "2024-01-01T00:00:00Z",
+    },
+    {
+      id: "wallet2",
+      user_id: "user123",
+      wallet: SECONDARY_WALLET,
+      created_at: "2024-01-02T00:00:00Z",
+    },
+  ];
+}
+
+async function expectAccountServiceError(
+  promise: Promise<unknown>,
+  message?: string
+): Promise<void> {
+  if (message) {
+    await expect(promise).rejects.toThrow(message);
+    return;
+  }
+
+  await expect(promise).rejects.toThrow();
+}
+
 describe("accountService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe("connectWallet", () => {
-    it("should connect wallet successfully", async () => {
-      const mockResponse: ConnectWalletResponse = {
-        user_id: "user123",
-        is_new_user: false,
-      };
+    it.each([
+      {
+        label: "existing users",
+        wallet: PRIMARY_WALLET,
+        response: createConnectWalletResponse(),
+      },
+      {
+        label: "new users",
+        wallet: SECONDARY_WALLET,
+        response: createConnectWalletResponse({
+          user_id: "user456",
+          is_new_user: true,
+        }),
+      },
+    ])(
+      "returns validated responses for $label",
+      async ({ wallet, response }) => {
+        vi.mocked(httpUtils.accountApi.post).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+        await expect(accountService.connectWallet(wallet)).resolves.toEqual(
+          response
+        );
+        expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
+          "/users/connect-wallet",
+          {
+            wallet,
+          }
+        );
+      }
+    );
 
-      const result = await accountService.connectWallet(
-        "0x1234567890123456789012345678901234567890"
-      );
-
-      expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
-        "/users/connect-wallet",
-        {
-          wallet: "0x1234567890123456789012345678901234567890",
-        }
-      );
-    });
-
-    it("should handle new user creation", async () => {
-      const mockResponse: ConnectWalletResponse = {
-        user_id: "user456",
-        is_new_user: true,
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.connectWallet(
-        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-      );
-
-      expect(result.is_new_user).toBe(true);
-      expect(result.user_id).toBe("user456");
-    });
-
-    it("should handle invalid wallet address format (400)", async () => {
-      const mockError = {
-        status: 400,
-        message: "Invalid wallet address",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.connectWallet("invalid-address")
-      ).rejects.toThrow();
-    });
-
-    it("should handle network errors", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(
-        new Error("Network error")
-      );
-
-      await expect(
-        accountService.connectWallet(
-          "0x1234567890123456789012345678901234567890"
-        )
-      ).rejects.toThrow();
-    });
-
-    /**
-     * Comprehensive tests for ETL job handling with snake_case fields
-     * These tests prevent regression of the bug where message/rate_limited were dropped
-     */
-    it("should handle real API response with etl_job containing minimal fields", async () => {
-      // Real API response structure from connect-wallet endpoint
-      const mockResponse: ConnectWalletResponse = {
-        user_id: "12a5184b-ec53-4ab7-b42b-70cb063308b6",
-        is_new_user: true,
-        etl_job: {
+    it.each([
+      {
+        label: "minimal etl job fields",
+        response: createConnectWalletResponse({
+          user_id: "12a5184b-ec53-4ab7-b42b-70cb063308b6",
+          is_new_user: true,
+          etl_job: {
+            job_id: "etl_1767881497530_1rw7jo",
+            status: "pending",
+            message: "Wallet data fetch job queued successfully",
+            rate_limited: false,
+          },
+        }),
+        expected: {
           job_id: "etl_1767881497530_1rw7jo",
           status: "pending",
           message: "Wallet data fetch job queued successfully",
           rate_limited: false,
         },
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.connectWallet(
-        "0x1234567890123456789012345678901234567890"
-      );
-
-      // CRITICAL: etl_job should be present with snake_case fields
-      expect(result.etl_job).toBeDefined();
-      expect(result.etl_job?.job_id).toBe("etl_1767881497530_1rw7jo");
-      expect(result.etl_job?.status).toBe("pending");
-      expect(result.etl_job?.message).toBe(
-        "Wallet data fetch job queued successfully"
-      );
-      expect(result.etl_job?.rate_limited).toBe(false);
-    });
-
-    it("should handle response with etl_job containing all optional fields", async () => {
-      const mockResponse: ConnectWalletResponse = {
-        user_id: "user456",
-        is_new_user: false,
-        etl_job: {
+      },
+      {
+        label: "all optional etl job fields",
+        response: createConnectWalletResponse({
+          etl_job: {
+            job_id: "job-full",
+            status: "completed",
+            trigger: "webhook",
+            created_at: "2024-01-01T00:00:00Z",
+            completed_at: "2024-01-01T02:00:00Z",
+            records_processed: 100,
+            records_inserted: 95,
+            message: "Job completed successfully",
+          },
+        }),
+        expected: {
           job_id: "job-full",
           status: "completed",
           trigger: "webhook",
@@ -139,148 +178,154 @@ describe("accountService", () => {
           records_inserted: 95,
           message: "Job completed successfully",
         },
-      };
+      },
+    ])("preserves $label", async ({ response, expected }) => {
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+      const result = await accountService.connectWallet(PRIMARY_WALLET);
 
-      const result = await accountService.connectWallet(
-        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-      );
-
-      expect(result.etl_job).toBeDefined();
-      expect(result.etl_job?.job_id).toBe("job-full");
-      expect(result.etl_job?.status).toBe("completed");
-      expect(result.etl_job?.trigger).toBe("webhook");
-      expect(result.etl_job?.created_at).toBe("2024-01-01T00:00:00Z");
-      expect(result.etl_job?.completed_at).toBe("2024-01-01T02:00:00Z");
-      expect(result.etl_job?.records_processed).toBe(100);
-      expect(result.etl_job?.records_inserted).toBe(95);
-      expect(result.etl_job?.message).toBe("Job completed successfully");
+      expect(result.etl_job).toEqual(expected);
     });
 
-    it("should handle response without etl_job field (existing user)", async () => {
-      const mockResponse: ConnectWalletResponse = {
+    it("returns existing users without etl job metadata", async () => {
+      const response = createConnectWalletResponse({
         user_id: "user789",
         is_new_user: false,
-        // No etl_job - existing user doesn't need data fetch
-      };
+      });
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.connectWallet(
-        "0x9999999999999999999999999999999999999999"
-      );
+      const result = await accountService.connectWallet(PRIMARY_WALLET);
 
       expect(result.user_id).toBe("user789");
       expect(result.is_new_user).toBe(false);
       expect(result.etl_job).toBeUndefined();
     });
 
-    it("should throw AccountServiceError when etl_job validation fails", async () => {
-      const mockResponse = {
+    it("throws AccountServiceError when etl job validation fails", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue({
         user_id: "user999",
         is_new_user: true,
         etl_job: {
-          // Missing required job_id field - should fail validation
           status: "pending",
           message: "Test",
         },
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+      });
 
       await expect(
-        accountService.connectWallet(
-          "0x1111111111111111111111111111111111111111"
-        )
+        accountService.connectWallet(PRIMARY_WALLET)
       ).rejects.toThrow(accountService.AccountServiceError);
+    });
+
+    it.each([
+      {
+        label: "invalid wallet input",
+        error: { status: 400, message: "Invalid wallet parameter" },
+        expectedMessage:
+          "Invalid wallet address format. Must be a 42-character Ethereum address.",
+      },
+      {
+        label: "generic bad request",
+        error: { status: 400, message: "Bad request general" },
+        expectedMessage: "Bad request general",
+      },
+      {
+        label: "user not found from response status",
+        error: { message: "Not found", response: { status: 404 } },
+        expectedMessage:
+          "User account not found. Please connect your wallet first.",
+      },
+      {
+        label: "unprocessable entity",
+        error: { status: 422, message: "Whatever" },
+        expectedMessage:
+          "Invalid request data. Please check your input and try again.",
+      },
+      {
+        label: "plain string errors",
+        error: "Just a string error",
+        expectedMessage: "Account service error",
+      },
+      {
+        label: "null errors",
+        error: null,
+        expectedMessage: "Account service error",
+      },
+    ])("maps $label", async ({ error, expectedMessage }) => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(error);
+
+      await expectAccountServiceError(
+        accountService.connectWallet("invalid-address"),
+        expectedMessage
+      );
+    });
+
+    it("preserves extra error fields on wrapped errors", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 500,
+        message: "Server error",
+        code: "INTERNAL_ERROR",
+        details: { trace: "abc123" },
+      });
+
+      await expect(accountService.connectWallet("0x123")).rejects.toMatchObject(
+        {
+          message: "Server error",
+          code: "INTERNAL_ERROR",
+          details: { trace: "abc123" },
+        }
+      );
     });
   });
 
   describe("getUserProfile", () => {
-    it("should fetch user profile successfully", async () => {
-      const mockProfile: UserProfileResponse = {
-        user: {
-          id: "user123",
-          email: "test@example.com",
-          is_subscribed_to_reports: true,
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        wallets: [
-          {
-            id: "wallet1",
+    it.each([
+      {
+        label: "basic profile data",
+        response: createUserProfileResponse(),
+      },
+      {
+        label: "subscription data",
+        response: createUserProfileResponse({
+          wallets: [],
+          subscription: {
+            id: "sub123",
             user_id: "user123",
-            wallet: "0x1234567890123456789012345678901234567890",
-            label: "Main Wallet",
+            plan_code: "PRO",
+            starts_at: "2024-01-01T00:00:00Z",
+            is_canceled: false,
             created_at: "2024-01-01T00:00:00Z",
           },
-        ],
-      };
+        }),
+      },
+    ])("returns $label", async ({ response }) => {
+      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(mockProfile);
-
-      const result = await accountService.getUserProfile("user123");
-
-      expect(result).toEqual(mockProfile);
+      await expect(accountService.getUserProfile("user123")).resolves.toEqual(
+        response
+      );
       expect(httpUtils.accountApi.get).toHaveBeenCalledWith("/users/user123");
     });
 
-    it("should handle user not found (404)", async () => {
-      const mockError = {
+    it("wraps not-found profile errors", async () => {
+      vi.mocked(httpUtils.accountApi.get).mockRejectedValue({
         status: 404,
         message: "User not found",
-      };
+      });
 
-      vi.mocked(httpUtils.accountApi.get).mockRejectedValue(mockError);
-
-      await expect(
+      await expectAccountServiceError(
         accountService.getUserProfile("nonexistent")
-      ).rejects.toThrow();
-    });
-
-    it("should fetch profile with subscription data", async () => {
-      const mockProfile: UserProfileResponse = {
-        user: {
-          id: "user123",
-          email: "test@example.com",
-          is_subscribed_to_reports: true,
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        wallets: [],
-        subscription: {
-          id: "sub123",
-          user_id: "user123",
-          plan_code: "PRO",
-          starts_at: "2024-01-01T00:00:00Z",
-          is_canceled: false,
-          created_at: "2024-01-01T00:00:00Z",
-        },
-      };
-
-      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(mockProfile);
-
-      const result = await accountService.getUserProfile("user123");
-
-      expect(result.subscription).toBeDefined();
-      expect(result.subscription?.plan_code).toBe("PRO");
+      );
     });
   });
 
   describe("updateUserEmail", () => {
-    it("should update email successfully", async () => {
-      const mockResponse: UpdateEmailResponse = {
-        success: true,
-        message: "Email updated successfully",
-      };
+    it("updates email successfully", async () => {
+      const response = createUpdateEmailResponse("Email updated successfully");
+      vi.mocked(httpUtils.accountApi.put).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.put).mockResolvedValue(mockResponse);
-
-      const result = await accountService.updateUserEmail(
-        "user123",
-        "newemail@example.com"
-      );
-
-      expect(result).toEqual(mockResponse);
+      await expect(
+        accountService.updateUserEmail("user123", "newemail@example.com")
+      ).resolves.toEqual(response);
       expect(httpUtils.accountApi.put).toHaveBeenCalledWith(
         "/users/user123/email",
         {
@@ -289,395 +334,289 @@ describe("accountService", () => {
       );
     });
 
-    it("should handle duplicate email (409)", async () => {
-      const mockError = {
-        status: 409,
-        message: "Email already in use",
-      };
+    it.each([
+      {
+        label: "duplicate emails",
+        error: { status: 409, message: "email exists" },
+        expectedMessage: "This email address is already in use.",
+      },
+      {
+        label: "invalid email formats",
+        error: { status: 422, message: "Invalid email format" },
+        expectedMessage:
+          "Invalid request data. Please check your input and try again.",
+      },
+    ])("maps $label", async ({ error, expectedMessage }) => {
+      vi.mocked(httpUtils.accountApi.put).mockRejectedValue(error);
 
-      vi.mocked(httpUtils.accountApi.put).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.updateUserEmail("user123", "existing@example.com")
-      ).rejects.toThrow();
-    });
-
-    it("should handle invalid email format (422)", async () => {
-      const mockError = {
-        status: 422,
-        message: "Invalid email format",
-      };
-
-      vi.mocked(httpUtils.accountApi.put).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.updateUserEmail("user123", "invalid-email")
-      ).rejects.toThrow();
+      await expectAccountServiceError(
+        accountService.updateUserEmail("user123", "existing@example.com"),
+        expectedMessage
+      );
     });
   });
 
   describe("removeUserEmail", () => {
-    it("should remove email successfully", async () => {
-      const mockResponse: UpdateEmailResponse = {
-        success: true,
-        message: "Email removed successfully",
-      };
+    it("removes email successfully", async () => {
+      const response = createUpdateEmailResponse("Email removed successfully");
+      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(mockResponse);
-
-      const result = await accountService.removeUserEmail("user123");
-
-      expect(result).toEqual(mockResponse);
+      await expect(accountService.removeUserEmail("user123")).resolves.toEqual(
+        response
+      );
       expect(httpUtils.accountApi.delete).toHaveBeenCalledWith(
         "/users/user123/email"
       );
     });
 
-    it("should handle user not found (404)", async () => {
-      const mockError = {
+    it("wraps user-not-found errors", async () => {
+      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue({
         status: 404,
         message: "User not found",
-      };
+      });
 
-      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue(mockError);
-
-      await expect(
+      await expectAccountServiceError(
         accountService.removeUserEmail("nonexistent")
-      ).rejects.toThrow();
+      );
     });
   });
 
   describe("deleteUser", () => {
-    it("should delete user successfully", async () => {
-      const mockResponse: UpdateEmailResponse = {
-        success: true,
-        message: "User deleted successfully",
-      };
+    it("deletes users successfully", async () => {
+      const response = createUpdateEmailResponse("User deleted successfully");
+      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(mockResponse);
-
-      const result = await accountService.deleteUser("user123");
-
-      expect(result).toEqual(mockResponse);
+      await expect(accountService.deleteUser("user123")).resolves.toEqual(
+        response
+      );
       expect(httpUtils.accountApi.delete).toHaveBeenCalledWith(
         "/users/user123"
       );
     });
 
-    it("should handle user not found (404)", async () => {
-      const mockError = {
+    it("wraps user-not-found errors", async () => {
+      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue({
         status: 404,
         message: "User not found",
-      };
+      });
 
-      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue(mockError);
-
-      await expect(accountService.deleteUser("nonexistent")).rejects.toThrow();
+      await expectAccountServiceError(accountService.deleteUser("nonexistent"));
     });
   });
 
   describe("getUserWallets", () => {
-    it("should fetch user wallets successfully", async () => {
-      const mockWallets = [
-        {
-          id: "wallet1",
-          user_id: "user123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          label: "Main Wallet",
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "wallet2",
-          user_id: "user123",
-          wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          created_at: "2024-01-02T00:00:00Z",
-        },
-      ];
-
-      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(mockWallets);
+    it.each([
+      {
+        label: "wallet collections",
+        response: createWallets(),
+        expectedLength: 2,
+      },
+      {
+        label: "empty wallet collections",
+        response: [],
+        expectedLength: 0,
+      },
+    ])("returns $label", async ({ response, expectedLength }) => {
+      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(response);
 
       const result = await accountService.getUserWallets("user123");
 
-      expect(result).toEqual(mockWallets);
-      expect(result).toHaveLength(2);
+      expect(result).toEqual(response);
+      expect(result).toHaveLength(expectedLength);
       expect(httpUtils.accountApi.get).toHaveBeenCalledWith(
         "/users/user123/wallets"
       );
     });
-
-    it("should handle empty wallet list", async () => {
-      vi.mocked(httpUtils.accountApi.get).mockResolvedValue([]);
-
-      const result = await accountService.getUserWallets("user123");
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
   });
 
   describe("addWalletToBundle", () => {
-    it("should add wallet without label", async () => {
-      const mockResponse: AddWalletResponse = {
-        wallet_id: "wallet123",
-        message: "Wallet added successfully",
-      };
+    it.each([
+      {
+        label: "without labels",
+        wallet: PRIMARY_WALLET,
+        labelValue: undefined,
+        response: {
+          wallet_id: "wallet123",
+          message: "Wallet added successfully",
+        } satisfies AddWalletResponse,
+      },
+      {
+        label: "with labels",
+        wallet: SECONDARY_WALLET,
+        labelValue: "Trading Wallet",
+        response: {
+          wallet_id: "wallet456",
+          message: "Wallet added successfully",
+        } satisfies AddWalletResponse,
+      },
+    ])("adds wallets $label", async ({ wallet, labelValue, response }) => {
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.addWalletToBundle(
-        "user123",
-        "0x1234567890123456789012345678901234567890"
-      );
-
-      expect(result).toEqual(mockResponse);
+      await expect(
+        accountService.addWalletToBundle("user123", wallet, labelValue)
+      ).resolves.toEqual(response);
       expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
         "/users/user123/wallets",
         {
-          wallet: "0x1234567890123456789012345678901234567890",
-          label: undefined,
+          wallet,
+          label: labelValue,
         }
       );
     });
 
-    it("should add wallet with custom label", async () => {
-      const mockResponse: AddWalletResponse = {
-        wallet_id: "wallet456",
-        message: "Wallet added successfully",
-      };
+    it.each([
+      {
+        label: "wallet conflicts",
+        error: { status: 409, message: "This wallet is taken" },
+        expectedMessage: "This wallet is already associated with an account.",
+      },
+      {
+        label: "cross-account wallet conflicts",
+        error: {
+          status: 409,
+          message:
+            "wallet already belongs to another user, please delete one of the accounts instead",
+        },
+        expectedMessage:
+          "wallet already belongs to another user, please delete one of the accounts instead",
+      },
+      {
+        label: "invalid wallets",
+        error: { status: 400, message: "Invalid wallet address" },
+        expectedMessage:
+          "Invalid wallet address format. Must be a 42-character Ethereum address.",
+      },
+    ])("maps $label", async ({ error, expectedMessage }) => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(error);
 
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.addWalletToBundle(
-        "user123",
-        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        "Trading Wallet"
+      await expectAccountServiceError(
+        accountService.addWalletToBundle("user123", PRIMARY_WALLET),
+        expectedMessage
       );
-
-      expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
-        "/users/user123/wallets",
-        {
-          wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          label: "Trading Wallet",
-        }
-      );
-    });
-
-    it("should handle duplicate wallet (409)", async () => {
-      const mockError = {
-        status: 409,
-        message: "Wallet already associated",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.addWalletToBundle(
-          "user123",
-          "0x1234567890123456789012345678901234567890"
-        )
-      ).rejects.toThrow();
-    });
-
-    it("should handle wallet belongs to another user (409)", async () => {
-      const mockError = {
-        status: 409,
-        message:
-          "Wallet already belongs to another user, please delete one of the accounts instead",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.addWalletToBundle(
-          "user123",
-          "0x1234567890123456789012345678901234567890"
-        )
-      ).rejects.toThrow();
-    });
-
-    it("should handle invalid wallet format (400)", async () => {
-      const mockError = {
-        status: 400,
-        message: "Invalid wallet address",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.addWalletToBundle("user123", "invalid-address")
-      ).rejects.toThrow();
     });
   });
 
   describe("removeWalletFromBundle", () => {
-    it("should remove wallet successfully", async () => {
-      const mockResponse = {
+    it("removes wallets successfully", async () => {
+      const response = {
         message: "Wallet removed successfully",
       };
+      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.delete).mockResolvedValue(mockResponse);
-
-      const result = await accountService.removeWalletFromBundle(
-        "user123",
-        "wallet456"
-      );
-
-      expect(result).toEqual(mockResponse);
+      await expect(
+        accountService.removeWalletFromBundle("user123", "wallet456")
+      ).resolves.toEqual(response);
       expect(httpUtils.accountApi.delete).toHaveBeenCalledWith(
         "/users/user123/wallets/wallet456"
       );
     });
 
-    it("should handle wallet not found (404)", async () => {
-      const mockError = {
+    it("wraps wallet-not-found errors", async () => {
+      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue({
         status: 404,
         message: "Wallet not found",
-      };
+      });
 
-      vi.mocked(httpUtils.accountApi.delete).mockRejectedValue(mockError);
-
-      await expect(
+      await expectAccountServiceError(
         accountService.removeWalletFromBundle("user123", "nonexistent")
-      ).rejects.toThrow();
+      );
     });
   });
 
   describe("updateWalletLabel", () => {
-    it("should update wallet label successfully", async () => {
-      const mockResponse = {
-        message: "Label updated successfully",
-      };
+    it.each([{ labelValue: "New Label" }, { labelValue: "" }])(
+      "updates wallet labels when label is '$labelValue'",
+      async ({ labelValue }) => {
+        const response = {
+          message: "Label updated successfully",
+        };
+        vi.mocked(httpUtils.accountApi.put).mockResolvedValue(response);
 
-      vi.mocked(httpUtils.accountApi.put).mockResolvedValue(mockResponse);
+        await expect(
+          accountService.updateWalletLabel(
+            "user123",
+            PRIMARY_WALLET,
+            labelValue
+          )
+        ).resolves.toEqual(response);
+        expect(httpUtils.accountApi.put).toHaveBeenCalledWith(
+          `/users/user123/wallets/${PRIMARY_WALLET}/label`,
+          {
+            label: labelValue,
+          }
+        );
+      }
+    );
 
-      const result = await accountService.updateWalletLabel(
-        "user123",
-        "0x1234567890123456789012345678901234567890",
-        "New Label"
-      );
-
-      expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.put).toHaveBeenCalledWith(
-        "/users/user123/wallets/0x1234567890123456789012345678901234567890/label",
-        {
-          label: "New Label",
-        }
-      );
-    });
-
-    it("should handle empty label", async () => {
-      const mockResponse = {
-        message: "Label updated successfully",
-      };
-
-      vi.mocked(httpUtils.accountApi.put).mockResolvedValue(mockResponse);
-
-      const result = await accountService.updateWalletLabel(
-        "user123",
-        "0x1234567890123456789012345678901234567890",
-        ""
-      );
-
-      expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.put).toHaveBeenCalledWith(
-        "/users/user123/wallets/0x1234567890123456789012345678901234567890/label",
-        {
-          label: "",
-        }
-      );
-    });
-
-    it("should handle wallet not found (404)", async () => {
-      const mockError = {
+    it("wraps wallet-not-found errors", async () => {
+      vi.mocked(httpUtils.accountApi.put).mockRejectedValue({
         status: 404,
         message: "Wallet not found",
-      };
+      });
 
-      vi.mocked(httpUtils.accountApi.put).mockRejectedValue(mockError);
-
-      await expect(
+      await expectAccountServiceError(
         accountService.updateWalletLabel("user123", "nonexistent", "Label")
-      ).rejects.toThrow();
+      );
     });
   });
 
-  describe("Error handling edge cases", () => {
-    it("should transform 400 'wallet' error to friendly message", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 400,
-        message: "Invalid wallet parameter",
-      });
-
-      await expect(accountService.connectWallet("invalid")).rejects.toThrow(
-        "Invalid wallet address format. Must be a 42-character Ethereum address."
-      );
-    });
-
-    it("should transform 409 'wallet' error", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 409,
-        // Lowercase 'wallet' to hit the branch
-        message: "This wallet is taken",
-      });
+  describe("triggerWalletDataFetch", () => {
+    it("triggers wallet data fetches", async () => {
+      const response = {
+        job_id: "job123",
+        status: "processing",
+        message: "Request accepted",
+      };
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(response);
 
       await expect(
-        accountService.addWalletToBundle("u1", "w1")
-      ).rejects.toThrow("This wallet is already associated with an account.");
-    });
-
-    it("should transform 409 'email' error", async () => {
-      vi.mocked(httpUtils.accountApi.put).mockRejectedValue({
-        status: 409,
-        message: "email exists",
-      });
-
-      await expect(accountService.updateUserEmail("u1", "e1")).rejects.toThrow(
-        "This email address is already in use."
+        accountService.triggerWalletDataFetch("user123", "0x123")
+      ).resolves.toEqual(response);
+      expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
+        "/users/user123/wallets/0x123/fetch-data"
       );
     });
 
-    it("should preserve 409 'belongs to another user' message", async () => {
-      const msg =
-        "wallet already belongs to another user, please delete one of the accounts instead";
+    it("wraps trigger errors", async () => {
       vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 409,
-        message: msg,
+        status: 500,
+        message: "Internal server error",
       });
 
-      await expect(
-        accountService.addWalletToBundle("u1", "w1")
-      ).rejects.toThrow(msg);
+      await expectAccountServiceError(
+        accountService.triggerWalletDataFetch("user123", "0x123")
+      );
+    });
+  });
+
+  describe("getEtlJobStatus", () => {
+    it("returns ETL job status", async () => {
+      const response = {
+        job_id: "job123",
+        status: "completed",
+        trigger: "manual",
+        created_at: "2024-01-01T00:00:00Z",
+      };
+      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(response);
+
+      await expect(accountService.getEtlJobStatus("job123")).resolves.toEqual(
+        response
+      );
+      expect(httpUtils.accountApi.get).toHaveBeenCalledWith("/etl/jobs/job123");
     });
 
-    it("should transform 422 error", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 422,
-        message: "Whatever",
+    it("wraps ETL lookup errors", async () => {
+      vi.mocked(httpUtils.accountApi.get).mockRejectedValue({
+        status: 404,
+        message: "Job not found",
       });
 
-      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
-        "Invalid request data. Please check your input and try again."
-      );
-    });
-
-    it("should handle non-object/string errors", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(
-        "Just a string error"
-      );
-
-      try {
-        await accountService.connectWallet("0x123");
-        expect.fail("Should have thrown");
-      } catch (e: any) {
-        expect(e.message).toBe("Account service error");
-        expect(e.status).toBe(500);
-      }
+      await expectAccountServiceError(accountService.getEtlJobStatus("job123"));
     });
   });
 
   describe("AccountServiceError", () => {
-    it("should create error with correct properties", () => {
+    it("stores error metadata", () => {
       const error = new accountService.AccountServiceError(
         "Test error",
         400,
@@ -690,145 +629,6 @@ describe("accountService", () => {
       expect(error.code).toBe("TEST_ERROR");
       expect(error.details).toEqual({ field: "wallet" });
       expect(error.name).toBe("AccountServiceError");
-    });
-  });
-  describe("triggerWalletDataFetch", () => {
-    it("should trigger data fetch successfully", async () => {
-      const mockResponse = {
-        job_id: "job123",
-        status: "processing",
-        message: "Request accepted",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
-
-      const result = await accountService.triggerWalletDataFetch(
-        "user123",
-        "0x123"
-      );
-
-      expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
-        "/users/user123/wallets/0x123/fetch-data"
-      );
-    });
-
-    it("should handle error during trigger", async () => {
-      const mockError = {
-        status: 500,
-        message: "Internal server error",
-      };
-
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
-
-      await expect(
-        accountService.triggerWalletDataFetch("user123", "0x123")
-      ).rejects.toThrow();
-    });
-  });
-
-  describe("getEtlJobStatus", () => {
-    it("should fetch job status successfully", async () => {
-      const mockResponse = {
-        job_id: "job123",
-        status: "completed",
-        trigger: "manual",
-        created_at: "2024-01-01T00:00:00Z",
-      };
-
-      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(mockResponse);
-
-      const result = await accountService.getEtlJobStatus("job123");
-
-      expect(result).toEqual({
-        job_id: "job123",
-        status: "completed",
-        trigger: "manual",
-        created_at: "2024-01-01T00:00:00Z",
-      });
-      expect(httpUtils.accountApi.get).toHaveBeenCalledWith("/etl/jobs/job123");
-    });
-
-    it("should handle job not found", async () => {
-      const mockError = {
-        status: 404,
-        message: "Job not found",
-      };
-
-      vi.mocked(httpUtils.accountApi.get).mockRejectedValue(mockError);
-
-      await expect(accountService.getEtlJobStatus("job123")).rejects.toThrow();
-    });
-  });
-
-  describe("createAccountServiceError branches", () => {
-    it("should handle 400 non-wallet error (default break)", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 400,
-        message: "Bad request general",
-      });
-
-      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
-        "Bad request general"
-      );
-    });
-
-    it("should handle 409 non-wallet non-email error (default break)", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 409,
-        message: "Conflict on something else",
-      });
-
-      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
-        "Conflict on something else"
-      );
-    });
-
-    it("should handle error with response.status instead of status", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        message: "Not found",
-        response: { status: 404 },
-      });
-
-      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
-        "User account not found. Please connect your wallet first."
-      );
-    });
-
-    it("should handle null error", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(null);
-
-      try {
-        await accountService.connectWallet("0x123");
-        expect.fail("Should have thrown");
-      } catch (e: unknown) {
-        const err = e as { message: string; status: number };
-        expect(err.message).toBe("Account service error");
-        expect(err.status).toBe(500);
-      }
-    });
-
-    it("should handle error with code and details fields", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
-        status: 500,
-        message: "Server error",
-        code: "INTERNAL_ERROR",
-        details: { trace: "abc123" },
-      });
-
-      try {
-        await accountService.connectWallet("0x123");
-        expect.fail("Should have thrown");
-      } catch (e: unknown) {
-        const err = e as {
-          message: string;
-          code: string;
-          details: Record<string, unknown>;
-        };
-        expect(err.message).toBe("Server error");
-        expect(err.code).toBe("INTERNAL_ERROR");
-        expect(err.details).toEqual({ trace: "abc123" });
-      }
     });
   });
 });

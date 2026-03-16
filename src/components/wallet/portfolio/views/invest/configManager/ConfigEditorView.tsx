@@ -2,7 +2,9 @@
 
 import { AlertTriangle, ArrowLeft, Copy, Save } from "lucide-react";
 import {
+  type Dispatch,
   type ReactElement,
+  type SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -31,13 +33,142 @@ interface ConfigEditorViewProps {
 const CONFIG_ID_PATTERN = /^[a-z0-9_]+$/;
 const JSON_TABS = ["params", "composition"] as const;
 type JsonTab = (typeof JSON_TABS)[number];
+type ConfigEditorMode = ConfigEditorViewProps["mode"];
 
-function tryParseJson(value: string): { valid: boolean; parsed: unknown } {
+interface ParsedJsonResult<T> {
+  parsed: T | null;
+  valid: boolean;
+}
+
+interface ConfigEditorFormState {
+  configIdInput: string;
+  displayName: string;
+  description: string;
+  strategyId: string;
+  primaryAsset: string;
+  supportsDailySuggestion: boolean;
+  paramsJson: string;
+  compositionJson: string;
+}
+
+interface ConfigFieldsPayload {
+  composition: StrategyComposition;
+  description: string | null;
+  display_name: string;
+  params: Record<string, unknown>;
+  primary_asset: string;
+  strategy_id: string;
+  supports_daily_suggestion: boolean;
+}
+
+interface JsonEditorPanelProps {
+  disabled: boolean;
+  onChange: (value: string) => void;
+  rows: number;
+  valid: boolean;
+  value: string;
+}
+
+const INITIAL_FORM_STATE: ConfigEditorFormState = {
+  configIdInput: "",
+  displayName: "",
+  description: "",
+  strategyId: "",
+  primaryAsset: "",
+  supportsDailySuggestion: false,
+  paramsJson: "{}",
+  compositionJson: "{}",
+};
+
+function tryParseJson<T>(value: string): ParsedJsonResult<T> {
   try {
-    return { valid: true, parsed: JSON.parse(value) };
+    return { valid: true, parsed: JSON.parse(value) as T };
   } catch {
     return { valid: false, parsed: null };
   }
+}
+
+function getSeedConfig(
+  mode: ConfigEditorMode,
+  existingConfig: SavedStrategyConfig | null | undefined,
+  duplicateFrom: SavedStrategyConfig | null
+): SavedStrategyConfig | null {
+  return mode === "edit" ? (existingConfig ?? null) : duplicateFrom;
+}
+
+function getSeededFormState(
+  mode: ConfigEditorMode,
+  seedConfig: SavedStrategyConfig | null
+): ConfigEditorFormState {
+  if (!seedConfig) {
+    return INITIAL_FORM_STATE;
+  }
+
+  return {
+    configIdInput: mode === "edit" ? seedConfig.config_id : "",
+    displayName:
+      mode === "edit"
+        ? seedConfig.display_name
+        : `${seedConfig.display_name} (copy)`,
+    description: seedConfig.description ?? "",
+    strategyId: seedConfig.strategy_id,
+    primaryAsset: seedConfig.primary_asset,
+    supportsDailySuggestion: seedConfig.supports_daily_suggestion,
+    paramsJson: JSON.stringify(seedConfig.params, null, 2),
+    compositionJson: JSON.stringify(seedConfig.composition, null, 2),
+  };
+}
+
+function getEditorTitle(mode: ConfigEditorMode): string {
+  return mode === "create" ? "Create Configuration" : "Edit Configuration";
+}
+
+function getMutationErrorTitle(mode: ConfigEditorMode): string {
+  return mode === "create" ? "Create failed" : "Update failed";
+}
+
+function buildFieldsPayload(
+  formState: ConfigEditorFormState,
+  params: Record<string, unknown>,
+  composition: StrategyComposition
+): ConfigFieldsPayload {
+  return {
+    display_name: formState.displayName.trim(),
+    description: formState.description.trim() || null,
+    strategy_id: formState.strategyId,
+    primary_asset: formState.primaryAsset,
+    supports_daily_suggestion: formState.supportsDailySuggestion,
+    params,
+    composition,
+  };
+}
+
+function getActiveJsonEditorState(
+  activeJsonTab: JsonTab,
+  formState: ConfigEditorFormState,
+  paramsValidation: ParsedJsonResult<Record<string, unknown>>,
+  compositionValidation: ParsedJsonResult<StrategyComposition>,
+  setFormState: Dispatch<SetStateAction<ConfigEditorFormState>>
+): JsonEditorPanelProps {
+  if (activeJsonTab === "params") {
+    return {
+      value: formState.paramsJson,
+      onChange: value =>
+        setFormState(previous => ({ ...previous, paramsJson: value })),
+      valid: paramsValidation.valid,
+      rows: 12,
+      disabled: false,
+    };
+  }
+
+  return {
+    value: formState.compositionJson,
+    onChange: value =>
+      setFormState(previous => ({ ...previous, compositionJson: value })),
+    valid: compositionValidation.valid,
+    rows: 16,
+    disabled: false,
+  };
 }
 
 /**
@@ -63,82 +194,64 @@ export function ConfigEditorView({
   const updateMutation = useUpdateStrategyConfig();
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  // Form state
-  const [configIdInput, setConfigIdInput] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [description, setDescription] = useState("");
-  const [strategyId, setStrategyId] = useState("");
-  const [primaryAsset, setPrimaryAsset] = useState("");
-  const [supportsDailySuggestion, setSupportsDailySuggestion] = useState(false);
-  const [paramsJson, setParamsJson] = useState("{}");
-  const [compositionJson, setCompositionJson] = useState("{}");
+  const [formState, setFormState] =
+    useState<ConfigEditorFormState>(INITIAL_FORM_STATE);
   const [activeJsonTab, setActiveJsonTab] = useState<JsonTab>("params");
 
-  // Seed form from existing config or duplicate source
-  const seedConfig = mode === "edit" ? existingConfig : duplicateFrom;
+  const seedConfig = useMemo(
+    () => getSeedConfig(mode, existingConfig, duplicateFrom),
+    [duplicateFrom, existingConfig, mode]
+  );
 
   useEffect(() => {
-    if (!seedConfig) return;
-
-    if (mode === "edit") {
-      setConfigIdInput(seedConfig.config_id);
-    }
-    // For duplicate, leave config_id empty so user must enter a new one
-    setDisplayName(
-      mode === "edit"
-        ? seedConfig.display_name
-        : `${seedConfig.display_name} (copy)`
-    );
-    setDescription(seedConfig.description ?? "");
-    setStrategyId(seedConfig.strategy_id);
-    setPrimaryAsset(seedConfig.primary_asset);
-    setSupportsDailySuggestion(seedConfig.supports_daily_suggestion);
-    setParamsJson(JSON.stringify(seedConfig.params, null, 2));
-    setCompositionJson(JSON.stringify(seedConfig.composition, null, 2));
+    setFormState(getSeededFormState(mode, seedConfig));
   }, [seedConfig, mode]);
 
   const isBenchmark = mode === "edit" && existingConfig?.is_benchmark === true;
 
-  // JSON validation
   const paramsValidation = useMemo(
-    () => tryParseJson(paramsJson),
-    [paramsJson]
+    () => tryParseJson<Record<string, unknown>>(formState.paramsJson),
+    [formState.paramsJson]
   );
   const compositionValidation = useMemo(
-    () => tryParseJson(compositionJson),
-    [compositionJson]
+    () => tryParseJson<StrategyComposition>(formState.compositionJson),
+    [formState.compositionJson]
   );
 
   const configIdValid =
-    mode === "edit" || CONFIG_ID_PATTERN.test(configIdInput);
+    mode === "edit" || CONFIG_ID_PATTERN.test(formState.configIdInput);
   const formValid =
     configIdValid &&
-    displayName.trim().length > 0 &&
-    strategyId.trim().length > 0 &&
-    primaryAsset.trim().length > 0 &&
+    formState.displayName.trim().length > 0 &&
+    formState.strategyId.trim().length > 0 &&
+    formState.primaryAsset.trim().length > 0 &&
     paramsValidation.valid &&
     compositionValidation.valid;
+  const activeJsonEditor = getActiveJsonEditorState(
+    activeJsonTab,
+    formState,
+    paramsValidation,
+    compositionValidation,
+    setFormState
+  );
 
   const handleSave = useCallback(async () => {
     if (!formValid || isBenchmark) return;
 
-    const params = paramsValidation.parsed as Record<string, unknown>;
-    const composition = compositionValidation.parsed as StrategyComposition;
+    if (!paramsValidation.parsed || !compositionValidation.parsed) {
+      return;
+    }
 
-    const sharedFields = {
-      display_name: displayName.trim(),
-      description: description.trim() || null,
-      strategy_id: strategyId,
-      primary_asset: primaryAsset,
-      supports_daily_suggestion: supportsDailySuggestion,
-      params,
-      composition,
-    };
+    const sharedFields = buildFieldsPayload(
+      formState,
+      paramsValidation.parsed,
+      compositionValidation.parsed
+    );
 
     try {
       if (mode === "create") {
         await createMutation.mutateAsync({
-          config_id: configIdInput,
+          config_id: formState.configIdInput,
           ...sharedFields,
         });
         showToast({
@@ -148,7 +261,7 @@ export function ConfigEditorView({
         });
       } else {
         await updateMutation.mutateAsync({
-          configId: configIdInput,
+          configId: formState.configIdInput,
           body: sharedFields,
         });
         showToast({
@@ -161,20 +274,15 @@ export function ConfigEditorView({
     } catch (err) {
       showToast({
         type: "error",
-        title: mode === "create" ? "Create failed" : "Update failed",
+        title: getMutationErrorTitle(mode),
         message: err instanceof Error ? err.message : "Unknown error",
       });
     }
   }, [
     formValid,
     isBenchmark,
+    formState,
     mode,
-    configIdInput,
-    displayName,
-    description,
-    strategyId,
-    primaryAsset,
-    supportsDailySuggestion,
     paramsValidation.parsed,
     compositionValidation.parsed,
     createMutation,
@@ -203,11 +311,11 @@ export function ConfigEditorView({
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h3 className="text-lg font-semibold text-white">
-            {mode === "create" ? "Create Configuration" : "Edit Configuration"}
+            {getEditorTitle(mode)}
           </h3>
           {mode === "edit" && (
             <span className="rounded-full bg-gray-800 px-3 py-1 font-mono text-xs text-gray-400">
-              {configIdInput}
+              {formState.configIdInput}
             </span>
           )}
         </div>
@@ -244,17 +352,22 @@ export function ConfigEditorView({
             <div>
               <input
                 type="text"
-                value={configIdInput}
-                onChange={e => setConfigIdInput(e.target.value)}
+                value={formState.configIdInput}
+                onChange={event =>
+                  setFormState(previous => ({
+                    ...previous,
+                    configIdInput: event.target.value,
+                  }))
+                }
                 placeholder="my_strategy_config"
                 className={`w-full rounded-lg border bg-gray-800/50 px-3 py-2 font-mono text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 ${
-                  configIdInput && !configIdValid
+                  formState.configIdInput && !configIdValid
                     ? "border-red-500 focus:ring-red-500"
                     : "border-gray-700 focus:ring-purple-500"
                 }`}
                 disabled={isBenchmark}
               />
-              {configIdInput && !configIdValid && (
+              {formState.configIdInput && !configIdValid && (
                 <p className="mt-1 text-xs text-red-400">
                   Only lowercase letters, digits, and underscores allowed
                 </p>
@@ -262,7 +375,7 @@ export function ConfigEditorView({
             </div>
           ) : (
             <span className="inline-block rounded-full bg-gray-800 px-3 py-1.5 font-mono text-sm text-gray-300">
-              {configIdInput}
+              {formState.configIdInput}
             </span>
           )}
         </div>
@@ -274,8 +387,13 @@ export function ConfigEditorView({
           </label>
           <input
             type="text"
-            value={displayName}
-            onChange={e => setDisplayName(e.target.value)}
+            value={formState.displayName}
+            onChange={event =>
+              setFormState(previous => ({
+                ...previous,
+                displayName: event.target.value,
+              }))
+            }
             placeholder="My Strategy Config"
             className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
             disabled={isBenchmark}
@@ -288,8 +406,13 @@ export function ConfigEditorView({
             Description
           </label>
           <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
+            value={formState.description}
+            onChange={event =>
+              setFormState(previous => ({
+                ...previous,
+                description: event.target.value,
+              }))
+            }
             placeholder="Optional description..."
             rows={2}
             className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
@@ -304,8 +427,13 @@ export function ConfigEditorView({
               Strategy ID *
             </label>
             <select
-              value={strategyId}
-              onChange={e => setStrategyId(e.target.value)}
+              value={formState.strategyId}
+              onChange={event =>
+                setFormState(previous => ({
+                  ...previous,
+                  strategyId: event.target.value,
+                }))
+              }
               className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
               disabled={isBenchmark}
             >
@@ -323,8 +451,13 @@ export function ConfigEditorView({
             </label>
             <input
               type="text"
-              value={primaryAsset}
-              onChange={e => setPrimaryAsset(e.target.value)}
+              value={formState.primaryAsset}
+              onChange={event =>
+                setFormState(previous => ({
+                  ...previous,
+                  primaryAsset: event.target.value,
+                }))
+              }
               placeholder="BTC"
               className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
               disabled={isBenchmark}
@@ -345,16 +478,25 @@ export function ConfigEditorView({
           <button
             type="button"
             role="switch"
-            aria-checked={supportsDailySuggestion}
-            onClick={() => setSupportsDailySuggestion(v => !v)}
+            aria-checked={formState.supportsDailySuggestion}
+            onClick={() =>
+              setFormState(previous => ({
+                ...previous,
+                supportsDailySuggestion: !previous.supportsDailySuggestion,
+              }))
+            }
             disabled={isBenchmark}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${
-              supportsDailySuggestion ? "bg-purple-600" : "bg-gray-700"
+              formState.supportsDailySuggestion
+                ? "bg-purple-600"
+                : "bg-gray-700"
             }`}
           >
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                supportsDailySuggestion ? "translate-x-5" : "translate-x-0"
+                formState.supportsDailySuggestion
+                  ? "translate-x-5"
+                  : "translate-x-0"
               }`}
             />
           </button>
@@ -382,19 +524,7 @@ export function ConfigEditorView({
 
         {/* Editor area */}
         <div className="p-4">
-          <JsonEditorPanel
-            value={activeJsonTab === "params" ? paramsJson : compositionJson}
-            onChange={
-              activeJsonTab === "params" ? setParamsJson : setCompositionJson
-            }
-            valid={
-              activeJsonTab === "params"
-                ? paramsValidation.valid
-                : compositionValidation.valid
-            }
-            rows={activeJsonTab === "params" ? 12 : 16}
-            disabled={isBenchmark}
-          />
+          <JsonEditorPanel {...activeJsonEditor} disabled={isBenchmark} />
         </div>
       </div>
 
@@ -428,18 +558,12 @@ function JsonEditorPanel({
   valid,
   rows,
   disabled,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  valid: boolean;
-  rows: number;
-  disabled: boolean;
-}): ReactElement {
+}: JsonEditorPanelProps): ReactElement {
   return (
     <div>
       <textarea
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={event => onChange(event.target.value)}
         rows={rows}
         spellCheck={false}
         className="w-full rounded-lg border border-gray-700 bg-gray-950 px-4 py-3 font-mono text-sm text-green-400 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 resize-y"

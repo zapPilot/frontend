@@ -13,6 +13,8 @@
 
 const { spawnSync } = require("node:child_process");
 
+const DEFAULT_MODE_KEY = "default";
+
 const MODES = {
   default: {
     label: "Local dead-code scan",
@@ -36,19 +38,7 @@ const MODES = {
   },
 };
 
-const modeKey = process.argv[2] ?? "default";
-const mode = MODES[modeKey];
-
-if (!mode) {
-  console.error(
-    `[deadcode] Unknown mode "${modeKey}". Supported modes: ${Object.keys(
-      MODES
-    ).join(", ")}`
-  );
-  process.exit(1);
-}
-
-const run = (command, args) => {
+function runCommand(command, args) {
   console.log(`[deadcode] Running ${command} ${args.join(" ")}`.trim());
   const result = spawnSync(command, args, {
     stdio: "inherit",
@@ -63,15 +53,29 @@ const run = (command, args) => {
     return result.status;
   }
 
-  // If the process was terminated by a signal, treat it as failure.
   return result.signal ? 1 : 0;
-};
+}
 
-const knipStatus = run("knip", mode.knipArgs);
+function shouldRunTsPrune(modeKey) {
+  return modeKey !== "check";
+}
 
-// Skip ts-prune in 'check' mode - knip is more accurate and ts-prune has many false positives
-if (modeKey !== "check") {
-  run("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
+const modeKey = process.argv[2] ?? DEFAULT_MODE_KEY;
+const mode = MODES[modeKey];
+
+if (!mode) {
+  console.error(
+    `[deadcode] Unknown mode "${modeKey}". Supported modes: ${Object.keys(
+      MODES
+    ).join(", ")}`
+  );
+  process.exit(1);
+}
+
+const knipStatus = runCommand("knip", mode.knipArgs);
+
+if (shouldRunTsPrune(modeKey)) {
+  runCommand("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
 }
 
 // Exit based only on knip status
