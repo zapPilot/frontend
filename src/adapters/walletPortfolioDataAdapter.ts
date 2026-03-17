@@ -37,13 +37,6 @@ import type {
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-// Re-export ASSET_COLORS for components that might use it from different paths
-// (Ideally components should import from @/constants/assets directly, but this keeps backwards compat if needed)
-export { ASSET_COLORS } from "@/constants/assets";
-
-// Re-export AllocationConstituent from canonical source (types)
-export type { AllocationConstituent } from "@/types/portfolio-allocation";
-
 /**
  * Wallet Portfolio Data Structure
  * Matches the structure expected by WalletPortfolioPresenter

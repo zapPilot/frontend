@@ -82,14 +82,6 @@ const createAccountServiceError = (error: unknown): AccountServiceError =>
     mapAccountServiceErrorMessage
   );
 
-const logDevelopmentResponse = (label: string, payload: unknown): void => {
-  if (process.env.NODE_ENV !== "development") {
-    return;
-  }
-
-  logger.debug(label, JSON.stringify(payload, null, 2));
-};
-
 function validateConnectWalletResponse(
   response: unknown
 ): ConnectWalletResponse {
@@ -110,29 +102,23 @@ function validateConnectWalletResponse(
 const accountApiClient = httpUtils.accountApi;
 const callAccountApi = createServiceCaller(createAccountServiceError);
 
-async function requestAccountResource<T>(
-  request: () => Promise<T>
-): Promise<T> {
-  return callAccountApi(request);
-}
-
 async function requestAndValidate<TResponse, TResult>(
   request: () => Promise<TResponse>,
   validate: (response: unknown) => TResult
 ): Promise<TResult> {
-  const response = await requestAccountResource(request);
+  const response = await callAccountApi(request);
   return validate(response);
 }
 
 async function getAccountResource<T>(path: string): Promise<T> {
-  return requestAccountResource(() => accountApiClient.get<T>(path));
+  return callAccountApi(() => accountApiClient.get<T>(path));
 }
 
 async function postAccountResource<T>(
   path: string,
   body?: Record<string, unknown>
 ): Promise<T> {
-  return requestAccountResource(() =>
+  return callAccountApi(() =>
     body ? accountApiClient.post<T>(path, body) : accountApiClient.post<T>(path)
   );
 }
@@ -141,11 +127,11 @@ async function putAccountResource<T>(
   path: string,
   body: Record<string, unknown>
 ): Promise<T> {
-  return requestAccountResource(() => accountApiClient.put<T>(path, body));
+  return callAccountApi(() => accountApiClient.put<T>(path, body));
 }
 
 async function deleteAccountResource<T>(path: string): Promise<T> {
-  return requestAccountResource(() => accountApiClient.delete<T>(path));
+  return callAccountApi(() => accountApiClient.delete<T>(path));
 }
 
 /**
@@ -161,11 +147,7 @@ export async function connectWallet(
     }
   );
 
-  logDevelopmentResponse("🔍 Raw connect-wallet response:", response);
-  const validatedResponse = validateConnectWalletResponse(response);
-  logDevelopmentResponse("✅ Validated response:", validatedResponse);
-
-  return validatedResponse;
+  return validateConnectWalletResponse(response);
 }
 
 /**

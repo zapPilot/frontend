@@ -34,7 +34,7 @@ export function useBorrowingPositions(
   enabled = false
 ) {
   return useQuery({
-    ...createQueryConfig({ dataType: "static" }), // Uses 12hr cache
+    ...createQueryConfig(), // Uses 12hr cache (overridden below)
     queryKey: userId ? queryKeys.portfolio.borrowingPositions(userId) : [],
     queryFn: async () => {
       if (!userId) {

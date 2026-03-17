@@ -550,7 +550,7 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      expect(createQueryConfig).toHaveBeenCalledWith({ dataType: "dynamic" });
+      expect(createQueryConfig).toHaveBeenCalledWith();
     });
   });
 });

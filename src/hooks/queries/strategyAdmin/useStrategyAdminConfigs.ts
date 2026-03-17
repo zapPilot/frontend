@@ -21,7 +21,7 @@ const ADMIN_STALE_TIME = 30 * 1000; // 30 seconds — admin data changes infrequ
  */
 export function useStrategyAdminConfigs() {
   return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
+    ...createQueryConfig(),
     queryKey: queryKeys.strategyAdmin.configs(),
     queryFn: async () => {
       const response = await getStrategyAdminConfigs();

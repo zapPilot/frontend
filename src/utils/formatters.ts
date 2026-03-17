@@ -105,11 +105,7 @@ function normalizeFormatOptions<T extends BaseFormatOptions>(
 
 function parseUtcDate(dateString: string): Dayjs | null {
   const parsedDate = dayjs.utc(dateString);
-  if (!parsedDate.isValid()) {
-    return null;
-  }
-
-  return parsedDate;
+  return parsedDate.isValid() ? parsedDate : null;
 }
 
 // =============================================================================

@@ -242,8 +242,6 @@ function createSourceErrorMessage(source: ErrorSource) {
     });
 }
 
-// Removed: getBackendErrorMessage - unused export (dead code cleanup)
-
 /**
  * Get error message for intent service
  * Convenience wrapper for getErrorMessage with source set to "intent-service"

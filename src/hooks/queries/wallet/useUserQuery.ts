@@ -27,7 +27,6 @@ export interface UserInfo {
 }
 
 const baseUserQueryConfig = createQueryConfig({
-  dataType: "dynamic",
   retryConfig: {
     skipErrorMessages: ["USER_NOT_FOUND"],
   },

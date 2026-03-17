@@ -43,7 +43,7 @@ const REGIME_HISTORY_CACHE_MS = 60 * 1000; // 60 seconds (regime transitions are
  */
 export function useRegimeHistory() {
   return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
+    ...createQueryConfig(),
     queryKey: queryKeys.sentiment.regimeHistory(),
     queryFn: async () => {
       try {

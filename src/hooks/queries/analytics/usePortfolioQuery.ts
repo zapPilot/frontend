@@ -26,7 +26,6 @@ export function useLandingPageData(
 ) {
   return useQuery({
     ...createQueryConfig({
-      dataType: "realtime",
       retryConfig: {
         skipErrorMessages: ["USER_NOT_FOUND", "404"],
       },

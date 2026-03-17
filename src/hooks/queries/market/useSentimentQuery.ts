@@ -22,7 +22,7 @@ const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes (matches backend cache)
  */
 export function useSentimentData() {
   return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
+    ...createQueryConfig(),
     queryKey: queryKeys.sentiment.market(),
     queryFn: async () => {
       try {

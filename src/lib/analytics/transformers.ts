@@ -25,42 +25,22 @@ import {
 } from "./utils/metricUtils";
 
 function getRecoverySubValue(days: number): string {
-  if (days > 0) {
-    return `Recovered in ${days} days`;
-  }
-
-  return "Not yet recovered";
+  return days > 0 ? `Recovered in ${days} days` : "Not yet recovered";
 }
 
 function getSignedPrefix(value: number): string {
-  if (value > 0) {
-    return "+";
-  }
-
-  return "";
+  return value > 0 ? "+" : "";
 }
 
 function getSharpeTrend(value: number): MetricData["trend"] {
-  if (value > 1.5) {
-    return "up";
-  }
-
-  if (value > 0.5) {
-    return "neutral";
-  }
-
+  if (value > 1.5) return "up";
+  if (value > 0.5) return "neutral";
   return "down";
 }
 
 function getVolatilityRiskLabel(value: number): string {
-  if (value < 20) {
-    return "Low risk";
-  }
-
-  if (value < 40) {
-    return "Moderate";
-  }
-
+  if (value < 20) return "Low risk";
+  if (value < 40) return "Moderate";
   return "High risk";
 }
 

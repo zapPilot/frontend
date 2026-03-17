@@ -8,9 +8,9 @@
  *
  * @example
  * ```typescript
- * // Standard usage
+ * // Standard usage (defaults to 'etl' timing)
  * const query = useQuery({
- *   ...createQueryConfig({ dataType: 'dynamic' }),
+ *   ...createQueryConfig(),
  *   queryKey: ['tokens', address],
  *   queryFn: () => fetchTokens(address),
  * });
@@ -18,7 +18,6 @@
  * // With custom retry logic
  * const query = useQuery({
  *   ...createQueryConfig({
- *     dataType: 'realtime',
  *     retryConfig: {
  *       skipErrorMessages: ['USER_NOT_FOUND'],
  *     },
@@ -58,10 +57,6 @@ const QUERY_TIMINGS = {
   etl: HOURLY_ETL_TIMINGS,
   /** Short-lived override for explicitly real-time data */
   volatile: VOLATILE_TIMINGS,
-  // Backward-compatible aliases until every hook is migrated
-  static: HOURLY_ETL_TIMINGS,
-  dynamic: HOURLY_ETL_TIMINGS,
-  realtime: HOURLY_ETL_TIMINGS,
 } as const;
 
 // isClientError is now imported from errorHelpers

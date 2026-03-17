@@ -25,10 +25,10 @@ describe("queryDefaults", () => {
       expect(config.gcTime).toBe(15 * 60 * 1000);
     });
 
-    it("should use etl timings for static dataType (alias)", () => {
-      const config = createQueryConfig({ dataType: "static" });
+    it("should default to etl timings when no dataType is specified", () => {
+      const config = createQueryConfig();
 
-      // Static is an alias for etl
+      // Default is etl timings
       expect(config.staleTime).toBeDefined();
       expect(config.gcTime).toBeDefined();
     });

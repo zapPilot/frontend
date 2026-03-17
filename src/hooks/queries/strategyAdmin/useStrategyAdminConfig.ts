@@ -20,7 +20,7 @@ import { getStrategyAdminConfig } from "@/services";
  */
 export function useStrategyAdminConfig(configId: string | null) {
   return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
+    ...createQueryConfig(),
     queryKey: queryKeys.strategyAdmin.config(configId ?? ""),
     queryFn: async () => {
       const response = await getStrategyAdminConfig(configId!);
