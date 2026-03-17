@@ -12,7 +12,12 @@ let capturedTooltipFormatter:
       value: string | number | (string | number)[],
       name: string | number,
       props: {
-        payload?: { sentiment_value?: number | null; regime?: string | null };
+        payload?: {
+          sentiment_value?: number | null;
+          regime?: string | null;
+          ratio?: number | null;
+          dma_200?: number | null;
+        };
       }
     ) => [string | number, string | number])
   | null = null;
@@ -58,7 +63,12 @@ vi.mock("recharts", async () => {
       value: string | number | (string | number)[],
       name: string | number,
       props: {
-        payload?: { sentiment_value?: number | null; regime?: string | null };
+        payload?: {
+          sentiment_value?: number | null;
+          regime?: string | null;
+          ratio?: number | null;
+          dma_200?: number | null;
+        };
       }
     ) => [string | number, string | number];
   }>(({ formatter }) => {
@@ -112,6 +122,11 @@ const mockData = {
       dma_200: 38000,
       sentiment_value: 65,
       regime: "g",
+      eth_btc_relative_strength: {
+        ratio: 0.0532,
+        dma_200: 0.0498,
+        is_above_dma: true,
+      },
     },
     {
       snapshot_date: "2025-01-02",
@@ -119,6 +134,11 @@ const mockData = {
       dma_200: 38500,
       sentiment_value: 70,
       regime: "eg",
+      eth_btc_relative_strength: {
+        ratio: 0.0541,
+        dma_200: 0.05,
+        is_above_dma: true,
+      },
     },
   ],
   count: 2,
@@ -182,6 +202,15 @@ describe("MarketDashboardView", () => {
     expect(screen.getByText("Fear & Greed Index")).toBeDefined();
   });
 
+  it("renders ETH/BTC relative strength section", async () => {
+    mockGetMarketDashboardData.mockResolvedValue(mockData);
+    render(<MarketDashboardView />, { wrapper: createWrapper() });
+    await waitFor(() => screen.getByText("ETH/BTC Ratio vs 200 DMA"));
+    expect(screen.getByText("Current ETH/BTC Ratio")).toBeDefined();
+    expect(screen.getByText("Ratio 200 DMA")).toBeDefined();
+    expect(screen.getByText("Leader Signal")).toBeDefined();
+  });
+
   it("switches timeframe on button click", async () => {
     mockGetMarketDashboardData.mockResolvedValue(mockData);
     render(<MarketDashboardView />, { wrapper: createWrapper() });
@@ -217,6 +246,7 @@ describe("MarketDashboardView", () => {
           dma_200: 38000,
           sentiment_value: 65,
           regime: null,
+          eth_btc_relative_strength: null,
         },
       ],
     });
@@ -247,6 +277,7 @@ describe("MarketDashboardView", () => {
           dma_200: null,
           sentiment_value: 65,
           regime: "g",
+          eth_btc_relative_strength: null,
         },
       ],
     });
@@ -266,6 +297,7 @@ describe("MarketDashboardView", () => {
           dma_200: 38000,
           sentiment_value: 65,
           regime: "unknown_regime",
+          eth_btc_relative_strength: null,
         },
       ],
     });
@@ -285,6 +317,7 @@ describe("MarketDashboardView", () => {
           dma_200: 38000,
           sentiment_value: 25,
           regime: "ef",
+          eth_btc_relative_strength: null,
         },
         {
           snapshot_date: "2025-01-02",
@@ -292,6 +325,7 @@ describe("MarketDashboardView", () => {
           dma_200: 38500,
           sentiment_value: 45,
           regime: "f",
+          eth_btc_relative_strength: null,
         },
         {
           snapshot_date: "2025-01-03",
@@ -299,6 +333,7 @@ describe("MarketDashboardView", () => {
           dma_200: 39000,
           sentiment_value: 55,
           regime: "n",
+          eth_btc_relative_strength: null,
         },
         {
           snapshot_date: "2025-01-04",
@@ -306,6 +341,7 @@ describe("MarketDashboardView", () => {
           dma_200: 39500,
           sentiment_value: 75,
           regime: "g",
+          eth_btc_relative_strength: null,
         },
         {
           snapshot_date: "2025-01-05",
@@ -313,6 +349,7 @@ describe("MarketDashboardView", () => {
           dma_200: 40000,
           sentiment_value: 90,
           regime: "eg",
+          eth_btc_relative_strength: null,
         },
       ],
     });
@@ -332,6 +369,7 @@ describe("MarketDashboardView", () => {
           dma_200: 38000,
           sentiment_value: 65,
           regime: undefined,
+          eth_btc_relative_strength: null,
         },
       ],
     });
@@ -414,6 +452,20 @@ describe("MarketDashboardView", () => {
       });
       expect(String(formattedValue)).toBe("50 ()");
       expect(label).toBe("Fear & Greed Index");
+    });
+
+    it("formats ETH/BTC Ratio with fixed decimals", async () => {
+      const fmt = await renderAndGetFormatter();
+      const [formattedValue, label] = fmt(0.05321, "ETH/BTC Ratio", {});
+      expect(String(formattedValue)).toBe("0.0532");
+      expect(label).toBe("ETH/BTC Ratio");
+    });
+
+    it("formats Ratio 200 DMA with fixed decimals", async () => {
+      const fmt = await renderAndGetFormatter();
+      const [formattedValue, label] = fmt(0.04981, "Ratio 200 DMA", {});
+      expect(String(formattedValue)).toBe("0.0498");
+      expect(label).toBe("Ratio 200 DMA");
     });
 
     it("returns value unchanged for unknown series name (default branch)", async () => {
@@ -503,6 +555,7 @@ describe("MarketDashboardView", () => {
             dma_200: 38000,
             sentiment_value: 65,
             regime: "g",
+            eth_btc_relative_strength: null,
           },
         ],
       });
@@ -528,6 +581,7 @@ describe("MarketDashboardView", () => {
             dma_200: 38000,
             sentiment_value: 65,
             regime: "g",
+            eth_btc_relative_strength: null,
           },
           {
             snapshot_date: "2025-01-02",
@@ -535,6 +589,7 @@ describe("MarketDashboardView", () => {
             dma_200: 38500,
             sentiment_value: 68,
             regime: "g",
+            eth_btc_relative_strength: null,
           },
           {
             snapshot_date: "2025-01-03",
@@ -542,12 +597,70 @@ describe("MarketDashboardView", () => {
             dma_200: 39000,
             sentiment_value: 30,
             regime: "ef",
+            eth_btc_relative_strength: null,
           },
         ],
       });
       render(<MarketDashboardView />, { wrapper: createWrapper() });
       await waitFor(() =>
         expect(screen.getByText("Market Overview")).toBeDefined()
+      );
+    });
+  });
+
+  describe("relative strength signal", () => {
+    it("shows ETH leading when ratio is above DMA", async () => {
+      mockGetMarketDashboardData.mockResolvedValue(mockData);
+      render(<MarketDashboardView />, { wrapper: createWrapper() });
+      await waitFor(() => screen.getAllByText("ETH leading"));
+      expect(screen.getAllByText("ETH leading").length).toBeGreaterThan(0);
+    });
+
+    it("shows BTC leading when ratio is below DMA", async () => {
+      mockGetMarketDashboardData.mockResolvedValue({
+        ...mockData,
+        snapshots: [
+          {
+            snapshot_date: "2025-01-01",
+            price_usd: 42000,
+            dma_200: 38000,
+            sentiment_value: 65,
+            regime: "g",
+            eth_btc_relative_strength: {
+              ratio: 0.045,
+              dma_200: 0.05,
+              is_above_dma: false,
+            },
+          },
+        ],
+      });
+      render(<MarketDashboardView />, { wrapper: createWrapper() });
+      await waitFor(() => screen.getAllByText("BTC leading"));
+      expect(screen.getAllByText("BTC leading").length).toBeGreaterThan(0);
+    });
+
+    it("shows insufficient data when ratio DMA is unavailable", async () => {
+      mockGetMarketDashboardData.mockResolvedValue({
+        ...mockData,
+        snapshots: [
+          {
+            snapshot_date: "2025-01-01",
+            price_usd: 42000,
+            dma_200: 38000,
+            sentiment_value: 65,
+            regime: "g",
+            eth_btc_relative_strength: {
+              ratio: 0.045,
+              dma_200: null,
+              is_above_dma: null,
+            },
+          },
+        ],
+      });
+      render(<MarketDashboardView />, { wrapper: createWrapper() });
+      await waitFor(() => screen.getAllByText("Insufficient data"));
+      expect(screen.getAllByText("Insufficient data").length).toBeGreaterThan(
+        0
       );
     });
   });

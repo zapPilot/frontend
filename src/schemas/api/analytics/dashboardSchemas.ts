@@ -4,12 +4,21 @@ import { createValidator } from "@/schemas/schemaUtils";
 
 export const unifiedDashboardResponseSchema = z.any();
 
+export const ethBtcRelativeStrengthPointSchema = z.object({
+  ratio: z.number(),
+  dma_200: z.number().nullable(),
+  is_above_dma: z.boolean().nullable(),
+});
+
 export const marketDashboardPointSchema = z.object({
   snapshot_date: z.string(),
   price_usd: z.number(),
   dma_200: z.number().nullable(),
   sentiment_value: z.number().nullable(),
   regime: z.enum(["ef", "f", "n", "g", "eg"]).nullable(),
+  eth_btc_relative_strength: ethBtcRelativeStrengthPointSchema
+    .nullable()
+    .optional(),
 });
 
 export const marketDashboardResponseSchema = z.object({
@@ -88,6 +97,9 @@ export interface UnifiedDashboardResponse {
 }
 
 export type MarketDashboardPoint = z.infer<typeof marketDashboardPointSchema>;
+export type EthBtcRelativeStrengthPoint = z.infer<
+  typeof ethBtcRelativeStrengthPointSchema
+>;
 export type MarketDashboardResponse = z.infer<
   typeof marketDashboardResponseSchema
 >;
