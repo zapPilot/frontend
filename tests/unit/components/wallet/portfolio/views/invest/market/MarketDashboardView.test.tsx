@@ -184,14 +184,20 @@ describe("MarketDashboardView", () => {
     );
   });
 
-  it("renders all timeframe buttons", async () => {
+  it("renders all timeframe buttons for BTC and ratio charts", async () => {
     mockGetMarketDashboardData.mockResolvedValue(mockData);
     render(<MarketDashboardView />, { wrapper: createWrapper() });
-    await waitFor(() => screen.getByText("1Y"));
-    expect(screen.getByText("1W")).toBeDefined();
-    expect(screen.getByText("1M")).toBeDefined();
-    expect(screen.getByText("3M")).toBeDefined();
-    expect(screen.getByText("ALL")).toBeDefined();
+    await waitFor(() => screen.getByTestId("btc-tf-1Y"));
+    // BTC chart timeframe buttons
+    expect(screen.getByTestId("btc-tf-1M")).toBeDefined();
+    expect(screen.getByTestId("btc-tf-3M")).toBeDefined();
+    expect(screen.getByTestId("btc-tf-1Y")).toBeDefined();
+    expect(screen.getByTestId("btc-tf-MAX")).toBeDefined();
+    // Ratio chart timeframe buttons
+    expect(screen.getByTestId("ratio-tf-1M")).toBeDefined();
+    expect(screen.getByTestId("ratio-tf-3M")).toBeDefined();
+    expect(screen.getByTestId("ratio-tf-1Y")).toBeDefined();
+    expect(screen.getByTestId("ratio-tf-MAX")).toBeDefined();
   });
 
   it("renders BTC price summary cards", async () => {
@@ -211,13 +217,15 @@ describe("MarketDashboardView", () => {
     expect(screen.getByText("Leader Signal")).toBeDefined();
   });
 
-  it("switches timeframe on button click", async () => {
+  it("switches BTC timeframe on button click", async () => {
     mockGetMarketDashboardData.mockResolvedValue(mockData);
     render(<MarketDashboardView />, { wrapper: createWrapper() });
-    await waitFor(() => screen.getByText("1W"));
-    const btn1W = screen.getByText("1W").closest("button")!;
-    fireEvent.click(btn1W);
-    expect(btn1W.className).toContain("bg-purple-600");
+    await waitFor(() => screen.getByTestId("btc-tf-3M"));
+    fireEvent.click(screen.getByTestId("btc-tf-3M"));
+    // After clicking 3M, the API is called with 90 days
+    await waitFor(() =>
+      expect(mockGetMarketDashboardData).toHaveBeenCalledWith(90, "btc")
+    );
   });
 
   it("handles fetch errors gracefully (calls service and does not crash)", async () => {
@@ -228,12 +236,27 @@ describe("MarketDashboardView", () => {
     expect(document.querySelector(".animate-spin")).not.toBeNull();
   });
 
-  it("calls getMarketDashboardData with 365 days on mount", async () => {
+  it("calls getMarketDashboardData with 365 days for BTC and 1900 days for ratio on mount", async () => {
     mockGetMarketDashboardData.mockResolvedValue(mockData);
     render(<MarketDashboardView />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(mockGetMarketDashboardData).toHaveBeenCalledWith(365, "btc");
+      expect(mockGetMarketDashboardData).toHaveBeenCalledWith(1900, "btc");
+    });
+  });
+
+  it("switches ratio timeframe independently from BTC timeframe", async () => {
+    mockGetMarketDashboardData.mockResolvedValue(mockData);
+    render(<MarketDashboardView />, { wrapper: createWrapper() });
+    await waitFor(() => screen.getByTestId("ratio-tf-1M"));
+    const ratioBtn1M = screen.getByTestId("ratio-tf-1M");
+    fireEvent.click(ratioBtn1M);
+    // Ratio requests 30 days, BTC still at 365
     await waitFor(() =>
-      expect(mockGetMarketDashboardData).toHaveBeenCalledWith(365, "btc")
+      expect(mockGetMarketDashboardData).toHaveBeenCalledWith(30, "btc")
     );
+    // BTC chart call should still have its original 365-day call
+    expect(mockGetMarketDashboardData).toHaveBeenCalledWith(365, "btc");
   });
 
   it("handles null regime in snapshots gracefully", async () => {

@@ -7,6 +7,7 @@ import {
   Legend,
   Line,
   ReferenceArea,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,11 +44,10 @@ function getRegimeLabel(regime: string | null | undefined): string {
 }
 
 const TIMEFRAMES = [
-  { id: "1W", days: 7 },
   { id: "1M", days: 30 },
   { id: "3M", days: 90 },
   { id: "1Y", days: 365 },
-  { id: "ALL", days: 365 },
+  { id: "MAX", days: 1900 },
 ] as const;
 
 type Timeframe = (typeof TIMEFRAMES)[number]["id"];
@@ -60,6 +60,12 @@ interface RelativeStrengthPoint {
   ratio: number | null;
   dma_200: number | null;
   is_above_dma: boolean | null;
+}
+
+interface CrossPoint {
+  snapshot_date: string;
+  ratio: number;
+  direction: "above" | "below";
 }
 
 function formatXAxisDate(val: string): string {
@@ -171,25 +177,33 @@ function renderFgiActiveDot(dotProps: {
 
 export function MarketDashboardView(): JSX.Element {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
-  const { data: dashboardData, isLoading } = useMarketDashboardQuery(365);
-  const snapshots = useMemo<MarketDashboardPoint[]>(
+  const [ratioTimeframe, setRatioTimeframe] = useState<Timeframe>("MAX");
+  const activeDays = TIMEFRAMES.find(tf => tf.id === timeframe)?.days ?? 365;
+  const ratioDays =
+    TIMEFRAMES.find(tf => tf.id === ratioTimeframe)?.days ?? 1900;
+  const { data: dashboardData, isLoading } =
+    useMarketDashboardQuery(activeDays);
+  const { data: ratioData, isLoading: isRatioLoading } =
+    useMarketDashboardQuery(ratioDays);
+  const filteredData = useMemo<MarketDashboardPoint[]>(
     () => dashboardData?.snapshots ?? [],
     [dashboardData?.snapshots]
   );
 
-  const filteredData = useMemo(() => {
-    const days = TIMEFRAMES.find(tf => tf.id === timeframe)?.days || 30;
-    return snapshots.slice(-days);
-  }, [snapshots, timeframe]);
+  const ratioSnapshots = useMemo<MarketDashboardPoint[]>(
+    () => ratioData?.snapshots ?? [],
+    [ratioData?.snapshots]
+  );
+
   const relativeStrengthData = useMemo<RelativeStrengthPoint[]>(
     () =>
-      filteredData.map(snapshot => ({
+      ratioSnapshots.map(snapshot => ({
         snapshot_date: snapshot.snapshot_date,
         ratio: snapshot.eth_btc_relative_strength?.ratio ?? null,
         dma_200: snapshot.eth_btc_relative_strength?.dma_200 ?? null,
         is_above_dma: snapshot.eth_btc_relative_strength?.is_above_dma ?? null,
       })),
-    [filteredData]
+    [ratioSnapshots]
   );
 
   const regimeBlocks = useMemo(() => {
@@ -226,7 +240,7 @@ export function MarketDashboardView(): JSX.Element {
     return blocks;
   }, [filteredData]);
 
-  const latestPoint = snapshots[snapshots.length - 1];
+  const latestPoint = filteredData[filteredData.length - 1];
   const latestRelativeStrengthPoint = useMemo(
     () =>
       [...relativeStrengthData].reverse().find(point => point.ratio != null) ??
@@ -236,6 +250,29 @@ export function MarketDashboardView(): JSX.Element {
   const relativeStrengthSignal = getRelativeStrengthSignal(
     latestRelativeStrengthPoint?.is_above_dma
   );
+
+  const crossPoints = useMemo<CrossPoint[]>(() => {
+    const points: CrossPoint[] = [];
+    for (let i = 1; i < relativeStrengthData.length; i++) {
+      const prev = relativeStrengthData[i - 1] as
+        | RelativeStrengthPoint
+        | undefined;
+      const curr = relativeStrengthData[i] as RelativeStrengthPoint | undefined;
+      if (
+        prev?.is_above_dma != null &&
+        curr?.is_above_dma != null &&
+        prev.is_above_dma !== curr.is_above_dma &&
+        curr.ratio != null
+      ) {
+        points.push({
+          snapshot_date: curr.snapshot_date,
+          ratio: curr.ratio,
+          direction: curr.is_above_dma ? "above" : "below",
+        });
+      }
+    }
+    return points;
+  }, [relativeStrengthData]);
 
   if (isLoading) {
     return (
@@ -259,6 +296,7 @@ export function MarketDashboardView(): JSX.Element {
             <button
               key={tf.id}
               onClick={() => setTimeframe(tf.id)}
+              data-testid={`btc-tf-${tf.id}`}
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 timeframe === tf.id
                   ? "bg-purple-600 text-white shadow-sm"
@@ -495,12 +533,35 @@ export function MarketDashboardView(): JSX.Element {
                 long-horizon trend basis.
               </p>
             </div>
-            <div className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
-              {relativeStrengthSignal.label}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1 border border-emerald-500/20">
+                {TIMEFRAMES.map(tf => (
+                  <button
+                    key={`ratio-${tf.id}`}
+                    onClick={() => setRatioTimeframe(tf.id)}
+                    data-testid={`ratio-tf-${tf.id}`}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                      ratioTimeframe === tf.id
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                    }`}
+                  >
+                    {tf.id}
+                  </button>
+                ))}
+              </div>
+              <div className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
+                {relativeStrengthSignal.label}
+              </div>
             </div>
           </div>
 
-          <div className="mt-5 h-[260px] rounded-2xl border border-gray-800/80 bg-black/10 p-3">
+          <div className="mt-5 h-[260px] rounded-2xl border border-gray-800/80 bg-black/10 p-3 relative">
+            {isRatioLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/30">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={relativeStrengthData}
@@ -527,21 +588,37 @@ export function MarketDashboardView(): JSX.Element {
                   tickFormatter={formatRatioLabel}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#111827",
-                    borderColor: "#374151",
-                    borderRadius: "12px",
-                    color: "#fff",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
-                  }}
-                  itemStyle={{ color: "#E5E7EB", fontSize: "13px" }}
-                  labelStyle={{
-                    color: AXIS_COLOR,
-                    marginBottom: "8px",
-                    fontWeight: "bold",
-                  }}
                   cursor={{ stroke: "#4B5563", strokeWidth: 1 }}
-                  formatter={formatTooltipValue}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const data = payload[0]?.payload as
+                      | RelativeStrengthPoint
+                      | undefined;
+                    const cross = crossPoints.find(
+                      cp => cp.snapshot_date === label
+                    );
+                    return (
+                      <div className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 shadow-xl">
+                        <p className="mb-2 text-xs font-bold text-gray-400">
+                          {label}
+                        </p>
+                        <p className="text-sm text-emerald-300">
+                          ETH/BTC Ratio: {formatRatioValue(data?.ratio)}
+                        </p>
+                        <p className="text-sm text-amber-300">
+                          Ratio 200 DMA: {formatRatioValue(data?.dma_200)}
+                        </p>
+                        {cross ? (
+                          <p
+                            className={`mt-2 text-xs font-semibold ${cross.direction === "above" ? "text-emerald-400" : "text-amber-400"}`}
+                          >
+                            {cross.direction === "above" ? "\u2B06" : "\u2B07"}{" "}
+                            ETH crosses {cross.direction} DMA200
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  }}
                 />
                 <Legend
                   verticalAlign="top"
@@ -570,6 +647,19 @@ export function MarketDashboardView(): JSX.Element {
                   strokeDasharray="5 5"
                   connectNulls
                 />
+                {crossPoints.map(cp => (
+                  <ReferenceDot
+                    key={cp.snapshot_date}
+                    yAxisId="ratio"
+                    x={cp.snapshot_date}
+                    y={cp.ratio}
+                    r={6}
+                    fill={cp.direction === "above" ? "#34D399" : "#F59E0B"}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    ifOverflow="extendDomain"
+                  />
+                ))}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
