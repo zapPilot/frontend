@@ -5,7 +5,12 @@ export interface LegendItem {
   color: string;
 }
 
-const EVENT_LEGEND_KEYS: SignalKey[] = ["buy_spot", "sell_spot"];
+const EVENT_LEGEND_KEYS: SignalKey[] = [
+  "buy_spot",
+  "sell_spot",
+  "switch_to_eth",
+  "switch_to_btc",
+];
 
 export const INDICATOR_LEGEND: LegendItem[] = [
   { label: "BTC Price", color: "#3b82f6" },

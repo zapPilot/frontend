@@ -8,7 +8,12 @@ import { hasBacktestAllocation } from "../backtestBuckets";
 import { CHART_SIGNALS } from "../utils/chartHelpers";
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
-const SIGNAL_EVENT_KEYS = new Set<string>(["buy_spot", "sell_spot"]);
+const SIGNAL_EVENT_KEYS = new Set<string>([
+  "buy_spot",
+  "sell_spot",
+  "switch_to_eth",
+  "switch_to_btc",
+]);
 const SIGNAL_TO_EVENT_KEY: Record<string, string> = Object.fromEntries(
   CHART_SIGNALS.filter(signal => SIGNAL_EVENT_KEYS.has(signal.key)).map(
     signal => [signal.name, signal.key]
@@ -39,6 +44,7 @@ export interface AllocationBlock {
   displayName: string;
   allocation: BacktestPortfolioAllocation;
   index: number | undefined;
+  spotAssetLabel?: "BTC" | "ETH";
 }
 
 export interface DetailItem {
@@ -81,6 +87,19 @@ interface ParsedTooltipSource {
   sortedStrategyIds: string[] | undefined;
 }
 
+function normalizeTargetSpotAsset(value: unknown): "BTC" | "ETH" | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "BTC" || normalized === "ETH") {
+    return normalized;
+  }
+
+  return null;
+}
+
 const getOrderedStrategyIds = (
   strategies: StrategiesRecord | undefined,
   sortedStrategyIds: string[] | undefined
@@ -114,6 +133,9 @@ const buildAllocationBlock = (
     displayName: getStrategyDisplayName(strategyId),
     allocation,
     index: sortedStrategyIds?.indexOf(strategyId),
+    spotAssetLabel:
+      normalizeTargetSpotAsset(strategy.decision.details?.target_spot_asset) ??
+      undefined,
   };
 };
 
@@ -234,6 +256,17 @@ const buildTooltipSections = (
       value: `${strategy.decision.action} · ${strategy.decision.reason}`,
       color: "#cbd5e1",
     });
+
+    const targetSpotAsset = normalizeTargetSpotAsset(
+      strategy.decision.details?.target_spot_asset
+    );
+    if (targetSpotAsset) {
+      detailItems.push({
+        name: `${displayName} spot asset`,
+        value: targetSpotAsset,
+        color: "#93c5fd",
+      });
+    }
 
     if (strategy.execution.blocked_reason) {
       detailItems.push({

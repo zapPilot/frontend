@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BacktestTerminalDisplay } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTerminalDisplay";
-import type { BacktestResponse } from "@/types/backtesting";
+import type {
+  BacktestResponse,
+  BacktestStrategyCatalogResponseV3,
+} from "@/types/backtesting";
 
 vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => (
@@ -40,6 +43,11 @@ vi.mock(
     ),
     updateJsonField: vi.fn(
       (_json: string, _field: string, value: number) => `{"days":${value}}`
+    ),
+    parseConfigStrategyId: vi.fn((_json: string, fallback: string) => fallback),
+    updateConfigStrategy: vi.fn(
+      (_json: string, strategyId: string) =>
+        `{"configs":[{"strategy_id":"${strategyId}"}]}`
     ),
   })
 );
@@ -91,6 +99,10 @@ vi.mock(
   })
 );
 
+vi.mock("@/hooks/ui/useClickOutside", () => ({
+  useClickOutside: vi.fn(),
+}));
+
 describe("BacktestTerminalDisplay", () => {
   const mockOnRun = vi.fn();
   const mockOnEditorValueChange = vi.fn();
@@ -105,6 +117,7 @@ describe("BacktestTerminalDisplay", () => {
     onRun: mockOnRun,
     editorValue: '{"days":500}',
     onEditorValueChange: mockOnEditorValueChange,
+    catalog: null,
   };
 
   const mockSummary: { strategies: BacktestResponse["strategies"] } = {
@@ -126,6 +139,28 @@ describe("BacktestTerminalDisplay", () => {
     },
   };
 
+  const mockCatalog: BacktestStrategyCatalogResponseV3 = {
+    catalog_version: "2.0.0",
+    strategies: [
+      {
+        strategy_id: "dma_gated_fgi",
+        display_name: "DMA Gated FGI",
+        description: "DMA-first strategy",
+        param_schema: {},
+        default_params: { pacing_k: 3 },
+        supports_daily_suggestion: true,
+      },
+      {
+        strategy_id: "momentum_alpha",
+        display_name: "Momentum Alpha",
+        description: "Momentum strategy",
+        param_schema: {},
+        default_params: { lookback: 14 },
+        supports_daily_suggestion: false,
+      },
+    ],
+  };
+
   it("renders command prompt controls", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
@@ -142,7 +177,7 @@ describe("BacktestTerminalDisplay", () => {
   it("shows pending state in the run button", () => {
     render(<BacktestTerminalDisplay {...defaultProps} isPending={true} />);
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", { name: "[...]" });
     expect(button.textContent).toBe("[...]");
     expect(button.getAttribute("disabled")).not.toBeNull();
   });
@@ -169,11 +204,20 @@ describe("BacktestTerminalDisplay", () => {
     expect(mockOnEditorValueChange).toHaveBeenCalledWith('{"days":365}');
   });
 
-  it("renders the fixed strategy indicator instead of a signal selector", () => {
+  it("renders static strategy label when catalog is null", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
-    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByRole("button", { name: /dma_gated_fgi/i })).toBeNull();
     expect(screen.getByText("dma_gated_fgi")).toBeDefined();
+  });
+
+  it("renders a dropdown when catalog has multiple strategies", () => {
+    render(<BacktestTerminalDisplay {...defaultProps} catalog={mockCatalog} />);
+
+    const dropdownTrigger = screen.getByRole("button", {
+      name: /DMA Gated FGI/i,
+    });
+    expect(dropdownTrigger).toBeDefined();
   });
 
   it("shows hero metrics for the primary non-DCA strategy", () => {

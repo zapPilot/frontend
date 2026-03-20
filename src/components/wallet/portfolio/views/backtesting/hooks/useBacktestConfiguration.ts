@@ -11,10 +11,6 @@ import type {
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
 import {
-  DCA_CLASSIC_STRATEGY_ID,
-  DMA_GATED_FGI_STRATEGY_ID,
-} from "../constants";
-import {
   buildDefaultPayloadFromCatalog,
   buildDefaultPayloadFromPresets,
   FALLBACK_DEFAULTS,
@@ -42,10 +38,7 @@ const backtestRequestSchema = z.object({
     .array(
       z.object({
         config_id: z.string().min(1),
-        strategy_id: z.enum([
-          DCA_CLASSIC_STRATEGY_ID,
-          DMA_GATED_FGI_STRATEGY_ID,
-        ]),
+        strategy_id: z.string().min(1),
         params: backtestParamsSchema.optional(),
       })
     )
@@ -53,6 +46,37 @@ const backtestRequestSchema = z.object({
 });
 
 type ParsedBacktestRequest = z.infer<typeof backtestRequestSchema>;
+
+/**
+ * When the catalog has strategy entries, require each config's `strategy_id`
+ * to appear in that list (backend source of truth). Skip when the catalog is
+ * missing or empty so presets/backends can still run without a populated list.
+ *
+ * Exported for unit tests.
+ */
+export function validateConfigsStrategyIdsAgainstCatalog(
+  configs: { strategy_id: string }[],
+  catalog: BacktestStrategyCatalogResponseV3 | null
+): string | null {
+  if (!catalog?.strategies?.length) {
+    return null;
+  }
+  const allowed = new Set(catalog.strategies.map(entry => entry.strategy_id));
+  for (let index = 0; index < configs.length; index += 1) {
+    const config = configs[index];
+    if (!config) {
+      continue;
+    }
+    const strategyId = config.strategy_id;
+    if (!allowed.has(strategyId)) {
+      const options = [...allowed]
+        .sort((left, right) => left.localeCompare(right))
+        .join('", "');
+      return `configs.${index}.strategy_id: Unknown strategy "${strategyId}". Expected one of "${options}"`;
+    }
+  }
+  return null;
+}
 
 function formatValidationError(error: z.ZodError): string {
   return error.issues
@@ -208,8 +232,15 @@ export function useBacktestConfiguration() {
         error: formatValidationError(parsed.error),
       };
     }
+    const catalogError = validateConfigsStrategyIdsAgainstCatalog(
+      parsed.data.configs,
+      catalog
+    );
+    if (catalogError) {
+      return { ok: false as const, error: catalogError };
+    }
     return { ok: true as const, data: parsed.data };
-  }, [parsedEditorPayload]);
+  }, [parsedEditorPayload, catalog]);
 
   const handleRunBacktest = () => {
     const result = validatePayload();

@@ -101,3 +101,74 @@ export function updateJsonField(
   parsed[key] = value;
   return JSON.stringify(parsed, null, 2);
 }
+
+/**
+ * Read the `strategy_id` from the first config entry in the JSON editor value.
+ * Returns `fallback` when the JSON is invalid or the path is missing.
+ *
+ * @param json - Raw JSON string from the editor
+ * @param fallback - Default strategy id when parsing fails
+ * @returns The strategy_id string or fallback
+ *
+ * @example
+ * ```ts
+ * parseConfigStrategyId('{"configs":[{"strategy_id":"dma_gated_fgi"}]}', "")
+ * // => "dma_gated_fgi"
+ * ```
+ */
+export function parseConfigStrategyId(json: string, fallback: string): string {
+  const parsed = parseJsonObject(json);
+  if (!parsed) {
+    return fallback;
+  }
+
+  const configs = parsed["configs"];
+  if (!Array.isArray(configs) || configs.length === 0) {
+    return fallback;
+  }
+
+  const first = configs[0] as Record<string, unknown> | undefined;
+  const strategyId = first?.["strategy_id"];
+  return typeof strategyId === "string" ? strategyId : fallback;
+}
+
+/**
+ * Update the `strategy_id` (and optionally `params`) on the first config entry
+ * in the JSON editor value. Preserves all other fields.
+ *
+ * @param json - Raw JSON string from the editor
+ * @param strategyId - New strategy_id to set
+ * @param defaultParams - Optional default params for the new strategy
+ * @returns Updated JSON string, or the original on parse failure
+ *
+ * @example
+ * ```ts
+ * updateConfigStrategy('{"configs":[{"config_id":"x","strategy_id":"old"}]}', "new_strat", { k: 5 })
+ * // updates configs[0].strategy_id to "new_strat" and configs[0].params to { k: 5 }
+ * ```
+ */
+export function updateConfigStrategy(
+  json: string,
+  strategyId: string,
+  defaultParams?: Record<string, unknown>
+): string {
+  const parsed = parseJsonObject(json);
+  if (!parsed) {
+    return json;
+  }
+
+  const configs = parsed["configs"];
+  if (!Array.isArray(configs) || configs.length === 0) {
+    return json;
+  }
+
+  const first = { ...(configs[0] as Record<string, unknown>) };
+  first["strategy_id"] = strategyId;
+  if (defaultParams !== undefined) {
+    first["params"] = defaultParams;
+  }
+
+  const updatedConfigs = [first, ...configs.slice(1)];
+  parsed["configs"] = updatedConfigs;
+  return JSON.stringify(parsed, null, 2);
+}

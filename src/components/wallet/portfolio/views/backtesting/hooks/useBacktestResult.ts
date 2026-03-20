@@ -32,13 +32,16 @@ export function useBacktestResult(
     [response]
   );
 
-  const chartData = useMemo(
-    () =>
-      response
-        ? response.timeline.map(point => buildChartPoint(point, strategyIds))
-        : [],
-    [response, strategyIds]
-  );
+  const chartData = useMemo(() => {
+    if (!response) {
+      return [];
+    }
+
+    const spotAssetTracker: Record<string, "BTC" | "ETH" | null> = {};
+    return response.timeline.map(point =>
+      buildChartPoint(point, strategyIds, spotAssetTracker)
+    );
+  }, [response, strategyIds]);
 
   const yAxisDomain = useMemo(
     () => calculateYAxisDomain(chartData, strategyIds),

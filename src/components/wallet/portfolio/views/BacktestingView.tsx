@@ -14,6 +14,7 @@ import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 export function BacktestingView(): ReactElement {
   const {
     backtestData,
+    catalog,
     editorValue,
     editorError,
     error,
@@ -51,6 +52,7 @@ export function BacktestingView(): ReactElement {
         onRun={handleRunBacktest}
         editorValue={editorValue}
         onEditorValueChange={updateEditorValue}
+        catalog={catalog}
       />
     );
   }

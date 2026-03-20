@@ -67,14 +67,19 @@ export function hasBacktestAllocation(
 }
 
 export function buildBacktestAllocationSegments(
-  allocation: BacktestPortfolioAllocation
+  allocation: BacktestPortfolioAllocation,
+  spotAssetLabel?: "BTC" | "ETH"
 ): UnifiedSegment[] {
   return BACKTEST_BUCKETS.map(bucket => {
     const config = BACKTEST_BUCKET_CONFIG[bucket];
+    const segmentLabel =
+      bucket === "spot"
+        ? (spotAssetLabel ?? config.shortLabel)
+        : config.shortLabel;
 
     return {
       category: config.segmentCategory,
-      label: config.shortLabel,
+      label: segmentLabel,
       percentage: allocation[bucket] * 100,
       color: config.color,
     };

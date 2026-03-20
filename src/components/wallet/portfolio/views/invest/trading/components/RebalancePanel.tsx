@@ -21,15 +21,51 @@ const ACTION_LABELS: Record<string, string> = {
   sell: "Reduce",
 };
 
+const SPOT_BUCKET_LABEL = "SPOT";
+const STABLE_BUCKET_LABEL = "STABLE";
+
+type SpotAssetSymbol = "BTC" | "ETH";
+
 interface DerivedTradeAction {
   action: "buy" | "sell" | "hold";
   bucket: "spot" | "stable";
+  bucketLabel: string;
   amount_usd: number;
   description: string;
 }
 
 function formatRegimeLabel(value: string | null | undefined): string {
   return (value ?? "unknown").replace(/_/g, " ");
+}
+
+function normalizeSpotAsset(value: unknown): SpotAssetSymbol | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "BTC" || normalized === "ETH") {
+    return normalized;
+  }
+
+  return null;
+}
+
+function getTargetSpotAsset(
+  data: DailySuggestionResponse
+): SpotAssetSymbol | null {
+  return normalizeSpotAsset(data.decision.details?.target_spot_asset);
+}
+
+function getBucketLabel(
+  bucket: "spot" | "stable",
+  targetSpotAsset: SpotAssetSymbol | null
+): string {
+  if (bucket === "stable") {
+    return STABLE_BUCKET_LABEL;
+  }
+
+  return targetSpotAsset ?? SPOT_BUCKET_LABEL;
 }
 
 function inferDecisionBucket(data: DailySuggestionResponse): "spot" | "stable" {
@@ -41,19 +77,33 @@ function inferDecisionBucket(data: DailySuggestionResponse): "spot" | "stable" {
 function buildTradeActions(
   data: DailySuggestionResponse
 ): DerivedTradeAction[] {
+  const targetSpotAsset = getTargetSpotAsset(data);
+
   if (data.execution.transfers.length > 0) {
-    return data.execution.transfers.map(transfer => ({
-      action: transfer.to_bucket === "spot" ? "buy" : "sell",
-      bucket: transfer.to_bucket,
-      amount_usd: transfer.amount_usd,
-      description: `${transfer.from_bucket} -> ${transfer.to_bucket}`,
-    }));
+    return data.execution.transfers.map(transfer => {
+      const action = transfer.to_bucket === "spot" ? "buy" : "sell";
+      const actionBucket =
+        action === "buy" ? transfer.to_bucket : transfer.from_bucket;
+
+      return {
+        action,
+        bucket: actionBucket,
+        bucketLabel: getBucketLabel(actionBucket, targetSpotAsset),
+        amount_usd: transfer.amount_usd,
+        description: `${getBucketLabel(transfer.from_bucket, targetSpotAsset)} -> ${getBucketLabel(
+          transfer.to_bucket,
+          targetSpotAsset
+        )}`,
+      };
+    });
   }
 
+  const decisionBucket = inferDecisionBucket(data);
   return [
     {
       action: data.decision.action,
-      bucket: inferDecisionBucket(data),
+      bucket: decisionBucket,
+      bucketLabel: getBucketLabel(decisionBucket, targetSpotAsset),
       amount_usd: 0,
       description: data.execution.blocked_reason ?? data.decision.reason,
     },
@@ -185,7 +235,7 @@ export function RebalancePanel({ userId }: { userId: string }) {
                     {ACTION_LABELS[trade.action] ?? "Hold"}
                   </span>{" "}
                   <span className="text-gray-400 mx-1">·</span>{" "}
-                  {trade.bucket.toUpperCase()}
+                  {trade.bucketLabel}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {trade.description}

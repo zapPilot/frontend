@@ -1,7 +1,6 @@
 import type {
   BacktestRequest,
   BacktestStrategyCatalogResponseV3,
-  BacktestStrategyIdV3,
 } from "@/types/backtesting";
 import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 
@@ -41,7 +40,7 @@ export function buildDefaultPayloadFromPresets(
     })
     .map(preset => ({
       config_id: preset.config_id,
-      strategy_id: preset.strategy_id as BacktestStrategyIdV3,
+      strategy_id: preset.strategy_id,
       params: preset.params,
     }));
 

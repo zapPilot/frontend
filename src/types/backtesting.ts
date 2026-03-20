@@ -5,8 +5,6 @@
  * - POST /api/v3/backtesting/compare
  */
 
-export type BacktestStrategyIdV3 = "dca_classic" | "dma_gated_fgi";
-
 export interface BacktestCompareParamsV3 {
   cross_cooldown_days?: number;
   cross_on_touch?: boolean;
@@ -20,7 +18,8 @@ export interface BacktestCompareParamsV3 {
 export interface BacktestCompareConfigV3 {
   /** Client-provided identifier; becomes the response strategies-map key. */
   config_id: string;
-  strategy_id: BacktestStrategyIdV3;
+  /** Backend-defined strategy id; extensible without frontend enum churn. */
+  strategy_id: string;
   params?: BacktestCompareParamsV3;
 }
 
@@ -88,6 +87,7 @@ export interface BacktestSignal {
 
 export interface BacktestDecisionDetails {
   allocation_name?: string | null;
+  target_spot_asset?: "BTC" | "ETH" | null;
   risk_notes?: string[];
   decision_score?: number;
   [key: string]: unknown;
@@ -168,7 +168,7 @@ export interface BacktestResponse {
 }
 
 export interface BacktestStrategyCatalogEntryV3 {
-  strategy_id: BacktestStrategyIdV3;
+  strategy_id: string;
   display_name: string;
   description?: string | null;
   param_schema: Record<string, unknown>;

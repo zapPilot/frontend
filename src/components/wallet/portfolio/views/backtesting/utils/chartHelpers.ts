@@ -7,7 +7,11 @@ import { getBacktestTransferDirection } from "../backtestBuckets";
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
-export type SignalKey = "buy_spot" | "sell_spot";
+export type SignalKey =
+  | "buy_spot"
+  | "sell_spot"
+  | "switch_to_eth"
+  | "switch_to_btc";
 
 export interface SignalConfig {
   key: SignalKey;
@@ -40,6 +44,20 @@ export const CHART_SIGNALS: SignalConfig[] = [
     color: "#ef4444",
     shape: "circle",
   },
+  {
+    key: "switch_to_eth",
+    field: "switchToEthSignal",
+    name: "Switch to ETH",
+    color: "#8b5cf6",
+    shape: "diamond",
+  },
+  {
+    key: "switch_to_btc",
+    field: "switchToBtcSignal",
+    name: "Switch to BTC",
+    color: "#f97316",
+    shape: "diamond",
+  },
 ];
 
 const SIGNAL_FIELDS = CHART_SIGNALS.map(s => s.field);
@@ -61,6 +79,27 @@ interface SignalAccumulator {
 type BacktestStrategy = NonNullable<
   BacktestTimelinePoint["strategies"][string]
 >;
+type SpotAssetSymbol = "BTC" | "ETH";
+type SpotAssetTracker = Record<string, SpotAssetSymbol | null>;
+
+function normalizeTargetSpotAsset(value: unknown): SpotAssetSymbol | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "BTC" || normalized === "ETH") {
+    return normalized;
+  }
+
+  return null;
+}
+
+function getTargetSpotAsset(
+  strategy: BacktestStrategy
+): SpotAssetSymbol | null {
+  return normalizeTargetSpotAsset(strategy.decision.details?.target_spot_asset);
+}
 
 function classifyTransfer(
   from: BacktestBucket,
@@ -131,6 +170,53 @@ function processStrategyTransfers(
 
       updateSignal(acc, signalKey, strategy.portfolio.total_value, displayName);
     }
+  }
+}
+
+function processStrategySpotSwitches(
+  point: BacktestTimelinePoint,
+  strategyIds: string[],
+  acc: SignalAccumulator,
+  spotAssetTracker: SpotAssetTracker | undefined
+): void {
+  if (!spotAssetTracker) {
+    return;
+  }
+
+  for (const strategyId of strategyIds) {
+    if (strategyId === DCA_CLASSIC_STRATEGY_ID) {
+      continue;
+    }
+
+    const strategy = point.strategies[strategyId];
+    if (!strategy) {
+      continue;
+    }
+
+    const spotAllocation = strategy.portfolio.allocation.spot;
+    if (spotAllocation <= 0) {
+      spotAssetTracker[strategyId] = null;
+      continue;
+    }
+
+    const targetSpotAsset = getTargetSpotAsset(strategy);
+    if (!targetSpotAsset) {
+      continue;
+    }
+
+    const previousSpotAsset = spotAssetTracker[strategyId];
+    if (previousSpotAsset && previousSpotAsset !== targetSpotAsset) {
+      const signalKey =
+        targetSpotAsset === "ETH" ? "switch_to_eth" : "switch_to_btc";
+      updateSignal(
+        acc,
+        signalKey,
+        strategy.portfolio.total_value,
+        getStrategyDisplayName(strategyId)
+      );
+    }
+
+    spotAssetTracker[strategyId] = targetSpotAsset;
   }
 }
 
@@ -254,7 +340,8 @@ export function sortStrategyIds(ids: string[]): string[] {
 
 export function buildChartPoint(
   point: BacktestTimelinePoint,
-  strategyIds: string[]
+  strategyIds: string[],
+  spotAssetTracker?: SpotAssetTracker
 ): Record<string, unknown> {
   const data: Record<string, unknown> = {
     date: point.market.date,
@@ -277,6 +364,7 @@ export function buildChartPoint(
 
   const acc = createSignalAccumulator();
   processStrategyTransfers(point, strategyIds, acc);
+  processStrategySpotSwitches(point, strategyIds, acc, spotAssetTracker);
 
   for (const signal of CHART_SIGNALS) {
     data[signal.field] = acc[signal.field];

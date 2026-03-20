@@ -1,9 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
-import type { BacktestResponse } from "@/types/backtesting";
+import type {
+  BacktestResponse,
+  BacktestStrategyCatalogResponseV3,
+} from "@/types/backtesting";
 
 import {
   DEFAULT_DAYS,
@@ -12,25 +14,20 @@ import {
 } from "../constants";
 import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
+  parseConfigStrategyId,
   parseJsonField,
+  updateConfigStrategy,
   updateJsonField,
 } from "../utils/jsonConfigurationHelpers";
 import { BacktestChart } from "./BacktestChart";
+import { BacktestCommandBar } from "./BacktestCommandBar";
+import { BacktestHeroMetrics } from "./BacktestHeroMetrics";
+import { BacktestSecondaryMetrics } from "./BacktestSecondaryMetrics";
 import {
   createHeroMetrics,
   createSecondaryMetrics,
 } from "./backtestTerminalMetrics";
-
-const PHOSPHOR_GLOW = "0 0 8px rgba(52,211,153,0.6)";
-const PHOSPHOR_GLOW_DIM = "0 0 8px rgba(52,211,153,0.4)";
-const phosphorGlowStyle = { textShadow: PHOSPHOR_GLOW } as const;
-const phosphorGlowDimStyle = { textShadow: PHOSPHOR_GLOW_DIM } as const;
-
-const COLLAPSE_ANIMATION = {
-  initial: { height: 0, opacity: 0 },
-  animate: { height: "auto" as const, opacity: 1 },
-  exit: { height: 0, opacity: 0 },
-};
+import type { TerminalDropdownOption } from "./TerminalDropdown";
 
 export interface BacktestTerminalDisplayProps {
   /** Strategy summaries keyed by strategy_id */
@@ -51,6 +48,8 @@ export interface BacktestTerminalDisplayProps {
   editorValue: string;
   /** Update the JSON editor value */
   onEditorValueChange: (v: string) => void;
+  /** Strategy catalog for populating the dropdown */
+  catalog: BacktestStrategyCatalogResponseV3 | null;
 }
 
 /**
@@ -67,10 +66,42 @@ export function BacktestTerminalDisplay({
   onRun,
   editorValue,
   onEditorValueChange,
+  catalog,
 }: BacktestTerminalDisplayProps): React.ReactElement {
-  const [showMetrics, setShowMetrics] = useState(false);
-
   const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
+  const selectedStrategyId = parseConfigStrategyId(
+    editorValue,
+    DMA_GATED_FGI_STRATEGY_ID
+  );
+
+  const strategyOptions: TerminalDropdownOption[] = useMemo(() => {
+    if (!catalog?.strategies?.length) {
+      return [{ value: selectedStrategyId, label: selectedStrategyId }];
+    }
+    return catalog.strategies.map(s => ({
+      value: s.strategy_id,
+      label: s.display_name,
+    }));
+  }, [catalog, selectedStrategyId]);
+
+  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onEditorValueChange(
+      updateJsonField(editorValue, "days", Number(e.target.value))
+    );
+  };
+
+  const handleStrategyChange = useCallback(
+    (newStrategyId: string) => {
+      const entry = catalog?.strategies.find(
+        s => s.strategy_id === newStrategyId
+      );
+      const defaultParams = entry?.default_params;
+      onEditorValueChange(
+        updateConfigStrategy(editorValue, newStrategyId, defaultParams)
+      );
+    },
+    [catalog, editorValue, onEditorValueChange]
+  );
 
   const primaryId = getPrimaryStrategyId(sortedStrategyIds);
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
@@ -81,87 +112,21 @@ export function BacktestTerminalDisplay({
     [regime]
   );
 
-  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onEditorValueChange(
-      updateJsonField(editorValue, "days", Number(e.target.value))
-    );
-  };
-
   return (
     <div className="font-mono bg-gray-950 rounded-2xl border border-gray-800 overflow-visible">
-      {/* Command prompt bar */}
-      <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-2 flex-wrap">
-        <span className="text-emerald-400" style={phosphorGlowStyle}>
-          $
-        </span>
-        <span className="text-gray-300">backtest</span>
-        <span className="text-gray-400">--days</span>
-        <input
-          type="number"
-          value={days}
-          onChange={handleDaysChange}
-          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 w-16 text-center focus:outline-none"
-          style={phosphorGlowStyle}
-        />
-        <span className="text-gray-400">--strategy</span>
-        <span
-          className="border-b border-emerald-400/30 text-emerald-400 px-1"
-          style={phosphorGlowStyle}
-        >
-          {DMA_GATED_FGI_STRATEGY_ID}
-        </span>
-        <span className="text-gray-400">--pacing</span>
-        <span
-          className="border-b border-emerald-400/30 text-emerald-400 px-1"
-          style={phosphorGlowStyle}
-        >
-          {FIXED_PACING_ENGINE_ID}
-        </span>
-        <button
-          onClick={onRun}
-          disabled={isPending}
-          className="ml-auto border border-emerald-400/30 text-emerald-400 px-3 py-1 rounded hover:bg-emerald-400/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          style={phosphorGlowStyle}
-        >
-          {isPending ? "[...]" : "[RUN]"}
-        </button>
-      </div>
+      <BacktestCommandBar
+        days={days}
+        onDaysChange={handleDaysChange}
+        strategyOptions={strategyOptions}
+        selectedStrategyId={selectedStrategyId}
+        onStrategyChange={handleStrategyChange}
+        pacingEngineId={FIXED_PACING_ENGINE_ID}
+        isPending={isPending}
+        onRun={onRun}
+      />
 
-      {/* Hero metrics section */}
-      {heroMetrics.length > 0 && (
-        <div className="px-6 py-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-            {heroMetrics.map((metric, index) => (
-              <div
-                key={metric.label}
-                className={`px-4 py-3 border-t-2 border-emerald-400/20 ${
-                  index > 0 ? "md:border-l border-emerald-400/20" : ""
-                }`}
-              >
-                <div
-                  className="text-xs text-emerald-400/60 uppercase tracking-widest mb-2"
-                  style={phosphorGlowStyle}
-                >
-                  {metric.label}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-emerald-400/80 text-sm">
-                    {metric.bar}
-                  </span>
-                  <span
-                    className={`text-xl font-bold ${metric.color}`}
-                    style={phosphorGlowStyle}
-                  >
-                    {metric.value}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <BacktestHeroMetrics metrics={heroMetrics} />
 
-      {/* Chart section with scan-line overlay */}
       {chartData.length > 0 && (
         <div className="relative px-4 py-2">
           <BacktestChart
@@ -181,51 +146,7 @@ export function BacktestTerminalDisplay({
         </div>
       )}
 
-      {/* Toggle prompt */}
-      {regime && (
-        <div className="px-6 py-3 border-t border-gray-800">
-          <button
-            onClick={() => setShowMetrics(!showMetrics)}
-            className="text-left w-full group"
-          >
-            <span className="text-emerald-400/60">{">"}</span>
-            <span className="text-gray-400 ml-2">show_metrics</span>
-            <span
-              className="text-emerald-400 ml-0.5"
-              style={{ animation: "blink 1s step-end infinite" }}
-            >
-              _
-            </span>
-            <span className="text-gray-500 ml-3">
-              [{showMetrics ? "Y/n" : "y/N"}]
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* Secondary metrics */}
-      <AnimatePresence>
-        {showMetrics && secondaryMetrics.length > 0 && (
-          <motion.div {...COLLAPSE_ANIMATION} className="overflow-hidden">
-            <div className="px-6 py-3 flex flex-wrap items-center gap-x-1 text-sm">
-              {secondaryMetrics.map((m, i) => (
-                <span key={m.label}>
-                  {i > 0 && (
-                    <span className="text-emerald-400/20 mx-2">{"\u2551"}</span>
-                  )}
-                  <span className="text-emerald-400/60">{m.label}</span>{" "}
-                  <span
-                    className="text-white font-bold"
-                    style={phosphorGlowDimStyle}
-                  >
-                    {m.value}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <BacktestSecondaryMetrics hasData={!!regime} metrics={secondaryMetrics} />
     </div>
   );
 }

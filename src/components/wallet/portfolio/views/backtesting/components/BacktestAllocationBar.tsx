@@ -11,6 +11,7 @@ import { getStrategyColor } from "../utils/strategyDisplay";
 export interface BacktestAllocationBarProps {
   displayName: string;
   allocation: BacktestPortfolioAllocation;
+  spotAssetLabel?: "BTC" | "ETH";
   strategyId?: string;
   index?: number | undefined;
 }
@@ -24,10 +25,11 @@ export interface BacktestAllocationBarProps {
 export function BacktestAllocationBar({
   displayName,
   allocation,
+  spotAssetLabel,
   strategyId,
   index,
 }: BacktestAllocationBarProps): ReactElement | null {
-  const segments = buildBacktestAllocationSegments(allocation);
+  const segments = buildBacktestAllocationSegments(allocation, spotAssetLabel);
 
   if (segments.length === 0) {
     return null;

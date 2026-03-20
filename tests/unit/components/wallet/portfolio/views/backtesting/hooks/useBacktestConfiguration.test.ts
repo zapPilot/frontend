@@ -1,10 +1,14 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useBacktestConfiguration } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestConfiguration";
+import {
+  useBacktestConfiguration,
+  validateConfigsStrategyIdsAgainstCatalog,
+} from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestConfiguration";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 import { getBacktestingStrategiesV3 } from "@/services/backtestingService";
 import { getStrategyConfigs } from "@/services/strategyService";
+import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
 
 import { QueryClientWrapper } from "../../../../../../../test-utils";
 
@@ -1017,5 +1021,116 @@ describe("useBacktestConfiguration", () => {
     expect(result.current).toHaveProperty("handleRunBacktest");
     expect(result.current).toHaveProperty("resetConfiguration");
     expect(result.current).toHaveProperty("updateEditorValue");
+  });
+});
+
+function makeStrategyCatalog(
+  strategyIds: string[]
+): BacktestStrategyCatalogResponseV3 {
+  return {
+    catalog_version: "test",
+    strategies: strategyIds.map(strategy_id => ({
+      strategy_id,
+      display_name: strategy_id,
+      description: null,
+      param_schema: {},
+      default_params: {},
+      supports_daily_suggestion: true,
+    })),
+  };
+}
+
+describe("validateConfigsStrategyIdsAgainstCatalog", () => {
+  it("returns null when catalog is null", () => {
+    expect(
+      validateConfigsStrategyIdsAgainstCatalog(
+        [{ strategy_id: "any_new_engine" }],
+        null
+      )
+    ).toBeNull();
+  });
+
+  it("returns null when catalog strategies array is empty", () => {
+    expect(
+      validateConfigsStrategyIdsAgainstCatalog(
+        [{ strategy_id: "dma_gated_fgi" }],
+        { catalog_version: "0", strategies: [] }
+      )
+    ).toBeNull();
+  });
+
+  it("returns null when every strategy_id is listed in the catalog", () => {
+    const catalog = makeStrategyCatalog(["dca_classic", "dma_gated_fgi"]);
+    expect(
+      validateConfigsStrategyIdsAgainstCatalog(
+        [{ strategy_id: "dca_classic" }, { strategy_id: "dma_gated_fgi" }],
+        catalog
+      )
+    ).toBeNull();
+  });
+
+  it("returns a path-style error when a strategy_id is not in the catalog", () => {
+    const catalog = makeStrategyCatalog(["dma_gated_fgi"]);
+    const message = validateConfigsStrategyIdsAgainstCatalog(
+      [{ strategy_id: "dma_gated_fgi" }, { strategy_id: "brand_new_strategy" }],
+      catalog
+    );
+    expect(message).toContain("configs.1.strategy_id");
+    expect(message).toContain("brand_new_strategy");
+    expect(message).toContain("dma_gated_fgi");
+  });
+});
+
+describe("useBacktestConfiguration catalog strategy_id refine", () => {
+  const mockMutate = vi.fn(
+    (_request: unknown, options?: { onSettled?: () => void }) => {
+      options?.onSettled?.();
+    }
+  );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useBacktestMutation).mockReturnValue({
+      mutate: mockMutate,
+      data: undefined,
+      isPending: false,
+      error: null,
+    } as any);
+  });
+
+  it("rejects run when catalog lists strategies but payload uses an unknown strategy_id", async () => {
+    vi.mocked(getStrategyConfigs).mockResolvedValue(mockStrategyConfigs);
+    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue(mockCatalog);
+
+    const { result } = renderHook(() => useBacktestConfiguration(), {
+      wrapper: QueryClientWrapper,
+    });
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+    });
+
+    act(() => {
+      result.current.updateEditorValue(
+        JSON.stringify({
+          total_capital: 10000,
+          days: 30,
+          configs: [
+            {
+              config_id: "unknown_default",
+              strategy_id: "not_in_catalog",
+            },
+          ],
+        })
+      );
+    });
+
+    act(() => {
+      result.current.handleRunBacktest();
+    });
+
+    expect(result.current.editorError).toContain("configs.0.strategy_id");
+    expect(result.current.editorError).toContain("not_in_catalog");
+    expect(mockMutate).toHaveBeenCalledTimes(1);
   });
 });

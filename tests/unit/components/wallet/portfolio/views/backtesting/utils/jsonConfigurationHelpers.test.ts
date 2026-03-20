@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  parseConfigStrategyId,
   parseJsonField,
   patchBacktestConfig,
+  updateConfigStrategy,
   updateJsonField,
 } from "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers";
 
@@ -58,5 +60,84 @@ describe("updateJsonField", () => {
 
   it("returns the original JSON when parsing fails", () => {
     expect(updateJsonField("bad json", "days", 365)).toBe("bad json");
+  });
+});
+
+describe("parseConfigStrategyId", () => {
+  it("reads strategy_id from the first config entry", () => {
+    const json = JSON.stringify({
+      configs: [{ config_id: "x", strategy_id: "dma_gated_fgi" }],
+    });
+    expect(parseConfigStrategyId(json, "fallback")).toBe("dma_gated_fgi");
+  });
+
+  it("returns fallback for invalid JSON", () => {
+    expect(parseConfigStrategyId("bad json", "fallback")).toBe("fallback");
+  });
+
+  it("returns fallback when configs is missing", () => {
+    expect(parseConfigStrategyId('{"days":500}', "fallback")).toBe("fallback");
+  });
+
+  it("returns fallback when configs is empty", () => {
+    expect(parseConfigStrategyId('{"configs":[]}', "fallback")).toBe(
+      "fallback"
+    );
+  });
+
+  it("returns fallback when strategy_id is not a string", () => {
+    const json = JSON.stringify({ configs: [{ strategy_id: 123 }] });
+    expect(parseConfigStrategyId(json, "fallback")).toBe("fallback");
+  });
+});
+
+describe("updateConfigStrategy", () => {
+  it("updates strategy_id on the first config entry", () => {
+    const json = JSON.stringify({
+      days: 500,
+      configs: [{ config_id: "x", strategy_id: "old", params: { k: 1 } }],
+    });
+    const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
+    expect(result.configs[0].strategy_id).toBe("new_strat");
+    expect(result.configs[0].params).toEqual({ k: 1 });
+    expect(result.days).toBe(500);
+  });
+
+  it("replaces params when defaultParams is provided", () => {
+    const json = JSON.stringify({
+      configs: [{ config_id: "x", strategy_id: "old", params: { k: 1 } }],
+    });
+    const result = JSON.parse(
+      updateConfigStrategy(json, "new_strat", { lookback: 14 })
+    );
+    expect(result.configs[0].strategy_id).toBe("new_strat");
+    expect(result.configs[0].params).toEqual({ lookback: 14 });
+  });
+
+  it("preserves other config entries", () => {
+    const json = JSON.stringify({
+      configs: [
+        { config_id: "a", strategy_id: "first" },
+        { config_id: "b", strategy_id: "second" },
+      ],
+    });
+    const result = JSON.parse(updateConfigStrategy(json, "changed"));
+    expect(result.configs).toHaveLength(2);
+    expect(result.configs[0].strategy_id).toBe("changed");
+    expect(result.configs[1].strategy_id).toBe("second");
+  });
+
+  it("returns original JSON on parse failure", () => {
+    expect(updateConfigStrategy("bad json", "x")).toBe("bad json");
+  });
+
+  it("returns original JSON when configs is empty", () => {
+    const json = '{"configs":[]}';
+    expect(updateConfigStrategy(json, "x")).toBe(json);
+  });
+
+  it("returns original JSON when configs is missing", () => {
+    const json = '{"days":500}';
+    expect(updateConfigStrategy(json, "x")).toBe(json);
   });
 });
