@@ -7,11 +7,14 @@ import {
 import {
   EVENT_LEGEND,
   INDICATOR_LEGEND,
+  type IndicatorKey,
   type LegendItem,
 } from "./backtestChartLegendData";
 
 interface BacktestChartLegendProps {
   sortedStrategyIds: string[];
+  activeIndicators: Set<IndicatorKey>;
+  onToggleIndicator: (key: IndicatorKey) => void;
 }
 
 interface LegendGroupProps {
@@ -21,6 +24,8 @@ interface LegendGroupProps {
 
 export function BacktestChartLegend({
   sortedStrategyIds,
+  activeIndicators,
+  onToggleIndicator,
 }: BacktestChartLegendProps): ReactElement {
   const strategyLegend = sortedStrategyIds.map((strategyId, index) => ({
     label: getStrategyDisplayName(strategyId),
@@ -30,8 +35,58 @@ export function BacktestChartLegend({
   return (
     <div className="flex flex-wrap items-start gap-4">
       <LegendGroup title="Strategy" items={strategyLegend} />
-      <LegendGroup title="Indicators" items={INDICATOR_LEGEND} />
+      <IndicatorToggleGroup
+        activeIndicators={activeIndicators}
+        onToggle={onToggleIndicator}
+      />
       <LegendGroup title="Events" items={EVENT_LEGEND} />
+    </div>
+  );
+}
+
+interface IndicatorToggleGroupProps {
+  activeIndicators: Set<IndicatorKey>;
+  onToggle: (key: IndicatorKey) => void;
+}
+
+function IndicatorToggleGroup({
+  activeIndicators,
+  onToggle,
+}: IndicatorToggleGroupProps): ReactElement {
+  return (
+    <div className="min-w-[120px]">
+      <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+        Market Context
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {INDICATOR_LEGEND.map(({ key, label, color }) => {
+          const isActive = activeIndicators.has(key);
+
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onToggle(key)}
+              className={`rounded-full text-[10px] px-2 py-0.5 cursor-pointer transition-colors border ${
+                isActive
+                  ? "text-gray-200"
+                  : "border-zinc-700 text-gray-500 bg-transparent"
+              }`}
+              style={
+                isActive
+                  ? {
+                      borderColor: color,
+                      backgroundColor: `${color}26`,
+                    }
+                  : undefined
+              }
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

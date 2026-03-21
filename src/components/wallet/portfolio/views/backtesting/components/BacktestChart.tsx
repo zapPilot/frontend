@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type ReactElement } from "react";
+import { memo, type ReactElement, useCallback, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -27,6 +27,7 @@ import {
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
 import { BacktestChartLegend } from "./BacktestChartLegend";
+import type { IndicatorKey } from "./backtestChartLegendData";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
 
 const AXIS_DEFAULTS = {
@@ -62,9 +63,14 @@ function buildBacktestTooltipProps(params: {
     | undefined;
   label: string | number | undefined;
   sortedStrategyIds: string[];
+  activeIndicators: Set<IndicatorKey>;
 }): BacktestTooltipProps {
-  const { active, payload, label, sortedStrategyIds } = params;
-  const tooltipProps: BacktestTooltipProps = { sortedStrategyIds };
+  const { active, payload, label, sortedStrategyIds, activeIndicators } =
+    params;
+  const tooltipProps: BacktestTooltipProps = {
+    sortedStrategyIds,
+    activeIndicators,
+  };
 
   if (active !== undefined) {
     tooltipProps.active = active;
@@ -91,6 +97,21 @@ function getStrokeDasharrayProps(isDcaClassic: boolean): {
   return { strokeDasharray: "4 4" };
 }
 
+function getStrategyVisualTier(index: number): {
+  strokeWidth: number;
+  strokeOpacity: number;
+} {
+  if (index === 0) {
+    return { strokeWidth: 1.5, strokeOpacity: 0.65 };
+  }
+
+  if (index === 1) {
+    return { strokeWidth: 2.5, strokeOpacity: 1.0 };
+  }
+
+  return { strokeWidth: 1.0, strokeOpacity: 0.35 };
+}
+
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
   sortedStrategyIds: string[];
@@ -108,6 +129,26 @@ export const BacktestChart = memo(function BacktestChart({
   chartIdPrefix = "default",
 }: BacktestChartProps): ReactElement {
   const primarySeriesId = getPrimaryStrategyId(sortedStrategyIds);
+  const [activeIndicators, setActiveIndicators] = useState<Set<IndicatorKey>>(
+    () => new Set()
+  );
+
+  const handleToggleIndicator = useCallback((key: IndicatorKey) => {
+    setActiveIndicators(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  }, []);
+
+  const showPriceAxis =
+    activeIndicators.has("btcPrice") || activeIndicators.has("dma200");
+  const showSentimentAxis = activeIndicators.has("sentiment");
 
   return (
     <BaseCard
@@ -121,7 +162,11 @@ export const BacktestChart = memo(function BacktestChart({
             ({actualDays} Days)
           </span>
         </div>
-        <BacktestChartLegend sortedStrategyIds={sortedStrategyIds} />
+        <BacktestChartLegend
+          sortedStrategyIds={sortedStrategyIds}
+          activeIndicators={activeIndicators}
+          onToggleIndicator={handleToggleIndicator}
+        />
       </div>
 
       <div className="flex-1 w-full pt-4 pr-4">
@@ -150,36 +195,40 @@ export const BacktestChart = memo(function BacktestChart({
               tickFormatter={formatCurrencyAxis}
             />
 
-            <YAxis
-              yAxisId="priceRight"
-              orientation="right"
-              tick={axisTick("#f59e0b")}
-              {...AXIS_DEFAULTS}
-              width={64}
-              tickFormatter={formatCurrencyAxis}
-              label={{
-                value: "BTC / DMA 200",
-                angle: 90,
-                position: "insideRight",
-                style: { fontSize: 10, fill: "#f59e0b" },
-              }}
-            />
+            {showPriceAxis && (
+              <YAxis
+                yAxisId="priceRight"
+                orientation="right"
+                tick={axisTick("#f59e0b")}
+                {...AXIS_DEFAULTS}
+                width={64}
+                tickFormatter={formatCurrencyAxis}
+                label={{
+                  value: "BTC / DMA 200",
+                  angle: 90,
+                  position: "insideRight",
+                  style: { fontSize: 10, fill: "#f59e0b" },
+                }}
+              />
+            )}
 
-            <YAxis
-              yAxisId="sentimentRight"
-              orientation="right"
-              domain={[0, 100]}
-              tick={axisTick("#a855f7")}
-              {...AXIS_DEFAULTS}
-              width={48}
-              label={{
-                value: "Sentiment",
-                angle: 90,
-                position: "insideRight",
-                style: { fontSize: 10, fill: "#a855f7" },
-              }}
-              tickFormatter={formatSentiment}
-            />
+            {showSentimentAxis && (
+              <YAxis
+                yAxisId="sentimentRight"
+                orientation="right"
+                domain={[0, 100]}
+                tick={axisTick("#a855f7")}
+                {...AXIS_DEFAULTS}
+                width={48}
+                label={{
+                  value: "Sentiment",
+                  angle: 90,
+                  position: "insideRight",
+                  style: { fontSize: 10, fill: "#a855f7" },
+                }}
+                tickFormatter={formatSentiment}
+              />
+            )}
 
             <Tooltip
               allowEscapeViewBox={{ x: false, y: true }}
@@ -190,12 +239,59 @@ export const BacktestChart = memo(function BacktestChart({
                   payload,
                   label,
                   sortedStrategyIds,
+                  activeIndicators,
                 });
 
                 return <BacktestTooltip {...tooltipProps} />;
               }}
             />
 
+            {/* Layer 1: Indicator lines (lowest visual priority, behind strategy fills) */}
+            {activeIndicators.has("sentiment") && (
+              <Line
+                yAxisId="sentimentRight"
+                type="monotone"
+                dataKey="sentiment"
+                name="Sentiment"
+                stroke="#a855f7"
+                strokeWidth={1}
+                dot={false}
+                connectNulls={true}
+                strokeOpacity={0.4}
+                legendType="none"
+              />
+            )}
+
+            {activeIndicators.has("btcPrice") && (
+              <Line
+                yAxisId="priceRight"
+                type="monotone"
+                dataKey="btc_price"
+                name="BTC Price"
+                stroke="#3b82f6"
+                strokeWidth={1.5}
+                dot={false}
+                connectNulls={true}
+                legendType="none"
+              />
+            )}
+
+            {activeIndicators.has("dma200") && (
+              <Line
+                yAxisId="priceRight"
+                type="monotone"
+                dataKey="dma_200"
+                name="DMA 200"
+                stroke="#f59e0b"
+                strokeWidth={1.25}
+                strokeDasharray="5 3"
+                dot={false}
+                connectNulls={true}
+                legendType="none"
+              />
+            )}
+
+            {/* Layer 2: Strategy areas (benchmark first, then primary with fill, then additional) */}
             {sortedStrategyIds.map((strategyId, index) => (
               <StrategyArea
                 key={strategyId}
@@ -206,44 +302,7 @@ export const BacktestChart = memo(function BacktestChart({
               />
             ))}
 
-            <Line
-              yAxisId="sentimentRight"
-              type="monotone"
-              dataKey="sentiment"
-              name="Sentiment"
-              stroke="#a855f7"
-              strokeWidth={1}
-              dot={false}
-              connectNulls={true}
-              strokeOpacity={0.4}
-              legendType="none"
-            />
-
-            <Line
-              yAxisId="priceRight"
-              type="monotone"
-              dataKey="btc_price"
-              name="BTC Price"
-              stroke="#3b82f6"
-              strokeWidth={1.5}
-              dot={false}
-              connectNulls={true}
-              legendType="none"
-            />
-
-            <Line
-              yAxisId="priceRight"
-              type="monotone"
-              dataKey="dma_200"
-              name="DMA 200"
-              stroke="#f59e0b"
-              strokeWidth={1.25}
-              strokeDasharray="5 3"
-              dot={false}
-              connectNulls={true}
-              legendType="none"
-            />
-
+            {/* Layer 3: Signal scatter points (highest, always on top) */}
             {CHART_SIGNALS.map(signal => (
               <Scatter
                 key={signal.key}
@@ -296,6 +355,7 @@ function StrategyArea({
   const displayName = getStrategyDisplayName(strategyId);
   const isDcaClassic = strategyId === DCA_CLASSIC_STRATEGY_ID;
   const strokeDasharrayProps = getStrokeDasharrayProps(isDcaClassic);
+  const { strokeWidth, strokeOpacity } = getStrategyVisualTier(index);
 
   return (
     <Area
@@ -303,9 +363,10 @@ function StrategyArea({
       dataKey={`${strategyId}_value`}
       name={displayName}
       stroke={color}
+      strokeOpacity={strokeOpacity}
       fillOpacity={isPrimary ? 1 : 0}
       fill={isPrimary ? `url(#${prefix}-color-${strategyId})` : "transparent"}
-      strokeWidth={2}
+      strokeWidth={strokeWidth}
       {...strokeDasharrayProps}
     />
   );

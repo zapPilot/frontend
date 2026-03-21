@@ -128,14 +128,16 @@ const buildAllocationBlock = (
     return null;
   }
 
+  const spotAssetLabel = normalizeTargetSpotAsset(
+    strategy.decision.details?.target_spot_asset
+  );
+
   return {
     id: strategyId,
     displayName: getStrategyDisplayName(strategyId),
     allocation,
     index: sortedStrategyIds?.indexOf(strategyId),
-    spotAssetLabel:
-      normalizeTargetSpotAsset(strategy.decision.details?.target_spot_asset) ??
-      undefined,
+    ...(spotAssetLabel ? { spotAssetLabel } : {}),
   };
 };
 

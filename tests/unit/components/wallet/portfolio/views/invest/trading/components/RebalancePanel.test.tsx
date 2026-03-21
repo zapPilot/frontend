@@ -108,6 +108,9 @@ const mockSuggestionData = {
       stable: 0,
     },
     immediate: false,
+    details: {
+      target_spot_asset: "eth",
+    },
   },
   execution: {
     event: "rebalance",
@@ -136,6 +139,9 @@ const mockHoldSuggestion = {
     ...mockSuggestionData.decision,
     action: "hold" as const,
     reason: "cooldown_hold",
+    details: {
+      target_spot_asset: "btc",
+    },
   },
   execution: {
     ...mockSuggestionData.execution,
@@ -202,12 +208,11 @@ describe("RebalancePanel", () => {
     expect(screen.getByText("extreme fear")).toBeDefined();
     expect(screen.getByText("Add")).toBeDefined();
     expect(screen.getByText("Reduce")).toBeDefined();
-    expect(screen.getByText("SPOT")).toBeDefined();
-    expect(screen.getByText("STABLE")).toBeDefined();
+    expect(screen.getAllByText("ETH")).toHaveLength(2);
     expect(screen.getByText("$500.00")).toBeDefined();
     expect(screen.getByText("$200.00")).toBeDefined();
-    expect(screen.getByText("stable -> spot")).toBeDefined();
-    expect(screen.getByText("spot -> stable")).toBeDefined();
+    expect(screen.getByText("STABLE -> ETH")).toBeDefined();
+    expect(screen.getByText("ETH -> STABLE")).toBeDefined();
   });
 
   it("renders a hold state when no transfers are present", () => {
@@ -218,8 +223,28 @@ describe("RebalancePanel", () => {
     render(<RebalancePanel userId="0xabc" />);
 
     expect(screen.getByText("Hold")).toBeDefined();
+    expect(screen.getByText("BTC")).toBeDefined();
     expect(screen.getByText("cooldown_active")).toBeDefined();
     expect(screen.getByText("$0.00")).toBeDefined();
+  });
+
+  it("falls back to SPOT label when target_spot_asset is missing or invalid", () => {
+    vi.mocked(useDailySuggestion).mockReturnValue({
+      data: {
+        ...mockSuggestionData,
+        decision: {
+          ...mockSuggestionData.decision,
+          details: {
+            target_spot_asset: "doge",
+          },
+        },
+      },
+    } as ReturnType<typeof useDailySuggestion>);
+
+    render(<RebalancePanel userId="0xabc" />);
+
+    expect(screen.getAllByText("SPOT")).toHaveLength(2);
+    expect(screen.getByText("STABLE -> SPOT")).toBeDefined();
   });
 
   it("opens and closes the review modal", () => {

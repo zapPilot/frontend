@@ -288,4 +288,179 @@ describe("useBacktestResult", () => {
     expect(typeof max).toBe("number");
     expect(min).toBeLessThanOrEqual(max);
   });
+
+  it("adds switch markers and resets them across stable-only gaps", () => {
+    const response = {
+      strategies: {
+        eth_btc_rotation_default: {
+          strategy_id: "eth_btc_rotation",
+          display_name: "ETH BTC Rotation Default",
+          signal_id: "eth_btc_rs_signal",
+          total_invested: 10000,
+          final_value: 10400,
+          roi_percent: 4,
+          trade_count: 2,
+          final_allocation: {
+            spot: 0.8,
+            stable: 0.2,
+          },
+          parameters: {},
+        },
+      },
+      timeline: [
+        {
+          market: {
+            date: "2024-01-01",
+            token_price: { btc: 50000 },
+            sentiment: 40,
+            sentiment_label: "fear",
+          },
+          strategies: {
+            eth_btc_rotation_default: {
+              portfolio: {
+                spot_usd: 8000,
+                stable_usd: 2000,
+                total_value: 10000,
+                allocation: { spot: 0.8, stable: 0.2 },
+              },
+              signal: { id: "eth_btc_rs_signal" },
+              decision: {
+                action: "hold",
+                reason: "btc",
+                rule_group: "none",
+                target_allocation: { spot: 0.8, stable: 0.2 },
+                immediate: false,
+                details: { target_spot_asset: "BTC" },
+              },
+              execution: {
+                event: null,
+                transfers: [],
+                blocked_reason: null,
+                step_count: 0,
+                steps_remaining: 0,
+                interval_days: 1,
+              },
+            },
+          },
+        },
+        {
+          market: {
+            date: "2024-01-02",
+            token_price: { btc: 50500 },
+            sentiment: 42,
+            sentiment_label: "fear",
+          },
+          strategies: {
+            eth_btc_rotation_default: {
+              portfolio: {
+                spot_usd: 8100,
+                stable_usd: 2100,
+                total_value: 10200,
+                allocation: { spot: 0.8, stable: 0.2 },
+              },
+              signal: { id: "eth_btc_rs_signal" },
+              decision: {
+                action: "hold",
+                reason: "eth",
+                rule_group: "none",
+                target_allocation: { spot: 0.8, stable: 0.2 },
+                immediate: false,
+                details: { target_spot_asset: "ETH" },
+              },
+              execution: {
+                event: null,
+                transfers: [],
+                blocked_reason: null,
+                step_count: 0,
+                steps_remaining: 0,
+                interval_days: 1,
+              },
+            },
+          },
+        },
+        {
+          market: {
+            date: "2024-01-03",
+            token_price: { btc: 51000 },
+            sentiment: 45,
+            sentiment_label: "neutral",
+          },
+          strategies: {
+            eth_btc_rotation_default: {
+              portfolio: {
+                spot_usd: 0,
+                stable_usd: 10200,
+                total_value: 10200,
+                allocation: { spot: 0, stable: 1 },
+              },
+              signal: { id: "eth_btc_rs_signal" },
+              decision: {
+                action: "sell",
+                reason: "stable",
+                rule_group: "none",
+                target_allocation: { spot: 0, stable: 1 },
+                immediate: false,
+                details: { target_spot_asset: "ETH" },
+              },
+              execution: {
+                event: "rebalance",
+                transfers: [],
+                blocked_reason: null,
+                step_count: 0,
+                steps_remaining: 0,
+                interval_days: 1,
+              },
+            },
+          },
+        },
+        {
+          market: {
+            date: "2024-01-04",
+            token_price: { btc: 51200 },
+            sentiment: 48,
+            sentiment_label: "neutral",
+          },
+          strategies: {
+            eth_btc_rotation_default: {
+              portfolio: {
+                spot_usd: 8200,
+                stable_usd: 2000,
+                total_value: 10200,
+                allocation: { spot: 0.8, stable: 0.2 },
+              },
+              signal: { id: "eth_btc_rs_signal" },
+              decision: {
+                action: "buy",
+                reason: "back_to_btc",
+                rule_group: "none",
+                target_allocation: { spot: 0.8, stable: 0.2 },
+                immediate: false,
+                details: { target_spot_asset: "BTC" },
+              },
+              execution: {
+                event: null,
+                transfers: [],
+                blocked_reason: null,
+                step_count: 0,
+                steps_remaining: 0,
+                interval_days: 1,
+              },
+            },
+          },
+        },
+      ],
+    };
+
+    const { result } = renderHook(() => useBacktestResult(response as any));
+    const first = result.current.chartData[0] as any;
+    const second = result.current.chartData[1] as any;
+    const fourth = result.current.chartData[3] as any;
+
+    expect(first.switchToEthSignal).toBeNull();
+    expect(second.switchToEthSignal).toBe(10200);
+    expect(second.eventStrategies.switch_to_eth).toContain(
+      "eth btc rotation default"
+    );
+    expect(fourth.switchToBtcSignal).toBeNull();
+  });
 });

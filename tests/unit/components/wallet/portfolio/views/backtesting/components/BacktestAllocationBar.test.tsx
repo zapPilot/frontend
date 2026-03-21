@@ -58,6 +58,20 @@ describe("BacktestAllocationBar", () => {
     );
   });
 
+  it("renders dynamic spot asset labels when provided", () => {
+    render(
+      <BacktestAllocationBar
+        displayName="ETH Rotation"
+        allocation={{ spot: 0.75, stable: 0.25 }}
+        spotAssetLabel="ETH"
+      />
+    );
+
+    expect(screen.getByTestId("backtest-default")).toHaveTextContent(
+      "ETH:75|STABLE:25"
+    );
+  });
+
   it("renders a strategy color indicator when strategyId is provided", () => {
     mockedGetStrategyColor.mockReturnValue("#3b82f6");
 

@@ -60,6 +60,31 @@ describe("backtestBuckets", () => {
     ]);
   });
 
+  it("uses the provided spot asset label when available", () => {
+    expect(
+      buildBacktestAllocationSegments(
+        {
+          spot: 0.6,
+          stable: 0.4,
+        },
+        "ETH"
+      )
+    ).toEqual([
+      {
+        category: "btc",
+        label: "ETH",
+        percentage: 60,
+        color: "#f59e0b",
+      },
+      {
+        category: "stable",
+        label: "STABLE",
+        percentage: 40,
+        color: "#10b981",
+      },
+    ]);
+  });
+
   it("treats zero allocation as empty and classifies supported directions", () => {
     expect(hasBacktestAllocation({ spot: 0, stable: 0 })).toBe(false);
     expect(getBacktestTransferDirection("stable", "spot")).toBe(

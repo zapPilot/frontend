@@ -21,7 +21,11 @@ function makeStrategyPoint(overrides: {
   spot?: number;
   stable?: number;
   signal?: object | null;
-  decision?: { action: string; reason: string };
+  decision?: {
+    action: string;
+    reason: string;
+    details?: { target_spot_asset?: unknown };
+  };
   blocked_reason?: string | null;
   buy_gate?: { block_reason: string | null } | null;
 }) {
@@ -105,7 +109,13 @@ function createTooltipPayload() {
             spot: 9600,
             stable: 2400,
             signal: { id: "dma_gated_fgi" },
-            decision: { action: "buy", reason: "below_extreme_fear_buy" },
+            decision: {
+              action: "buy",
+              reason: "below_extreme_fear_buy",
+              details: {
+                target_spot_asset: "ETH",
+              },
+            },
             blocked_reason: "cooldown_active",
             buy_gate: { block_reason: "sideways_pending" },
           }),
@@ -274,6 +284,28 @@ describe("useBacktestTooltipData", () => {
         // no sortedStrategyIds → index becomes undefined via optional chaining
       });
       expect(result?.sections.allocations[0]?.index).toBeUndefined();
+    });
+
+    it("exposes a normalized spotAssetLabel when target_spot_asset is present", () => {
+      const strategies = {
+        my_strategy: makeStrategyPoint({
+          spot: 1000,
+          stable: 1000,
+          decision: {
+            action: "hold",
+            reason: "rotation",
+            details: {
+              target_spot_asset: "eth",
+            },
+          },
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strategy"],
+      });
+
+      expect(result?.sections.allocations[0]?.spotAssetLabel).toBe("ETH");
     });
   });
 
@@ -585,6 +617,38 @@ describe("useBacktestTooltipData", () => {
       expect(names).toContain("my strat blocked");
     });
 
+    it("adds a target spot asset detail when target_spot_asset is available", () => {
+      const strategies = {
+        my_strat: makeStrategyPoint({
+          signal: { id: "dma_gated_fgi" },
+          decision: {
+            action: "hold",
+            reason: "rotation",
+            details: {
+              target_spot_asset: "eth",
+            },
+          },
+          blocked_reason: null,
+          buy_gate: null,
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strat"],
+      });
+      const details = result?.sections.details ?? [];
+
+      expect(details).toEqual(
+        expect.arrayContaining([
+          {
+            name: "my strat spot asset",
+            value: "ETH",
+            color: "#93c5fd",
+          },
+        ])
+      );
+    });
+
     it("adds buy-gate detail when buy_gate.block_reason is set", () => {
       const strategies = {
         my_strat: makeStrategyPoint({
@@ -789,6 +853,11 @@ describe("useBacktestTooltipData", () => {
             name: "DMA Gated FGI Default blocked",
             value: "cooldown_active",
             color: "#fda4af",
+          },
+          {
+            name: "DMA Gated FGI Default spot asset",
+            value: "ETH",
+            color: "#93c5fd",
           },
           {
             name: "DMA Gated FGI Default buy gate",
