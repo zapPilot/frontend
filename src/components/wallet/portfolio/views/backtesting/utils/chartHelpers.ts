@@ -82,7 +82,9 @@ type BacktestStrategy = NonNullable<
 type SpotAssetSymbol = "BTC" | "ETH";
 type SpotAssetTracker = Record<string, SpotAssetSymbol | null>;
 
-function normalizeTargetSpotAsset(value: unknown): SpotAssetSymbol | null {
+export function normalizeTargetSpotAsset(
+  value: unknown
+): SpotAssetSymbol | null {
   if (typeof value !== "string") {
     return null;
   }
@@ -143,10 +145,10 @@ function getTransfers(
   return strategy.execution.transfers ?? [];
 }
 
-function processStrategyTransfers(
+function forEachActiveStrategy(
   point: BacktestTimelinePoint,
   strategyIds: string[],
-  acc: SignalAccumulator
+  callback: (strategyId: string, strategy: BacktestStrategy) => void
 ): void {
   for (const strategyId of strategyIds) {
     if (strategyId === DCA_CLASSIC_STRATEGY_ID) {
@@ -158,6 +160,16 @@ function processStrategyTransfers(
       continue;
     }
 
+    callback(strategyId, strategy);
+  }
+}
+
+function processStrategyTransfers(
+  point: BacktestTimelinePoint,
+  strategyIds: string[],
+  acc: SignalAccumulator
+): void {
+  forEachActiveStrategy(point, strategyIds, (strategyId, strategy) => {
     const displayName = getStrategyDisplayName(strategyId);
     for (const transfer of getTransfers(strategy)) {
       const signalKey = classifyTransfer(
@@ -170,7 +182,7 @@ function processStrategyTransfers(
 
       updateSignal(acc, signalKey, strategy.portfolio.total_value, displayName);
     }
-  }
+  });
 }
 
 function processStrategySpotSwitches(
@@ -183,25 +195,16 @@ function processStrategySpotSwitches(
     return;
   }
 
-  for (const strategyId of strategyIds) {
-    if (strategyId === DCA_CLASSIC_STRATEGY_ID) {
-      continue;
-    }
-
-    const strategy = point.strategies[strategyId];
-    if (!strategy) {
-      continue;
-    }
-
+  forEachActiveStrategy(point, strategyIds, (strategyId, strategy) => {
     const spotAllocation = strategy.portfolio.allocation.spot;
     if (spotAllocation <= 0) {
       spotAssetTracker[strategyId] = null;
-      continue;
+      return;
     }
 
     const targetSpotAsset = getTargetSpotAsset(strategy);
     if (!targetSpotAsset) {
-      continue;
+      return;
     }
 
     const previousSpotAsset = spotAssetTracker[strategyId];
@@ -217,7 +220,7 @@ function processStrategySpotSwitches(
     }
 
     spotAssetTracker[strategyId] = targetSpotAsset;
-  }
+  });
 }
 
 function createSignalAccumulator(): SignalAccumulator {

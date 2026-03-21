@@ -163,11 +163,12 @@ describe("BacktestChart", () => {
     expect(screen.getByTestId("chart-legend")).toBeDefined();
   });
 
-  it("renders reference lines (sentiment, BTC price, DMA 200)", () => {
+  it("does not render indicator lines when indicators default to OFF", () => {
     render(<BacktestChart {...defaultProps} />);
-    expect(screen.getByTestId("line-sentiment")).toBeDefined();
-    expect(screen.getByTestId("line-btc_price")).toBeDefined();
-    expect(screen.getByTestId("line-dma_200")).toBeDefined();
+    // Indicators default to OFF (empty activeIndicators set), so lines are absent
+    expect(screen.queryByTestId("line-sentiment")).toBeNull();
+    expect(screen.queryByTestId("line-btc_price")).toBeNull();
+    expect(screen.queryByTestId("line-dma_200")).toBeNull();
   });
 
   it("renders scatter signals", () => {

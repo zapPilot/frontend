@@ -5,7 +5,7 @@ import type {
 import { formatCurrency } from "@/utils";
 
 import { hasBacktestAllocation } from "../backtestBuckets";
-import { CHART_SIGNALS } from "../utils/chartHelpers";
+import { CHART_SIGNALS, normalizeTargetSpotAsset } from "../utils/chartHelpers";
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
 const SIGNAL_EVENT_KEYS = new Set<string>([
@@ -85,19 +85,6 @@ interface ParsedTooltipSource {
   payload: BacktestTooltipPayloadEntry[];
   label: string | number | undefined;
   sortedStrategyIds: string[] | undefined;
-}
-
-function normalizeTargetSpotAsset(value: unknown): "BTC" | "ETH" | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "BTC" || normalized === "ETH") {
-    return normalized;
-  }
-
-  return null;
 }
 
 const getOrderedStrategyIds = (
