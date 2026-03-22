@@ -8,6 +8,7 @@ import {
   buildChartPoint,
   calculateActualDays,
   calculateYAxisDomain,
+  filterToActiveStrategies,
   sortStrategyIds,
 } from "../utils/chartHelpers";
 
@@ -43,16 +44,16 @@ export function useBacktestResult(
     );
   }, [response, strategyIds]);
 
-  const yAxisDomain = useMemo(
-    () => calculateYAxisDomain(chartData, strategyIds),
-    [chartData, strategyIds]
-  );
-
   const summary = response ? { strategies: response.strategies } : null;
 
   const sortedStrategyIds = useMemo(
-    () => sortStrategyIds(strategyIds),
+    () => filterToActiveStrategies(sortStrategyIds(strategyIds)),
     [strategyIds]
+  );
+
+  const yAxisDomain = useMemo(
+    () => calculateYAxisDomain(chartData, sortedStrategyIds),
+    [chartData, sortedStrategyIds]
   );
 
   return {

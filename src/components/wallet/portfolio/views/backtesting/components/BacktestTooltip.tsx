@@ -49,7 +49,7 @@ export function BacktestTooltip(props: BacktestTooltipProps) {
       <div className="space-y-1">
         {strategies.map((entry, index) => (
           <div key={index} className="text-xs" style={{ color: entry.color }}>
-            {entry.name}: ${entry.value.toLocaleString()}
+            {entry.name}: ${entry.value.toLocaleString("en-US")}
           </div>
         ))}
 

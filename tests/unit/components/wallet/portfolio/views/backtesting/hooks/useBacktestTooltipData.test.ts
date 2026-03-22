@@ -219,7 +219,7 @@ describe("useBacktestTooltipData", () => {
       expect(ids).toEqual(["strategy_b", "strategy_a"]);
     });
 
-    it("puts sortedStrategyIds-listed strategies first and appends remainder", () => {
+    it("only includes strategies present in sortedStrategyIds", () => {
       const strategies = {
         strategy_a: makeStrategyPoint({}),
         strategy_b: makeStrategyPoint({}),
@@ -230,7 +230,8 @@ describe("useBacktestTooltipData", () => {
         sortedStrategyIds: ["strategy_c", "strategy_a"],
       });
       const ids = result?.sections.allocations.map(a => a.id) ?? [];
-      expect(ids).toEqual(["strategy_c", "strategy_a", "strategy_b"]);
+      // strategy_b is excluded because it's not in sortedStrategyIds
+      expect(ids).toEqual(["strategy_c", "strategy_a"]);
     });
   });
 

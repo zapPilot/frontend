@@ -96,12 +96,7 @@ const getOrderedStrategyIds = (
     return strategyKeys;
   }
 
-  const sortedExistingIds = sortedStrategyIds.filter(id => strategies?.[id]);
-  const remainingIds = strategyKeys.filter(
-    id => !sortedExistingIds.includes(id)
-  );
-
-  return [...sortedExistingIds, ...remainingIds];
+  return sortedStrategyIds.filter(id => strategies?.[id]);
 };
 
 const buildAllocationBlock = (

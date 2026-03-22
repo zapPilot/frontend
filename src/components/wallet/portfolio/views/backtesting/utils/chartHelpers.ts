@@ -326,6 +326,33 @@ export function getPrimaryStrategyId(sortedIds: string[]): string | null {
   );
 }
 
+/**
+ * Filters sorted strategy IDs to only include DCA Classic and the primary test strategy.
+ * This prevents the chart/tooltip from showing all strategies when the API returns many.
+ *
+ * @param sortedIds - Strategy IDs already sorted by `sortStrategyIds`
+ * @returns Array with at most 2 IDs: [dca_classic, primaryStrategy]
+ * @example
+ * ```ts
+ * filterToActiveStrategies(["dca_classic", "dma_gated_fgi", "eth_btc_rotation"])
+ * // => ["dca_classic", "dma_gated_fgi"]
+ * ```
+ */
+export function filterToActiveStrategies(sortedIds: string[]): string[] {
+  const primary = getPrimaryStrategyId(sortedIds);
+  if (!primary) return sortedIds;
+
+  const result: string[] = [];
+  if (sortedIds.includes(DCA_CLASSIC_STRATEGY_ID)) {
+    result.push(DCA_CLASSIC_STRATEGY_ID);
+  }
+  if (primary !== DCA_CLASSIC_STRATEGY_ID) {
+    result.push(primary);
+  }
+
+  return result;
+}
+
 export function sortStrategyIds(ids: string[]): string[] {
   const dca: string[] = [];
   if (ids.includes(DCA_CLASSIC_STRATEGY_ID)) {

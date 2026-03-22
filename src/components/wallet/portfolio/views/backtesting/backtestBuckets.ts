@@ -17,6 +17,12 @@ interface BacktestBucketConfig {
 
 type BacktestTransferDirection = "stable_to_spot" | "spot_to_stable";
 
+/** Spot asset colors matching CHART_SIGNALS (switch_to_btc / switch_to_eth). */
+const SPOT_ASSET_COLORS: Record<"BTC" | "ETH", string> = {
+  BTC: "#f97316",
+  ETH: "#8b5cf6",
+};
+
 export const BACKTEST_BUCKETS = [
   "spot",
   "stable",
@@ -77,11 +83,16 @@ export function buildBacktestAllocationSegments(
         ? (spotAssetLabel ?? config.shortLabel)
         : config.shortLabel;
 
+    const segmentColor =
+      bucket === "spot" && spotAssetLabel
+        ? (SPOT_ASSET_COLORS[spotAssetLabel] ?? config.color)
+        : config.color;
+
     return {
       category: config.segmentCategory,
       label: segmentLabel,
       percentage: allocation[bucket] * 100,
-      color: config.color,
+      color: segmentColor,
     };
   }).filter(segment => segment.percentage > 0);
 }

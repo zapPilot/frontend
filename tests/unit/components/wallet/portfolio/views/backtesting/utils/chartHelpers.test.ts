@@ -4,7 +4,9 @@ import {
   buildChartPoint,
   calculateActualDays,
   calculateYAxisDomain,
+  filterToActiveStrategies,
   getPrimaryStrategyId,
+  normalizeTargetSpotAsset,
   sentimentLabelToIndex,
   sortStrategyIds,
 } from "@/components/wallet/portfolio/views/backtesting/utils/chartHelpers";
@@ -645,6 +647,35 @@ describe("buildChartPoint", () => {
     expect(result.switchToBtcSignal).toBeNull();
   });
 
+  it("does not emit a switch marker on the first point (no previous asset)", () => {
+    const tracker: Record<string, "BTC" | "ETH" | null> = {};
+
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            decision: {
+              action: "hold",
+              reason: "initial",
+              rule_group: "none",
+              target_allocation: { spot: 0.8, stable: 0.2 },
+              immediate: false,
+              details: {
+                target_spot_asset: "BTC",
+              },
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"],
+      tracker
+    );
+
+    expect(result.switchToBtcSignal).toBeNull();
+    expect(result.switchToEthSignal).toBeNull();
+    expect(tracker["dma_gated_fgi_default"]).toBe("BTC");
+  });
+
   it("resets switch tracking when spot allocation reaches zero", () => {
     const tracker: Record<string, "BTC" | "ETH" | null> = {};
 
@@ -724,5 +755,68 @@ describe("buildChartPoint", () => {
     expect(
       (result.eventStrategies as Record<string, string[]>).switch_to_eth
     ).toEqual([]);
+  });
+});
+
+describe("filterToActiveStrategies", () => {
+  it("returns an empty array for empty input", () => {
+    expect(filterToActiveStrategies([])).toEqual([]);
+  });
+
+  it("returns dca_classic and primary strategy from 3+ strategies", () => {
+    expect(
+      filterToActiveStrategies(["dca_classic", "dma_gated_fgi", "extra_strat"])
+    ).toEqual(["dca_classic", "dma_gated_fgi"]);
+  });
+
+  it("returns only dca_classic when it is the sole strategy", () => {
+    expect(filterToActiveStrategies(["dca_classic"])).toEqual(["dca_classic"]);
+  });
+
+  it("returns the single non-DCA strategy when DCA is absent", () => {
+    expect(filterToActiveStrategies(["other_strategy"])).toEqual([
+      "other_strategy",
+    ]);
+  });
+
+  it("returns at most 2 IDs", () => {
+    const result = filterToActiveStrategies([
+      "dca_classic",
+      "alpha",
+      "bravo",
+      "charlie",
+    ]);
+    expect(result.length).toBeLessThanOrEqual(2);
+    expect(result).toEqual(["dca_classic", "alpha"]);
+  });
+});
+
+describe("normalizeTargetSpotAsset", () => {
+  it("normalizes lowercase btc to BTC", () => {
+    expect(normalizeTargetSpotAsset("btc")).toBe("BTC");
+  });
+
+  it("normalizes lowercase eth to ETH", () => {
+    expect(normalizeTargetSpotAsset("eth")).toBe("ETH");
+  });
+
+  it("trims whitespace and uppercases", () => {
+    expect(normalizeTargetSpotAsset("  Eth  ")).toBe("ETH");
+  });
+
+  it("returns null for unsupported assets", () => {
+    expect(normalizeTargetSpotAsset("SOL")).toBeNull();
+  });
+
+  it("returns null for empty string", () => {
+    expect(normalizeTargetSpotAsset("")).toBeNull();
+  });
+
+  it("returns null for null input", () => {
+    expect(normalizeTargetSpotAsset(null)).toBeNull();
+  });
+
+  it("returns null for non-string input", () => {
+    expect(normalizeTargetSpotAsset(123)).toBeNull();
   });
 });

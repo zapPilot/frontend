@@ -60,7 +60,7 @@ describe("backtestBuckets", () => {
     ]);
   });
 
-  it("uses the provided spot asset label when available", () => {
+  it("uses the provided spot asset label and purple color for ETH", () => {
     expect(
       buildBacktestAllocationSegments(
         {
@@ -74,7 +74,7 @@ describe("backtestBuckets", () => {
         category: "btc",
         label: "ETH",
         percentage: 60,
-        color: "#f59e0b",
+        color: "#8b5cf6",
       },
       {
         category: "stable",
@@ -83,6 +83,40 @@ describe("backtestBuckets", () => {
         color: "#10b981",
       },
     ]);
+  });
+
+  it("uses orange color for BTC spot asset label", () => {
+    expect(
+      buildBacktestAllocationSegments(
+        {
+          spot: 0.7,
+          stable: 0.3,
+        },
+        "BTC"
+      )
+    ).toEqual([
+      {
+        category: "btc",
+        label: "BTC",
+        percentage: 70,
+        color: "#f97316",
+      },
+      {
+        category: "stable",
+        label: "STABLE",
+        percentage: 30,
+        color: "#10b981",
+      },
+    ]);
+  });
+
+  it("keeps default amber color when no spotAssetLabel is provided", () => {
+    const segments = buildBacktestAllocationSegments({
+      spot: 0.5,
+      stable: 0.5,
+    });
+    const spotSegment = segments.find(s => s.label === "SPOT");
+    expect(spotSegment?.color).toBe("#f59e0b");
   });
 
   it("treats zero allocation as empty and classifies supported directions", () => {
