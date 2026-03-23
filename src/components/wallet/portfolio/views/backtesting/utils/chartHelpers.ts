@@ -101,6 +101,14 @@ function classifyTransfer(
     return "sell_spot";
   }
 
+  if (from === "btc" && to === "eth") {
+    return "switch_to_eth";
+  }
+
+  if (from === "eth" && to === "btc") {
+    return "switch_to_btc";
+  }
+
   return null;
 }
 

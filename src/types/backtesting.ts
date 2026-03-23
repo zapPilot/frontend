@@ -105,7 +105,11 @@ export interface BacktestDecision {
   details?: BacktestDecisionDetails;
 }
 
-export type BacktestBucket = "spot" | "stable";
+/** Allocation display buckets (portfolio pie chart). */
+export type BacktestAllocationBucket = "spot" | "stable";
+
+/** All valid transfer bucket identifiers including per-asset buckets. */
+export type BacktestBucket = BacktestAllocationBucket | "eth" | "btc";
 
 export interface BacktestTransferMetadata {
   from_bucket: BacktestBucket;

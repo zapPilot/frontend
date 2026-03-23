@@ -3,6 +3,7 @@ import type {
   UnifiedSegment,
 } from "@/components/wallet/portfolio/components/allocation";
 import type {
+  BacktestAllocationBucket,
   BacktestBucket,
   BacktestPortfolioAllocation,
   BacktestTransferMetadata,
@@ -22,12 +23,16 @@ interface BacktestBucketConfig {
 
 type BacktestTransferDirection = "stable_to_spot" | "spot_to_stable";
 
+/** Allocation buckets used for portfolio display (spot & stable). */
 export const BACKTEST_BUCKETS = [
   "spot",
   "stable",
-] as const satisfies readonly BacktestBucket[];
+] as const satisfies readonly BacktestAllocationBucket[];
 
-const BACKTEST_BUCKET_CONFIG: Record<BacktestBucket, BacktestBucketConfig> = {
+const BACKTEST_BUCKET_CONFIG: Record<
+  BacktestAllocationBucket,
+  BacktestBucketConfig
+> = {
   spot: {
     label: "Spot",
     shortLabel: "SPOT",
@@ -42,11 +47,14 @@ const BACKTEST_BUCKET_CONFIG: Record<BacktestBucket, BacktestBucketConfig> = {
   },
 };
 
+const ALL_BUCKET_VALUES: readonly string[] = [
+  ...BACKTEST_BUCKETS,
+  "eth",
+  "btc",
+];
+
 export function isBacktestBucket(value: unknown): value is BacktestBucket {
-  return (
-    typeof value === "string" &&
-    BACKTEST_BUCKETS.includes(value as BacktestBucket)
-  );
+  return typeof value === "string" && ALL_BUCKET_VALUES.includes(value);
 }
 
 export function isBacktestTransfer(
@@ -96,15 +104,19 @@ export function buildBacktestAllocationSegments(
   }).filter(segment => segment.percentage > 0);
 }
 
+function isSpotBucket(bucket: BacktestBucket): boolean {
+  return bucket === "spot" || bucket === "eth" || bucket === "btc";
+}
+
 export function getBacktestTransferDirection(
   fromBucket: BacktestBucket,
   toBucket: BacktestBucket
 ): BacktestTransferDirection | null {
-  if (fromBucket === "stable" && toBucket === "spot") {
+  if (fromBucket === "stable" && isSpotBucket(toBucket)) {
     return "stable_to_spot";
   }
 
-  if (fromBucket === "spot" && toBucket === "stable") {
+  if (isSpotBucket(fromBucket) && toBucket === "stable") {
     return "spot_to_stable";
   }
 

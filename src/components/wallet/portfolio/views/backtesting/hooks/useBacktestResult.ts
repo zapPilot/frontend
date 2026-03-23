@@ -29,8 +29,13 @@ export function useBacktestResult(
     [response]
   );
 
-  const strategyIds = useMemo(
-    () => (response ? Object.keys(response.strategies ?? {}) : []),
+  const sortedStrategyIds = useMemo(
+    () =>
+      response
+        ? filterToActiveStrategies(
+            sortStrategyIds(Object.keys(response.strategies ?? {}))
+          )
+        : [],
     [response]
   );
 
@@ -41,16 +46,11 @@ export function useBacktestResult(
 
     const spotAssetTracker: Record<string, SpotAssetSymbol | null> = {};
     return response.timeline.map(point =>
-      buildChartPoint(point, strategyIds, spotAssetTracker)
+      buildChartPoint(point, sortedStrategyIds, spotAssetTracker)
     );
-  }, [response, strategyIds]);
+  }, [response, sortedStrategyIds]);
 
   const summary = response ? { strategies: response.strategies } : null;
-
-  const sortedStrategyIds = useMemo(
-    () => filterToActiveStrategies(sortStrategyIds(strategyIds)),
-    [strategyIds]
-  );
 
   const yAxisDomain = useMemo(
     () => calculateYAxisDomain(chartData, sortedStrategyIds),
