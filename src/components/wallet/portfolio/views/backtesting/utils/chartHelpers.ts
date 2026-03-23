@@ -5,6 +5,11 @@ import type {
 
 import { getBacktestTransferDirection } from "../backtestBuckets";
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
+import {
+  getBacktestSpotAssetColor,
+  resolveBacktestSpotAsset,
+  type SpotAssetSymbol,
+} from "./spotAssetDisplay";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
 export type SignalKey =
@@ -48,14 +53,14 @@ export const CHART_SIGNALS: SignalConfig[] = [
     key: "switch_to_eth",
     field: "switchToEthSignal",
     name: "Switch to ETH",
-    color: "#8b5cf6",
+    color: getBacktestSpotAssetColor("ETH"),
     shape: "diamond",
   },
   {
     key: "switch_to_btc",
     field: "switchToBtcSignal",
     name: "Switch to BTC",
-    color: "#f97316",
+    color: getBacktestSpotAssetColor("BTC"),
     shape: "diamond",
   },
 ];
@@ -70,6 +75,7 @@ const SENTIMENT_INDEX_MAP: Record<string, number> = {
 };
 const MS_PER_DAY = 86_400_000;
 const DEFAULT_Y_DOMAIN: [number, number] = [0, 1000];
+const Y_AXIS_PADDING_FACTOR = 0.05;
 
 interface SignalAccumulator {
   [key: string]: number | null | Record<SignalKey, string[]>;
@@ -79,29 +85,7 @@ interface SignalAccumulator {
 type BacktestStrategy = NonNullable<
   BacktestTimelinePoint["strategies"][string]
 >;
-type SpotAssetSymbol = "BTC" | "ETH";
 type SpotAssetTracker = Record<string, SpotAssetSymbol | null>;
-
-export function normalizeTargetSpotAsset(
-  value: unknown
-): SpotAssetSymbol | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "BTC" || normalized === "ETH") {
-    return normalized;
-  }
-
-  return null;
-}
-
-function getTargetSpotAsset(
-  strategy: BacktestStrategy
-): SpotAssetSymbol | null {
-  return normalizeTargetSpotAsset(strategy.decision.details?.target_spot_asset);
-}
 
 function classifyTransfer(
   from: BacktestBucket,
@@ -202,15 +186,15 @@ function processStrategySpotSwitches(
       return;
     }
 
-    const targetSpotAsset = getTargetSpotAsset(strategy);
-    if (!targetSpotAsset) {
+    const currentSpotAsset = resolveBacktestSpotAsset(strategy);
+    if (!currentSpotAsset) {
       return;
     }
 
     const previousSpotAsset = spotAssetTracker[strategyId];
-    if (previousSpotAsset && previousSpotAsset !== targetSpotAsset) {
+    if (previousSpotAsset && previousSpotAsset !== currentSpotAsset) {
       const signalKey =
-        targetSpotAsset === "ETH" ? "switch_to_eth" : "switch_to_btc";
+        currentSpotAsset === "ETH" ? "switch_to_eth" : "switch_to_btc";
       updateSignal(
         acc,
         signalKey,
@@ -219,7 +203,7 @@ function processStrategySpotSwitches(
       );
     }
 
-    spotAssetTracker[strategyId] = targetSpotAsset;
+    spotAssetTracker[strategyId] = currentSpotAsset;
   });
 }
 
@@ -302,7 +286,7 @@ export function calculateYAxisDomain(
 
   if (min === Infinity || max === -Infinity) return DEFAULT_Y_DOMAIN;
 
-  const padding = (max - min) * 0.05;
+  const padding = (max - min) * Y_AXIS_PADDING_FACTOR;
   return [Math.max(0, min - padding), max + padding];
 }
 

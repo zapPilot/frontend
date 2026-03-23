@@ -53,11 +53,14 @@ export interface BacktestPortfolioAllocation {
   stable: number;
 }
 
+export type BacktestSpotAssetSymbol = "BTC" | "ETH";
+
 export interface BacktestStrategyPortfolio {
   spot_usd: number;
   stable_usd: number;
   total_value: number;
   allocation: BacktestPortfolioAllocation;
+  spot_asset?: BacktestSpotAssetSymbol | null;
 }
 
 export interface BacktestDmaSignalDetails {
@@ -87,7 +90,7 @@ export interface BacktestSignal {
 
 export interface BacktestDecisionDetails {
   allocation_name?: string | null;
-  target_spot_asset?: "BTC" | "ETH" | null;
+  target_spot_asset?: BacktestSpotAssetSymbol | null;
   risk_notes?: string[];
   decision_score?: number;
   [key: string]: unknown;

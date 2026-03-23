@@ -1,5 +1,8 @@
-import { isBacktestTransfer } from "@/components/wallet/portfolio/views/backtesting/backtestBuckets";
-import { DCA_CLASSIC_STRATEGY_ID } from "@/components/wallet/portfolio/views/backtesting/constants";
+import {
+  DCA_CLASSIC_STRATEGY_ID,
+  isBacktestTransfer,
+  resolveBacktestSpotAsset,
+} from "@/components/wallet/portfolio/views/backtesting";
 import type {
   BacktestTimelinePoint,
   BacktestTransferMetadata,
@@ -65,9 +68,14 @@ function sampleEvenlyFromIndices(
 }
 
 function hasCriticalStrategyEvent(
-  strategy: BacktestTimelinePoint["strategies"][string] | undefined
+  strategy: BacktestTimelinePoint["strategies"][string] | undefined,
+  previousStrategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): boolean {
-  return extractTransfers(strategy).length > 0;
+  return (
+    extractTransfers(strategy).length > 0 ||
+    resolveBacktestSpotAsset(strategy) !==
+      resolveBacktestSpotAsset(previousStrategy)
+  );
 }
 
 function collectCriticalIndices(
@@ -76,10 +84,14 @@ function collectCriticalIndices(
   const criticalIndices = new Set<number>([0, timeline.length - 1]);
 
   for (const [index, point] of timeline.entries()) {
+    const previousPoint = index > 0 ? timeline[index - 1] : undefined;
     const hasCriticalEvent = Object.entries(point.strategies).some(
       ([strategyId, strategy]) =>
         strategyId !== DCA_CLASSIC_STRATEGY_ID &&
-        hasCriticalStrategyEvent(strategy)
+        hasCriticalStrategyEvent(
+          strategy,
+          previousPoint?.strategies[strategyId]
+        )
     );
     if (hasCriticalEvent) {
       criticalIndices.add(index);
@@ -129,6 +141,7 @@ function collectNonCriticalIndices(
  * Always preserves:
  * - First and last points
  * - Points where any non-dca_classic strategy executes spot/stable transfers
+ * - Points where any non-dca_classic strategy changes its current `spot_asset`
  *
  * Dynamically expands the point limit to fit all strategy events, then samples
  * non-critical points evenly to fill remaining slots.

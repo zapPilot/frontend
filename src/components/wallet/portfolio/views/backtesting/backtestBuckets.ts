@@ -8,6 +8,11 @@ import type {
   BacktestTransferMetadata,
 } from "@/types/backtesting";
 
+import {
+  getBacktestSpotAssetColor,
+  type SpotAssetSymbol,
+} from "./utils/spotAssetDisplay";
+
 interface BacktestBucketConfig {
   label: string;
   shortLabel: string;
@@ -16,12 +21,6 @@ interface BacktestBucketConfig {
 }
 
 type BacktestTransferDirection = "stable_to_spot" | "spot_to_stable";
-
-/** Spot asset colors matching CHART_SIGNALS (switch_to_btc / switch_to_eth). */
-const SPOT_ASSET_COLORS: Record<"BTC" | "ETH", string> = {
-  BTC: "#f97316",
-  ETH: "#8b5cf6",
-};
 
 export const BACKTEST_BUCKETS = [
   "spot",
@@ -32,7 +31,7 @@ const BACKTEST_BUCKET_CONFIG: Record<BacktestBucket, BacktestBucketConfig> = {
   spot: {
     label: "Spot",
     shortLabel: "SPOT",
-    color: "#f59e0b",
+    color: getBacktestSpotAssetColor("BTC"),
     segmentCategory: "btc",
   },
   stable: {
@@ -74,7 +73,7 @@ export function hasBacktestAllocation(
 
 export function buildBacktestAllocationSegments(
   allocation: BacktestPortfolioAllocation,
-  spotAssetLabel?: "BTC" | "ETH"
+  spotAssetLabel?: SpotAssetSymbol
 ): UnifiedSegment[] {
   return BACKTEST_BUCKETS.map(bucket => {
     const config = BACKTEST_BUCKET_CONFIG[bucket];
@@ -85,7 +84,7 @@ export function buildBacktestAllocationSegments(
 
     const segmentColor =
       bucket === "spot" && spotAssetLabel
-        ? (SPOT_ASSET_COLORS[spotAssetLabel] ?? config.color)
+        ? getBacktestSpotAssetColor(spotAssetLabel)
         : config.color;
 
     return {

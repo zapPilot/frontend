@@ -11,6 +11,7 @@ import {
   filterToActiveStrategies,
   sortStrategyIds,
 } from "../utils/chartHelpers";
+import type { SpotAssetSymbol } from "../utils/spotAssetDisplay";
 
 export interface UseBacktestResultReturn {
   chartData: Record<string, unknown>[];
@@ -38,7 +39,7 @@ export function useBacktestResult(
       return [];
     }
 
-    const spotAssetTracker: Record<string, "BTC" | "ETH" | null> = {};
+    const spotAssetTracker: Record<string, SpotAssetSymbol | null> = {};
     return response.timeline.map(point =>
       buildChartPoint(point, strategyIds, spotAssetTracker)
     );

@@ -108,6 +108,7 @@ function nextBlobOutputFile() {
 
 function cleanupCoverageArtifacts() {
   fs.rmSync(COVERAGE_DIR, { recursive: true, force: true });
+  fs.mkdirSync(path.join(COVERAGE_DIR, ".tmp"), { recursive: true });
 }
 
 function runBatch(batchFiles, batchLabel) {
@@ -125,6 +126,7 @@ function runBatch(batchFiles, batchLabel) {
       "--coverage.reportsDirectory=coverage",
       "--coverage.reporter=json-summary",
       "--reporter=blob",
+      "--poolOptions.forks.singleFork",
       `--outputFile=${outputFile}`,
       ...batchFiles,
     ],

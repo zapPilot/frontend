@@ -20,6 +20,7 @@ function makeMarket(
 function makeStrategyPoint(overrides: {
   spot?: number;
   stable?: number;
+  spotAsset?: "BTC" | "ETH" | null;
   signal?: object | null;
   decision?: {
     action: string;
@@ -34,6 +35,9 @@ function makeStrategyPoint(overrides: {
       spot_usd: overrides.spot ?? 5000,
       stable_usd: overrides.stable ?? 5000,
       total_value: (overrides.spot ?? 5000) + (overrides.stable ?? 5000),
+      ...(overrides.spotAsset !== undefined && {
+        spot_asset: overrides.spotAsset,
+      }),
       allocation: {
         spot: overrides.spot ?? 5000,
         stable: overrides.stable ?? 5000,
@@ -108,6 +112,7 @@ function createTooltipPayload() {
           dma_gated_fgi_default: makeStrategyPoint({
             spot: 9600,
             stable: 2400,
+            spotAsset: "ETH",
             signal: { id: "dma_gated_fgi" },
             decision: {
               action: "buy",
@@ -287,7 +292,30 @@ describe("useBacktestTooltipData", () => {
       expect(result?.sections.allocations[0]?.index).toBeUndefined();
     });
 
-    it("exposes a normalized spotAssetLabel when target_spot_asset is present", () => {
+    it("prefers portfolio.spot_asset when it is present", () => {
+      const strategies = {
+        my_strategy: makeStrategyPoint({
+          spot: 1000,
+          stable: 1000,
+          spotAsset: "ETH",
+          decision: {
+            action: "hold",
+            reason: "rotation",
+            details: {
+              target_spot_asset: "btc",
+            },
+          },
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strategy"],
+      });
+
+      expect(result?.sections.allocations[0]?.spotAssetLabel).toBe("ETH");
+    });
+
+    it("falls back to target_spot_asset when portfolio.spot_asset is absent", () => {
       const strategies = {
         my_strategy: makeStrategyPoint({
           spot: 1000,
@@ -307,6 +335,72 @@ describe("useBacktestTooltipData", () => {
       });
 
       expect(result?.sections.allocations[0]?.spotAssetLabel).toBe("ETH");
+    });
+
+    it("updates the allocation label when portfolio.spot_asset flips and ignores stale decision metadata", () => {
+      const sortedStrategyIds = ["my_strategy"];
+
+      const btcResult = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket("2026-01-15"), {
+          my_strategy: makeStrategyPoint({
+            spot: 1000,
+            stable: 1000,
+            spotAsset: "BTC",
+            decision: {
+              action: "hold",
+              reason: "rotation",
+              details: {
+                target_spot_asset: "ETH",
+              },
+            },
+          }),
+        }),
+        sortedStrategyIds,
+      });
+
+      const ethResult = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket("2026-01-16"), {
+          my_strategy: makeStrategyPoint({
+            spot: 1000,
+            stable: 1000,
+            spotAsset: "ETH",
+            decision: {
+              action: "hold",
+              reason: "rotation",
+              details: {
+                target_spot_asset: "BTC",
+              },
+            },
+          }),
+        }),
+        sortedStrategyIds,
+      });
+
+      expect(btcResult?.sections.allocations[0]?.spotAssetLabel).toBe("BTC");
+      expect(ethResult?.sections.allocations[0]?.spotAssetLabel).toBe("ETH");
+    });
+
+    it("does not expose a spotAssetLabel for stable-only allocations", () => {
+      const strategies = {
+        stable_only: makeStrategyPoint({
+          spot: 0,
+          stable: 6000,
+          spotAsset: "ETH",
+          decision: {
+            action: "sell",
+            reason: "go_stable",
+            details: {
+              target_spot_asset: "ETH",
+            },
+          },
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["stable_only"],
+      });
+
+      expect(result?.sections.allocations[0]?.spotAssetLabel).toBeUndefined();
     });
   });
 
@@ -618,7 +712,40 @@ describe("useBacktestTooltipData", () => {
       expect(names).toContain("my strat blocked");
     });
 
-    it("adds a target spot asset detail when target_spot_asset is available", () => {
+    it("adds a spot asset detail from portfolio.spot_asset when available", () => {
+      const strategies = {
+        my_strat: makeStrategyPoint({
+          spotAsset: "ETH",
+          signal: { id: "dma_gated_fgi" },
+          decision: {
+            action: "hold",
+            reason: "rotation",
+            details: {
+              target_spot_asset: "btc",
+            },
+          },
+          blocked_reason: null,
+          buy_gate: null,
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strat"],
+      });
+      const details = result?.sections.details ?? [];
+
+      expect(details).toEqual(
+        expect.arrayContaining([
+          {
+            name: "my strat spot asset",
+            value: "ETH",
+            color: "#6366f1",
+          },
+        ])
+      );
+    });
+
+    it("falls back to legacy target_spot_asset for spot asset details", () => {
       const strategies = {
         my_strat: makeStrategyPoint({
           signal: { id: "dma_gated_fgi" },
@@ -644,10 +771,37 @@ describe("useBacktestTooltipData", () => {
           {
             name: "my strat spot asset",
             value: "ETH",
-            color: "#93c5fd",
+            color: "#6366f1",
           },
         ])
       );
+    });
+
+    it("skips spot asset detail for stable-only points", () => {
+      const strategies = {
+        my_strat: makeStrategyPoint({
+          spot: 0,
+          stable: 10000,
+          spotAsset: null,
+          signal: { id: "dma_gated_fgi" },
+          decision: {
+            action: "sell",
+            reason: "go_stable",
+            details: {
+              target_spot_asset: "ETH",
+            },
+          },
+          blocked_reason: null,
+          buy_gate: null,
+        }),
+      };
+      const result = useBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strat"],
+      });
+      const detailNames = (result?.sections.details ?? []).map(d => d.name);
+
+      expect(detailNames).not.toContain("my strat spot asset");
     });
 
     it("adds buy-gate detail when buy_gate.block_reason is set", () => {
@@ -858,7 +1012,7 @@ describe("useBacktestTooltipData", () => {
           {
             name: "DMA Gated FGI Default spot asset",
             value: "ETH",
-            color: "#93c5fd",
+            color: "#6366f1",
           },
           {
             name: "DMA Gated FGI Default buy gate",

@@ -60,7 +60,7 @@ describe("backtestBuckets", () => {
     ]);
   });
 
-  it("uses the provided spot asset label and purple color for ETH", () => {
+  it("uses the provided spot asset label and chart indigo color for ETH", () => {
     expect(
       buildBacktestAllocationSegments(
         {
@@ -74,7 +74,7 @@ describe("backtestBuckets", () => {
         category: "btc",
         label: "ETH",
         percentage: 60,
-        color: "#8b5cf6",
+        color: "#6366f1",
       },
       {
         category: "stable",
@@ -85,7 +85,7 @@ describe("backtestBuckets", () => {
     ]);
   });
 
-  it("uses orange color for BTC spot asset label", () => {
+  it("uses chart amber color for BTC spot asset label", () => {
     expect(
       buildBacktestAllocationSegments(
         {
@@ -99,7 +99,7 @@ describe("backtestBuckets", () => {
         category: "btc",
         label: "BTC",
         percentage: 70,
-        color: "#f97316",
+        color: "#f59e0b",
       },
       {
         category: "stable",

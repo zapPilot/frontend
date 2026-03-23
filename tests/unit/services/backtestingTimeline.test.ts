@@ -17,6 +17,8 @@ function createTimelinePoint(
     withTransfer?: boolean;
     dcaOnlyTransfer?: boolean;
     invalidTransfers?: unknown[];
+    spotAsset?: "BTC" | "ETH" | null;
+    dcaSpotAsset?: "BTC" | "ETH" | null;
   }
 ): BacktestTimelinePoint {
   const date = new Date("2024-01-01");
@@ -39,6 +41,9 @@ function createTimelinePoint(
                 stable_usd: 5000,
                 total_value: 10000,
                 allocation: { spot: 0.5, stable: 0.5 },
+                ...(opts?.dcaSpotAsset !== undefined && {
+                  spot_asset: opts.dcaSpotAsset,
+                }),
               },
               signal: null,
               decision: {
@@ -67,6 +72,9 @@ function createTimelinePoint(
           stable_usd: 4000,
           total_value: 10000,
           allocation: { spot: 0.6, stable: 0.4 },
+          ...(opts?.spotAsset !== undefined && {
+            spot_asset: opts.spotAsset,
+          }),
         },
         signal: null,
         decision: {
@@ -188,6 +196,18 @@ describe("sampleTimelineData", () => {
     expect(result.some(p => p.market.date === timeline[75]?.market.date)).toBe(
       true
     );
+  });
+
+  it("expands sampling to preserve non-DCA spot asset changes", () => {
+    const timeline = Array.from({ length: 220 }, (_, i) =>
+      createTimelinePoint(i, {
+        spotAsset: i <= 100 ? (i % 2 === 0 ? "BTC" : "ETH") : "ETH",
+      })
+    );
+
+    const result = sampleTimelineData(timeline);
+
+    expect(result.length).toBeGreaterThan(MIN_CHART_POINTS);
   });
 
   // ------------------------------------------------------------------

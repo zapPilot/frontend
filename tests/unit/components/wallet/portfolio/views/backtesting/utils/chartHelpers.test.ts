@@ -4,12 +4,13 @@ import {
   buildChartPoint,
   calculateActualDays,
   calculateYAxisDomain,
+  CHART_SIGNALS,
   filterToActiveStrategies,
   getPrimaryStrategyId,
-  normalizeTargetSpotAsset,
   sentimentLabelToIndex,
   sortStrategyIds,
 } from "@/components/wallet/portfolio/views/backtesting/utils/chartHelpers";
+import { getBacktestSpotAssetColor } from "@/components/wallet/portfolio/views/backtesting/utils/spotAssetDisplay";
 import type {
   BacktestStrategyPoint,
   BacktestTimelinePoint,
@@ -99,6 +100,17 @@ describe("getPrimaryStrategyId", () => {
     expect(getPrimaryStrategyId(["dca_classic", "dma_gated_fgi_default"])).toBe(
       "dma_gated_fgi_default"
     );
+  });
+});
+
+describe("CHART_SIGNALS", () => {
+  it("uses shared portfolio chart colors for ETH/BTC switch markers", () => {
+    expect(
+      CHART_SIGNALS.find(signal => signal.key === "switch_to_eth")?.color
+    ).toBe(getBacktestSpotAssetColor("ETH"));
+    expect(
+      CHART_SIGNALS.find(signal => signal.key === "switch_to_btc")?.color
+    ).toBe(getBacktestSpotAssetColor("BTC"));
   });
 });
 
@@ -595,7 +607,79 @@ describe("buildChartPoint", () => {
     expect(result.buySpotSignal).toBe(15000);
   });
 
-  it("creates switch markers when target_spot_asset changes within an active spot segment", () => {
+  it("creates switch markers when portfolio.spot_asset changes within an active spot segment", () => {
+    const tracker: Record<string, "BTC" | "ETH" | null> = {};
+
+    buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "BTC",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
+            decision: {
+              action: "hold",
+              reason: "keep_btc",
+              rule_group: "none",
+              target_allocation: { spot: 0.8, stable: 0.2 },
+              immediate: false,
+              details: {
+                target_spot_asset: "BTC",
+              },
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"],
+      tracker
+    );
+
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "ETH",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
+            decision: {
+              action: "hold",
+              reason: "rotate_to_eth",
+              rule_group: "none",
+              target_allocation: { spot: 0.8, stable: 0.2 },
+              immediate: false,
+              details: {
+                target_spot_asset: "ETH",
+              },
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"],
+      tracker
+    );
+
+    expect(result.switchToEthSignal).toBe(10000);
+    expect(
+      (result.eventStrategies as Record<string, string[]>).switch_to_eth
+    ).toEqual(["DMA Gated FGI Default"]);
+    expect(result.switchToBtcSignal).toBeNull();
+  });
+
+  it("falls back to target_spot_asset when portfolio.spot_asset is absent", () => {
     const tracker: Record<string, "BTC" | "ETH" | null> = {};
 
     buildChartPoint(
@@ -641,10 +725,75 @@ describe("buildChartPoint", () => {
     );
 
     expect(result.switchToEthSignal).toBe(10000);
-    expect(
-      (result.eventStrategies as Record<string, string[]>).switch_to_eth
-    ).toEqual(["DMA Gated FGI Default"]);
-    expect(result.switchToBtcSignal).toBeNull();
+  });
+
+  it("prefers portfolio.spot_asset over target_spot_asset when both are present", () => {
+    const tracker: Record<string, "BTC" | "ETH" | null> = {};
+
+    buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "BTC",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
+            decision: {
+              action: "hold",
+              reason: "keep_btc",
+              rule_group: "none",
+              target_allocation: { spot: 0.8, stable: 0.2 },
+              immediate: false,
+              details: {
+                target_spot_asset: "BTC",
+              },
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"],
+      tracker
+    );
+
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "BTC",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
+            decision: {
+              action: "hold",
+              reason: "target_changes_but_state_does_not",
+              rule_group: "none",
+              target_allocation: { spot: 0.8, stable: 0.2 },
+              immediate: false,
+              details: {
+                target_spot_asset: "ETH",
+              },
+            },
+          }),
+        },
+      }),
+      ["dma_gated_fgi_default"],
+      tracker
+    );
+
+    expect(result.switchToEthSignal).toBeNull();
+    expect(tracker["dma_gated_fgi_default"]).toBe("BTC");
   });
 
   it("does not emit a switch marker on the first point (no previous asset)", () => {
@@ -654,6 +803,16 @@ describe("buildChartPoint", () => {
       createTimelinePoint({
         strategies: {
           dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "BTC",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
             decision: {
               action: "hold",
               reason: "initial",
@@ -683,6 +842,16 @@ describe("buildChartPoint", () => {
       createTimelinePoint({
         strategies: {
           dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "BTC",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
             decision: {
               action: "hold",
               reason: "hold_btc",
@@ -708,6 +877,7 @@ describe("buildChartPoint", () => {
               spot_usd: 0,
               stable_usd: 10000,
               total_value: 10000,
+              spot_asset: null,
               allocation: {
                 spot: 0,
                 stable: 1,
@@ -734,6 +904,16 @@ describe("buildChartPoint", () => {
       createTimelinePoint({
         strategies: {
           dma_gated_fgi_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 5000,
+              stable_usd: 5000,
+              total_value: 10000,
+              spot_asset: "ETH",
+              allocation: {
+                spot: 0.5,
+                stable: 0.5,
+              },
+            },
             decision: {
               action: "buy",
               reason: "reenter_eth",
@@ -778,7 +958,6 @@ describe("filterToActiveStrategies", () => {
       "other_strategy",
     ]);
   });
-
   it("returns at most 2 IDs", () => {
     const result = filterToActiveStrategies([
       "dca_classic",
@@ -788,35 +967,5 @@ describe("filterToActiveStrategies", () => {
     ]);
     expect(result.length).toBeLessThanOrEqual(2);
     expect(result).toEqual(["dca_classic", "alpha"]);
-  });
-});
-
-describe("normalizeTargetSpotAsset", () => {
-  it("normalizes lowercase btc to BTC", () => {
-    expect(normalizeTargetSpotAsset("btc")).toBe("BTC");
-  });
-
-  it("normalizes lowercase eth to ETH", () => {
-    expect(normalizeTargetSpotAsset("eth")).toBe("ETH");
-  });
-
-  it("trims whitespace and uppercases", () => {
-    expect(normalizeTargetSpotAsset("  Eth  ")).toBe("ETH");
-  });
-
-  it("returns null for unsupported assets", () => {
-    expect(normalizeTargetSpotAsset("SOL")).toBeNull();
-  });
-
-  it("returns null for empty string", () => {
-    expect(normalizeTargetSpotAsset("")).toBeNull();
-  });
-
-  it("returns null for null input", () => {
-    expect(normalizeTargetSpotAsset(null)).toBeNull();
-  });
-
-  it("returns null for non-string input", () => {
-    expect(normalizeTargetSpotAsset(123)).toBeNull();
   });
 });

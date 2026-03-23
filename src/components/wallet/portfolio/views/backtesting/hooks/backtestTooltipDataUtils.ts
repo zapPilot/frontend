@@ -5,7 +5,12 @@ import type {
 import { formatCurrency } from "@/utils";
 
 import { hasBacktestAllocation } from "../backtestBuckets";
-import { CHART_SIGNALS, normalizeTargetSpotAsset } from "../utils/chartHelpers";
+import { CHART_SIGNALS } from "../utils/chartHelpers";
+import {
+  getBacktestSpotAssetColor,
+  resolveBacktestSpotAsset,
+  type SpotAssetSymbol,
+} from "../utils/spotAssetDisplay";
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
 const SIGNAL_EVENT_KEYS = new Set<string>([
@@ -44,7 +49,7 @@ export interface AllocationBlock {
   displayName: string;
   allocation: BacktestPortfolioAllocation;
   index: number | undefined;
-  spotAssetLabel?: "BTC" | "ETH";
+  spotAssetLabel?: SpotAssetSymbol;
 }
 
 export interface DetailItem {
@@ -110,9 +115,7 @@ const buildAllocationBlock = (
     return null;
   }
 
-  const spotAssetLabel = normalizeTargetSpotAsset(
-    strategy.decision.details?.target_spot_asset
-  );
+  const spotAssetLabel = resolveBacktestSpotAsset(strategy);
 
   return {
     id: strategyId,
@@ -241,14 +244,12 @@ const buildTooltipSections = (
       color: "#cbd5e1",
     });
 
-    const targetSpotAsset = normalizeTargetSpotAsset(
-      strategy.decision.details?.target_spot_asset
-    );
+    const targetSpotAsset = resolveBacktestSpotAsset(strategy);
     if (targetSpotAsset) {
       detailItems.push({
         name: `${displayName} spot asset`,
         value: targetSpotAsset,
-        color: "#93c5fd",
+        color: getBacktestSpotAssetColor(targetSpotAsset),
       });
     }
 

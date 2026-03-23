@@ -30,7 +30,10 @@ async function main() {
   }
 
   const args = ["test", "--workers=1", "--reporter=list"];
-  const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(bin, args, {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env },
+  });
 
   let stderr = "";
   let stdout = "";

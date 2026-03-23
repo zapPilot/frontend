@@ -49,6 +49,7 @@ function createResponse() {
               spot_usd: 5000,
               stable_usd: 5000,
               total_value: 10000,
+              spot_asset: "BTC",
               allocation: {
                 spot: 0.5,
                 stable: 0.5,
@@ -79,6 +80,7 @@ function createResponse() {
               spot_usd: 5000,
               stable_usd: 5000,
               total_value: 10000,
+              spot_asset: "BTC",
               allocation: {
                 spot: 0.5,
                 stable: 0.5,
@@ -142,6 +144,7 @@ function createResponse() {
               spot_usd: 5100,
               stable_usd: 5100,
               total_value: 10200,
+              spot_asset: "BTC",
               allocation: {
                 spot: 0.5,
                 stable: 0.5,
@@ -172,6 +175,7 @@ function createResponse() {
               spot_usd: 8400,
               stable_usd: 2100,
               total_value: 10500,
+              spot_asset: "BTC",
               allocation: {
                 spot: 0.8,
                 stable: 0.2,
@@ -278,6 +282,17 @@ describe("useBacktestResult", () => {
     expect(result.current.chartData).toHaveLength(2);
   });
 
+  it("preserves portfolio.spot_asset on chartData strategies for tooltip consumers", () => {
+    const { result } = renderHook(() =>
+      useBacktestResult(createResponse() as any)
+    );
+
+    const point = result.current.chartData[0] as any;
+    expect(point.strategies.dma_gated_fgi_default.portfolio.spot_asset).toBe(
+      "BTC"
+    );
+  });
+
   it("returns a valid y-axis domain tuple", () => {
     const { result } = renderHook(() =>
       useBacktestResult(createResponse() as any)
@@ -321,6 +336,7 @@ describe("useBacktestResult", () => {
                 spot_usd: 8000,
                 stable_usd: 2000,
                 total_value: 10000,
+                spot_asset: "BTC",
                 allocation: { spot: 0.8, stable: 0.2 },
               },
               signal: { id: "eth_btc_rs_signal" },
@@ -356,6 +372,7 @@ describe("useBacktestResult", () => {
                 spot_usd: 8100,
                 stable_usd: 2100,
                 total_value: 10200,
+                spot_asset: "ETH",
                 allocation: { spot: 0.8, stable: 0.2 },
               },
               signal: { id: "eth_btc_rs_signal" },
@@ -391,6 +408,7 @@ describe("useBacktestResult", () => {
                 spot_usd: 0,
                 stable_usd: 10200,
                 total_value: 10200,
+                spot_asset: null,
                 allocation: { spot: 0, stable: 1 },
               },
               signal: { id: "eth_btc_rs_signal" },
@@ -426,6 +444,7 @@ describe("useBacktestResult", () => {
                 spot_usd: 8200,
                 stable_usd: 2000,
                 total_value: 10200,
+                spot_asset: "BTC",
                 allocation: { spot: 0.8, stable: 0.2 },
               },
               signal: { id: "eth_btc_rs_signal" },

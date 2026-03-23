@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BacktestAllocationBar } from "@/components/wallet/portfolio/views/backtesting/components/BacktestAllocationBar";
+import { getBacktestSpotAssetColor } from "@/components/wallet/portfolio/views/backtesting/utils/spotAssetDisplay";
 import { getStrategyColor } from "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay";
 
 import { render, screen } from "../../../../../../../test-utils";
@@ -8,11 +9,17 @@ import { render, screen } from "../../../../../../../test-utils";
 vi.mock("@/components/wallet/portfolio/components/allocation", () => ({
   UnifiedAllocationBar: (props: {
     testIdPrefix: string;
-    segments: { label: string; percentage: number }[];
+    segments: { label: string; percentage: number; color: string }[];
   }) => (
-    <div data-testid={props.testIdPrefix}>
+    <div
+      data-testid={props.testIdPrefix}
+      data-segments={JSON.stringify(props.segments)}
+    >
       {props.segments
-        .map(segment => `${segment.label}:${segment.percentage}`)
+        .map(
+          segment =>
+            `${segment.label}:${segment.percentage}:${segment.color.toLowerCase()}`
+        )
         .join("|")}
     </div>
   ),
@@ -26,6 +33,19 @@ vi.mock(
 );
 
 const mockedGetStrategyColor = vi.mocked(getStrategyColor);
+
+function getRenderedSegments(testId: string) {
+  const rendered = screen.getByTestId(testId);
+  const rawSegments = rendered.getAttribute("data-segments");
+
+  expect(rawSegments).toBeTruthy();
+
+  return JSON.parse(rawSegments ?? "[]") as {
+    label: string;
+    percentage: number;
+    color: string;
+  }[];
+}
 
 describe("BacktestAllocationBar", () => {
   beforeEach(() => {
@@ -54,11 +74,29 @@ describe("BacktestAllocationBar", () => {
 
     expect(screen.getByText("AWP Portfolio")).toBeInTheDocument();
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      "SPOT:60|STABLE:40"
+      `SPOT:60:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:40:#10b981`
     );
   });
 
-  it("renders dynamic spot asset labels when provided", () => {
+  it("renders BTC spot labels with the shared amber chart color", () => {
+    render(
+      <BacktestAllocationBar
+        displayName="BTC Rotation"
+        allocation={{ spot: 0.75, stable: 0.25 }}
+        spotAssetLabel="BTC"
+      />
+    );
+
+    expect(screen.getByTestId("backtest-default")).toHaveTextContent(
+      `BTC:75:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:25:#10b981`
+    );
+    expect(getRenderedSegments("backtest-default")[0]).toMatchObject({
+      label: "BTC",
+      color: getBacktestSpotAssetColor("BTC"),
+    });
+  });
+
+  it("renders ETH spot labels with the shared indigo chart color", () => {
     render(
       <BacktestAllocationBar
         displayName="ETH Rotation"
@@ -68,8 +106,12 @@ describe("BacktestAllocationBar", () => {
     );
 
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      "ETH:75|STABLE:25"
+      `ETH:75:${getBacktestSpotAssetColor("ETH").toLowerCase()}|STABLE:25:#10b981`
     );
+    expect(getRenderedSegments("backtest-default")[0]).toMatchObject({
+      label: "ETH",
+      color: getBacktestSpotAssetColor("ETH"),
+    });
   });
 
   it("renders a strategy color indicator when strategyId is provided", () => {
@@ -114,7 +156,7 @@ describe("BacktestAllocationBar", () => {
     );
 
     expect(screen.getByTestId("backtest-spot_only")).toHaveTextContent(
-      "SPOT:100"
+      `SPOT:100:${getBacktestSpotAssetColor("BTC").toLowerCase()}`
     );
     expect(screen.getByTestId("backtest-spot_only")).not.toHaveTextContent(
       "STABLE"
