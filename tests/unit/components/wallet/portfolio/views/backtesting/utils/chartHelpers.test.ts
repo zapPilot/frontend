@@ -835,6 +835,198 @@ describe("buildChartPoint", () => {
     expect(tracker["dma_gated_fgi_default"]).toBe("BTC");
   });
 
+  it("creates a buy spot marker from a stable → eth transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          eth_btc_rotation_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 7000,
+              stable_usd: 3000,
+              total_value: 11000,
+              allocation: { spot: 0.7, stable: 0.3 },
+            },
+            execution: {
+              event: "rebalance",
+              transfers: [
+                { from_bucket: "stable", to_bucket: "eth", amount_usd: 200 },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+            },
+          }),
+        },
+      }),
+      ["eth_btc_rotation_default"]
+    );
+
+    expect(result.buySpotSignal).toBe(11000);
+    expect(result.sellSpotSignal).toBeNull();
+  });
+
+  it("creates a buy spot marker from a stable → btc transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          eth_btc_rotation_default: createStrategyPoint({
+            portfolio: {
+              spot_usd: 7000,
+              stable_usd: 3000,
+              total_value: 11000,
+              allocation: { spot: 0.7, stable: 0.3 },
+            },
+            execution: {
+              event: "rebalance",
+              transfers: [
+                { from_bucket: "stable", to_bucket: "btc", amount_usd: 200 },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+            },
+          }),
+        },
+      }),
+      ["eth_btc_rotation_default"]
+    );
+
+    expect(result.buySpotSignal).toBe(11000);
+  });
+
+  it("creates a sell spot marker from an eth → stable transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          eth_btc_rotation_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
+              transfers: [
+                { from_bucket: "eth", to_bucket: "stable", amount_usd: 100 },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+            },
+          }),
+        },
+      }),
+      ["eth_btc_rotation_default"]
+    );
+
+    expect(result.sellSpotSignal).toBe(10000);
+    expect(result.buySpotSignal).toBeNull();
+  });
+
+  it("creates a switchToBtc marker from an eth → btc transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          eth_btc_rotation_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
+              transfers: [
+                { from_bucket: "eth", to_bucket: "btc", amount_usd: 500 },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+            },
+          }),
+        },
+      }),
+      ["eth_btc_rotation_default"]
+    );
+
+    expect(result.switchToBtcSignal).toBe(10000);
+    expect(result.switchToEthSignal).toBeNull();
+    expect(
+      (result.eventStrategies as Record<string, string[]>).switch_to_btc
+    ).toEqual(["eth btc rotation default"]);
+  });
+
+  it("creates a switchToEth marker from a btc → eth transfer", () => {
+    const result = buildChartPoint(
+      createTimelinePoint({
+        strategies: {
+          eth_btc_rotation_default: createStrategyPoint({
+            execution: {
+              event: "rebalance",
+              transfers: [
+                { from_bucket: "btc", to_bucket: "eth", amount_usd: 500 },
+              ],
+              blocked_reason: null,
+              step_count: 1,
+              steps_remaining: 0,
+              interval_days: 3,
+            },
+          }),
+        },
+      }),
+      ["eth_btc_rotation_default"]
+    );
+
+    expect(result.switchToEthSignal).toBe(10000);
+    expect(result.switchToBtcSignal).toBeNull();
+  });
+
+  it("does not emit signals from a second strategy excluded from strategyIds", () => {
+    const point = createTimelinePoint({
+      strategies: {
+        dma_gated_fgi_default: createStrategyPoint({
+          portfolio: {
+            spot_usd: 7000,
+            stable_usd: 3000,
+            total_value: 11000,
+            allocation: { spot: 0.7, stable: 0.3 },
+          },
+          execution: {
+            event: "rebalance",
+            transfers: [
+              { from_bucket: "stable", to_bucket: "spot", amount_usd: 100 },
+            ],
+            blocked_reason: null,
+            step_count: 1,
+            steps_remaining: 0,
+            interval_days: 3,
+          },
+        }),
+        eth_btc_rotation_default: createStrategyPoint({
+          portfolio: {
+            spot_usd: 5000,
+            stable_usd: 5000,
+            total_value: 15000,
+            allocation: { spot: 0.5, stable: 0.5 },
+          },
+          execution: {
+            event: "rebalance",
+            transfers: [
+              { from_bucket: "eth", to_bucket: "stable", amount_usd: 300 },
+            ],
+            blocked_reason: null,
+            step_count: 1,
+            steps_remaining: 0,
+            interval_days: 3,
+          },
+        }),
+      },
+    });
+
+    // Only pass dma strategy — rotation signals must NOT bleed through
+    const result = buildChartPoint(point, ["dma_gated_fgi_default"]);
+
+    expect(result.buySpotSignal).toBe(11000);
+    // If rotation signals bled through, sellSpotSignal would be 15000
+    expect(result.sellSpotSignal).toBeNull();
+    expect(
+      (result.eventStrategies as Record<string, string[]>).buy_spot
+    ).toEqual(["DMA Gated FGI Default"]);
+  });
+
   it("resets switch tracking when spot allocation reaches zero", () => {
     const tracker: Record<string, "BTC" | "ETH" | null> = {};
 

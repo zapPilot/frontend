@@ -19,8 +19,8 @@ export const FALLBACK_DEFAULTS: BacktestDefaults = {
 
 /**
  * Build default backtest payload from curated strategy presets.
- * Uses curated live presets from the API and relies on the backend compare
- * endpoint to auto-inject the DCA baseline when needed.
+ * Sends only the default (first) preset to avoid unnecessary backend computation.
+ * The backend compare endpoint auto-injects the DCA baseline when needed.
  */
 export function buildDefaultPayloadFromPresets(
   presets: StrategyPreset[],
@@ -30,28 +30,30 @@ export function buildDefaultPayloadFromPresets(
   const orderedPresets = [...presets].sort(
     (left, right) => Number(right.is_default) - Number(left.is_default)
   );
-  const configs: BacktestRequest["configs"] = orderedPresets
-    .filter(preset => {
-      if (seenConfigIds.has(preset.config_id)) {
-        return false;
-      }
-      seenConfigIds.add(preset.config_id);
-      return true;
-    })
-    .map(preset => ({
-      config_id: preset.config_id,
-      strategy_id: preset.strategy_id,
-      params: preset.params,
-    }));
 
-  if (configs.length === 0) {
+  // Find the first non-duplicate preset (the default one)
+  const defaultPreset = orderedPresets.find(preset => {
+    if (seenConfigIds.has(preset.config_id)) {
+      return false;
+    }
+    seenConfigIds.add(preset.config_id);
+    return true;
+  });
+
+  if (!defaultPreset) {
     return buildDefaultPayloadFromCatalog(null, defaults);
   }
 
   return {
     days: defaults.days,
     total_capital: defaults.total_capital,
-    configs,
+    configs: [
+      {
+        config_id: defaultPreset.config_id,
+        strategy_id: defaultPreset.strategy_id,
+        params: defaultPreset.params,
+      },
+    ],
   };
 }
 

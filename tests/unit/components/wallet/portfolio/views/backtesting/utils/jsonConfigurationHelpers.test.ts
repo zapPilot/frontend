@@ -114,7 +114,7 @@ describe("updateConfigStrategy", () => {
     expect(result.configs[0].params).toEqual({ lookback: 14 });
   });
 
-  it("preserves other config entries", () => {
+  it("discards other config entries, keeping only the updated one", () => {
     const json = JSON.stringify({
       configs: [
         { config_id: "a", strategy_id: "first" },
@@ -122,9 +122,9 @@ describe("updateConfigStrategy", () => {
       ],
     });
     const result = JSON.parse(updateConfigStrategy(json, "changed"));
-    expect(result.configs).toHaveLength(2);
+    expect(result.configs).toHaveLength(1);
     expect(result.configs[0].strategy_id).toBe("changed");
-    expect(result.configs[1].strategy_id).toBe("second");
+    expect(result.configs[0].config_id).toBe("a");
   });
 
   it("returns original JSON on parse failure", () => {
@@ -139,5 +139,46 @@ describe("updateConfigStrategy", () => {
   it("returns original JSON when configs is missing", () => {
     const json = '{"days":500}';
     expect(updateConfigStrategy(json, "x")).toBe(json);
+  });
+
+  it("preserves other top-level fields when updating config", () => {
+    const json = JSON.stringify({
+      days: 500,
+      total_capital: 10000,
+      configs: [{ config_id: "x", strategy_id: "old" }],
+    });
+
+    const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
+
+    expect(result.days).toBe(500);
+    expect(result.total_capital).toBe(10000);
+    expect(result.configs[0].strategy_id).toBe("new_strat");
+  });
+
+  it("preserves config_id when only strategy_id is updated", () => {
+    const json = JSON.stringify({
+      configs: [
+        { config_id: "my_config", strategy_id: "old_strat", params: {} },
+      ],
+    });
+
+    const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
+
+    expect(result.configs[0].config_id).toBe("my_config");
+    expect(result.configs[0].strategy_id).toBe("new_strat");
+  });
+
+  it("replaces params with empty object when defaultParams is {}", () => {
+    const json = JSON.stringify({
+      configs: [
+        { config_id: "x", strategy_id: "old", params: { k: 5, r: 1 } },
+      ],
+    });
+
+    const result = JSON.parse(
+      updateConfigStrategy(json, "new_strat", {})
+    );
+
+    expect(result.configs[0].params).toEqual({});
   });
 });

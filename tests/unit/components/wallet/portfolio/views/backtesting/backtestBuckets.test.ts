@@ -17,6 +17,8 @@ describe("backtestBuckets", () => {
   it("recognizes valid buckets only", () => {
     expect(isBacktestBucket("spot")).toBe(true);
     expect(isBacktestBucket("stable")).toBe(true);
+    expect(isBacktestBucket("eth")).toBe(true);
+    expect(isBacktestBucket("btc")).toBe(true);
     expect(isBacktestBucket("lp")).toBe(false);
   });
 
@@ -36,6 +38,24 @@ describe("backtestBuckets", () => {
         amount_usd: 100,
       })
     ).toBe(false);
+  });
+
+  it("accepts eth and btc as valid transfer buckets", () => {
+    expect(
+      isBacktestTransfer({
+        from_bucket: "stable",
+        to_bucket: "eth",
+        amount_usd: 100,
+      })
+    ).toBe(true);
+
+    expect(
+      isBacktestTransfer({
+        from_bucket: "btc",
+        to_bucket: "stable",
+        amount_usd: 50,
+      })
+    ).toBe(true);
   });
 
   it("maps allocation ratios to UI segments", () => {
@@ -127,5 +147,25 @@ describe("backtestBuckets", () => {
     expect(getBacktestTransferDirection("spot", "stable")).toBe(
       "spot_to_stable"
     );
+  });
+
+  it("treats eth and btc buckets as spot for transfer direction", () => {
+    expect(getBacktestTransferDirection("stable", "eth")).toBe(
+      "stable_to_spot"
+    );
+    expect(getBacktestTransferDirection("stable", "btc")).toBe(
+      "stable_to_spot"
+    );
+    expect(getBacktestTransferDirection("eth", "stable")).toBe(
+      "spot_to_stable"
+    );
+    expect(getBacktestTransferDirection("btc", "stable")).toBe(
+      "spot_to_stable"
+    );
+  });
+
+  it("returns null for spot-to-spot transfers (eth/btc rotation handled at chart level)", () => {
+    expect(getBacktestTransferDirection("eth", "btc")).toBeNull();
+    expect(getBacktestTransferDirection("btc", "eth")).toBeNull();
   });
 });

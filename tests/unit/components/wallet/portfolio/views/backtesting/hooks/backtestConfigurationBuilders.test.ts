@@ -39,7 +39,7 @@ describe("FALLBACK_DEFAULTS", () => {
 });
 
 describe("buildDefaultPayloadFromPresets", () => {
-  it("builds the payload from live presets and keeps the default preset first", () => {
+  it("sends only the default preset to minimize backend computation", () => {
     const presets = [
       createPreset({
         config_id: "dma_gated_fgi_alt",
@@ -64,11 +64,6 @@ describe("buildDefaultPayloadFromPresets", () => {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
           params: { pacing_k: 5, pacing_r_max: 1 },
-        },
-        {
-          config_id: "dma_gated_fgi_alt",
-          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-          params: { pacing_k: 3, pacing_r_max: 0.8 },
         },
       ],
     });
@@ -104,6 +99,87 @@ describe("buildDefaultPayloadFromPresets", () => {
         params: {},
       },
     ]);
+  });
+
+  it("uses the single preset when only one is available", () => {
+    const presets = [
+      createPreset({
+        config_id: "only_one",
+        strategy_id: "eth_btc_rotation",
+        params: { k: 2 },
+      }),
+    ];
+
+    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
+
+    expect(result.configs).toHaveLength(1);
+    expect(result.configs[0]).toEqual({
+      config_id: "only_one",
+      strategy_id: "eth_btc_rotation",
+      params: { k: 2 },
+    });
+  });
+
+  it("picks the first preset in original order when none is marked as default", () => {
+    const presets = [
+      createPreset({
+        config_id: "first_non_default",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        params: { k: 1 },
+      }),
+      createPreset({
+        config_id: "second_non_default",
+        strategy_id: "eth_btc_rotation",
+        params: { k: 2 },
+      }),
+    ];
+
+    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
+
+    expect(result.configs).toHaveLength(1);
+    expect(result.configs[0]?.config_id).toBe("first_non_default");
+  });
+
+  it("promotes the default preset to first even when it is in the middle of the input", () => {
+    const presets = [
+      createPreset({
+        config_id: "before",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+      }),
+      createPreset({
+        config_id: "the_default",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        is_default: true,
+      }),
+      createPreset({
+        config_id: "after",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+      }),
+    ];
+
+    const result = buildDefaultPayloadFromPresets(presets, TEST_DEFAULTS);
+
+    expect(result.configs).toHaveLength(1);
+    expect(result.configs[0]?.config_id).toBe("the_default");
+  });
+
+  it("uses days and total_capital from the provided defaults, not the preset", () => {
+    const presets = [
+      createPreset({
+        config_id: "x",
+        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        is_default: true,
+      }),
+    ];
+    const customDefaults: BacktestDefaults = {
+      days: 90,
+      total_capital: 99999,
+    };
+
+    const result = buildDefaultPayloadFromPresets(presets, customDefaults);
+
+    expect(result.days).toBe(90);
+    expect(result.total_capital).toBe(99999);
   });
 });
 

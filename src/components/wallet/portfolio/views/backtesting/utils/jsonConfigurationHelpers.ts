@@ -134,7 +134,7 @@ export function parseConfigStrategyId(json: string, fallback: string): string {
 
 /**
  * Update the `strategy_id` (and optionally `params`) on the first config entry
- * in the JSON editor value. Preserves all other fields.
+ * in the JSON editor value. Always produces a single config entry.
  *
  * @param json - Raw JSON string from the editor
  * @param strategyId - New strategy_id to set
@@ -143,8 +143,8 @@ export function parseConfigStrategyId(json: string, fallback: string): string {
  *
  * @example
  * ```ts
- * updateConfigStrategy('{"configs":[{"config_id":"x","strategy_id":"old"}]}', "new_strat", { k: 5 })
- * // updates configs[0].strategy_id to "new_strat" and configs[0].params to { k: 5 }
+ * updateConfigStrategy('{"configs":[{"config_id":"x","strategy_id":"old"},{"config_id":"y","strategy_id":"other"}]}', "new_strat", { k: 5 })
+ * // updates configs[0] to new strategy and discards any additional configs
  * ```
  */
 export function updateConfigStrategy(
@@ -168,7 +168,7 @@ export function updateConfigStrategy(
     first["params"] = defaultParams;
   }
 
-  const updatedConfigs = [first, ...configs.slice(1)];
+  const updatedConfigs = [first];
   parsed["configs"] = updatedConfigs;
   return JSON.stringify(parsed, null, 2);
 }

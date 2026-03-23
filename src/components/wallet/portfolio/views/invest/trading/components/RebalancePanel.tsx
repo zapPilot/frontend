@@ -4,6 +4,7 @@ import { CircleDollarSign } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/ui/classNames";
+import type { BacktestBucket } from "@/types/backtesting";
 import type { DailySuggestionResponse } from "@/types/strategy";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -28,7 +29,7 @@ type SpotAssetSymbol = "BTC" | "ETH";
 
 interface DerivedTradeAction {
   action: "buy" | "sell" | "hold";
-  bucket: "spot" | "stable";
+  bucket: BacktestBucket;
   bucketLabel: string;
   amount_usd: number;
   description: string;
@@ -58,11 +59,19 @@ function getTargetSpotAsset(
 }
 
 function getBucketLabel(
-  bucket: "spot" | "stable",
+  bucket: BacktestBucket,
   targetSpotAsset: SpotAssetSymbol | null
 ): string {
   if (bucket === "stable") {
     return STABLE_BUCKET_LABEL;
+  }
+
+  if (bucket === "eth") {
+    return "ETH";
+  }
+
+  if (bucket === "btc") {
+    return "BTC";
   }
 
   return targetSpotAsset ?? SPOT_BUCKET_LABEL;
@@ -81,7 +90,7 @@ function buildTradeActions(
 
   if (data.execution.transfers.length > 0) {
     return data.execution.transfers.map(transfer => {
-      const action = transfer.to_bucket === "spot" ? "buy" : "sell";
+      const action = transfer.to_bucket !== "stable" ? "buy" : "sell";
       const actionBucket =
         action === "buy" ? transfer.to_bucket : transfer.from_bucket;
 
