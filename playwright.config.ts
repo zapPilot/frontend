@@ -1,9 +1,44 @@
+import { execFileSync } from "node:child_process";
+
 import { defineConfig, devices } from "@playwright/test";
 
-const PLAYWRIGHT_PORT = process.env["PLAYWRIGHT_PORT"] ?? "3000";
+/**
+ * Check whether a TCP port is already listening on 127.0.0.1.
+ * Uses execFileSync (no shell) to avoid command-injection risks.
+ */
+function isPortListening(port: number): boolean {
+  try {
+    execFileSync(
+      "node",
+      [
+        "-e",
+        `const s=require("net").createConnection(${port},"127.0.0.1");` +
+          `s.on("connect",()=>{s.destroy();process.exit(0)});` +
+          `s.on("error",()=>process.exit(1))`,
+      ],
+      { timeout: 2000, stdio: "ignore" },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const DEV_PORT = 3000;
+const FALLBACK_PORT = Number(process.env["PLAYWRIGHT_PORT"] ?? "3099");
+const isCI = !!process.env["CI"];
+const devServerRunning = !isCI && isPortListening(DEV_PORT);
+
+const activePort = devServerRunning ? DEV_PORT : FALLBACK_PORT;
 const PLAYWRIGHT_BASE_URL =
   process.env["PLAYWRIGHT_BASE_URL"] ??
-  `http://127.0.0.1:${PLAYWRIGHT_PORT}`;
+  `http://127.0.0.1:${activePort}`;
+
+if (devServerRunning) {
+  console.log(`♻️  Reusing existing dev server on port ${DEV_PORT}`);
+} else {
+  console.log(`🚀 Starting fresh dev server on port ${FALLBACK_PORT}`);
+}
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -70,12 +105,17 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${PLAYWRIGHT_PORT}`,
-    url: PLAYWRIGHT_BASE_URL,
-    // Always launch this repo's app to avoid accidentally targeting a
-    // different local server already listening on port 3000.
-    reuseExistingServer: false,
-  },
+  /* Run your local dev server before starting the tests.
+   * When a dev server is already running on port 3000 (local dev), we skip
+   * starting a new one to avoid .next/dev/lock conflicts. On CI, we always
+   * start a fresh server on the fallback port. */
+  ...(devServerRunning
+    ? {}
+    : {
+        webServer: {
+          command: `npm run dev -- --hostname 127.0.0.1 --port ${FALLBACK_PORT}`,
+          url: PLAYWRIGHT_BASE_URL,
+          reuseExistingServer: false,
+        },
+      }),
 });
