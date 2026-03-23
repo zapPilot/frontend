@@ -26,7 +26,8 @@ const backtestParamsSchema = z
     buy_sideways_max_range: z.coerce.number().nonnegative().optional(),
     buy_leg_caps: z.array(z.coerce.number()).optional(),
   })
-  .strict();
+  /* eslint-disable-next-line sonarjs/deprecation */
+  .passthrough();
 
 const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),

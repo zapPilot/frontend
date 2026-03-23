@@ -374,7 +374,7 @@ describe("useBacktestConfiguration", () => {
   // handleRunBacktest – invalid JSON branch
   // -------------------------------------------------------------------------
 
-  it("rejects invalid JSON and legacy params", () => {
+  it("rejects invalid JSON", () => {
     mockPendingDefaults();
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
@@ -388,6 +388,14 @@ describe("useBacktestConfiguration", () => {
       result.current.handleRunBacktest();
     });
     expect(result.current.editorError).toBe("Invalid JSON: unable to parse.");
+  });
+
+  it("passes unknown params through to backend with passthrough schema", () => {
+    mockPendingDefaults();
+
+    const { result } = renderHook(() => useBacktestConfiguration(), {
+      wrapper: QueryClientWrapper,
+    });
 
     act(() => {
       result.current.updateEditorValue(
@@ -409,8 +417,19 @@ describe("useBacktestConfiguration", () => {
       result.current.handleRunBacktest();
     });
 
-    expect(result.current.editorError).toContain("params");
-    expect(mockMutate).not.toHaveBeenCalled();
+    // With passthrough schema, unknown params are accepted and forwarded to backend
+    expect(result.current.editorError).toBeNull();
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configs: [
+          expect.objectContaining({
+            params: {
+              signal_provider: "fgi",
+            },
+          }),
+        ],
+      })
+    );
   });
 
   // -------------------------------------------------------------------------
