@@ -5,13 +5,13 @@ import type {
 import { formatCurrency } from "@/utils";
 
 import { hasBacktestAllocation } from "../backtestBuckets";
-import { CHART_SIGNALS } from "../utils/chartHelpers";
+import { CHART_SIGNALS } from "./chartHelpers";
 import {
   getBacktestSpotAssetColor,
   resolveBacktestSpotAsset,
   type SpotAssetSymbol,
-} from "../utils/spotAssetDisplay";
-import { getStrategyDisplayName } from "../utils/strategyDisplay";
+} from "./spotAssetDisplay";
+import { getStrategyDisplayName } from "./strategyDisplay";
 
 const SIGNAL_EVENT_KEYS = new Set<string>([
   "buy_spot",

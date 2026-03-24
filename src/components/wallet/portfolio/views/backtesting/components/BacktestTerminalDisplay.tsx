@@ -7,27 +7,21 @@ import type {
   BacktestStrategyCatalogResponseV3,
 } from "@/types/backtesting";
 
-import {
-  DEFAULT_DAYS,
-  DMA_GATED_FGI_STRATEGY_ID,
-  FIXED_PACING_ENGINE_ID,
-} from "../constants";
+import { FIXED_PACING_ENGINE_ID } from "../constants";
 import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
-  parseConfigStrategyId,
-  parseJsonField,
   updateConfigStrategy,
   updateJsonField,
 } from "../utils/jsonConfigurationHelpers";
 import { BacktestChart } from "./BacktestChart";
 import { BacktestCommandBar } from "./BacktestCommandBar";
 import { BacktestHeroMetrics } from "./BacktestHeroMetrics";
-import { BacktestSecondaryMetrics } from "./BacktestSecondaryMetrics";
 import {
   createHeroMetrics,
-  createSecondaryMetrics,
+  formatTradeFrequency,
 } from "./backtestTerminalMetrics";
 import type { TerminalDropdownOption } from "./TerminalDropdown";
+import { phosphorGlowDimStyle } from "./terminalStyles";
 
 export interface BacktestTerminalDisplayProps {
   /** Strategy summaries keyed by strategy_id */
@@ -50,6 +44,12 @@ export interface BacktestTerminalDisplayProps {
   onEditorValueChange: (v: string) => void;
   /** Strategy catalog for populating the dropdown */
   catalog: BacktestStrategyCatalogResponseV3 | null;
+  /** Parsed days value from editor */
+  days: number;
+  /** Selected strategy ID from editor */
+  selectedStrategyId: string;
+  /** Strategy options for dropdown */
+  strategyOptions: TerminalDropdownOption[];
 }
 
 /**
@@ -67,23 +67,10 @@ export function BacktestTerminalDisplay({
   editorValue,
   onEditorValueChange,
   catalog,
+  days,
+  selectedStrategyId,
+  strategyOptions,
 }: BacktestTerminalDisplayProps): React.ReactElement {
-  const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
-  const selectedStrategyId = parseConfigStrategyId(
-    editorValue,
-    DMA_GATED_FGI_STRATEGY_ID
-  );
-
-  const strategyOptions: TerminalDropdownOption[] = useMemo(() => {
-    if (!catalog?.strategies?.length) {
-      return [{ value: selectedStrategyId, label: selectedStrategyId }];
-    }
-    return catalog.strategies.map(s => ({
-      value: s.strategy_id,
-      label: s.display_name,
-    }));
-  }, [catalog, selectedStrategyId]);
-
   const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onEditorValueChange(
       updateJsonField(editorValue, "days", Number(e.target.value))
@@ -107,9 +94,9 @@ export function BacktestTerminalDisplay({
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
 
   const heroMetrics = useMemo(() => createHeroMetrics(regime), [regime]);
-  const secondaryMetrics = useMemo(
-    () => createSecondaryMetrics(regime),
-    [regime]
+  const tradeFreqLabel = useMemo(
+    () => formatTradeFrequency(regime?.trade_count ?? 0, actualDays),
+    [regime?.trade_count, actualDays]
   );
 
   return (
@@ -146,7 +133,16 @@ export function BacktestTerminalDisplay({
         </div>
       )}
 
-      <BacktestSecondaryMetrics hasData={!!regime} metrics={secondaryMetrics} />
+      {tradeFreqLabel && (
+        <div className="px-6 pb-3 -mt-1">
+          <span
+            className="text-xs text-emerald-400/40 tracking-wide"
+            style={phosphorGlowDimStyle}
+          >
+            {">"} approx. {tradeFreqLabel}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

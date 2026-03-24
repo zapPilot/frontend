@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BacktestTooltip } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTooltip";
-import { useBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestTooltipData";
+import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData";
 
 import { render, screen } from "../../../../../../../test-utils";
 
 vi.mock(
-  "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestTooltipData",
+  "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData",
   () => ({
-    useBacktestTooltipData: vi.fn(),
+    buildBacktestTooltipData: vi.fn(),
   })
 );
 
@@ -26,7 +26,7 @@ vi.mock(
   })
 );
 
-const mockedUseBacktestTooltipData = vi.mocked(useBacktestTooltipData);
+const mockedBuildBacktestTooltipData = vi.mocked(buildBacktestTooltipData);
 
 function createTooltipData(overrides: Record<string, unknown> = {}) {
   return {
@@ -47,8 +47,8 @@ describe("BacktestTooltip", () => {
     vi.clearAllMocks();
   });
 
-  it("returns null when inactive or when the hook has no data", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(null);
+  it("returns null when inactive or when the build helper has no data", () => {
+    mockedBuildBacktestTooltipData.mockReturnValue(null);
 
     const { rerender } = render(
       <BacktestTooltip active={false} payload={[]} label="" />
@@ -60,7 +60,7 @@ describe("BacktestTooltip", () => {
   });
 
   it("renders date, strategy rows, and events", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
+    mockedBuildBacktestTooltipData.mockReturnValue(
       createTooltipData({
         sections: {
           strategies: [{ name: "AWP", value: 10000, color: "#3b82f6" }],
@@ -75,7 +75,7 @@ describe("BacktestTooltip", () => {
           details: [],
           allocations: [],
         },
-      }) as ReturnType<typeof useBacktestTooltipData>
+      }) as ReturnType<typeof buildBacktestTooltipData>
     );
 
     render(<BacktestTooltip active={true} payload={[]} label="" />);
@@ -86,7 +86,7 @@ describe("BacktestTooltip", () => {
   });
 
   it("renders signals and decision details sections when present", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
+    mockedBuildBacktestTooltipData.mockReturnValue(
       createTooltipData({
         sections: {
           strategies: [],
@@ -101,7 +101,7 @@ describe("BacktestTooltip", () => {
           ],
           allocations: [],
         },
-      }) as ReturnType<typeof useBacktestTooltipData>
+      }) as ReturnType<typeof buildBacktestTooltipData>
     );
 
     render(<BacktestTooltip active={true} payload={[]} label="" />);
@@ -116,7 +116,7 @@ describe("BacktestTooltip", () => {
   });
 
   it("renders allocation blocks when present", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
+    mockedBuildBacktestTooltipData.mockReturnValue(
       createTooltipData({
         sections: {
           strategies: [],
@@ -138,7 +138,7 @@ describe("BacktestTooltip", () => {
             },
           ],
         },
-      }) as ReturnType<typeof useBacktestTooltipData>
+      }) as ReturnType<typeof buildBacktestTooltipData>
     );
 
     const { container } = render(

@@ -15,11 +15,14 @@ export function BacktestingView(): ReactElement {
   const {
     backtestData,
     catalog,
+    days,
     editorValue,
     editorError,
     error,
     isInitializing,
     isPending,
+    selectedStrategyId,
+    strategyOptions,
     handleRunBacktest,
     updateEditorValue,
   } = useBacktestConfiguration();
@@ -53,6 +56,9 @@ export function BacktestingView(): ReactElement {
         editorValue={editorValue}
         onEditorValueChange={updateEditorValue}
         catalog={catalog}
+        days={days}
+        selectedStrategyId={selectedStrategyId}
+        strategyOptions={strategyOptions}
       />
     );
   }

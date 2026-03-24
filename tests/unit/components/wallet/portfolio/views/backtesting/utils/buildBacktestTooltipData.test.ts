@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { useBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestTooltipData";
+import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData";
 
 vi.mock("@/utils", () => ({
   formatCurrency: (value: number) => `$${Math.round(value).toLocaleString()}`,
@@ -158,18 +158,18 @@ function createTooltipPayload() {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("useBacktestTooltipData", () => {
+describe("buildBacktestTooltipData", () => {
   // ------------------------------------------------------------------
   // Early-exit guard
   // ------------------------------------------------------------------
 
   describe("early-exit when payload is absent or empty", () => {
     it("returns null when payload is undefined", () => {
-      expect(useBacktestTooltipData({ payload: undefined })).toBeNull();
+      expect(buildBacktestTooltipData({ payload: undefined })).toBeNull();
     });
 
     it("returns null when payload is an empty array", () => {
-      expect(useBacktestTooltipData({ payload: [] })).toBeNull();
+      expect(buildBacktestTooltipData({ payload: [] })).toBeNull();
     });
   });
 
@@ -179,7 +179,7 @@ describe("useBacktestTooltipData", () => {
 
   describe("date string derivation", () => {
     it("uses market.date when available, ignoring label", () => {
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: createTooltipPayload(),
         label: "2026-01-01",
       });
@@ -200,7 +200,7 @@ describe("useBacktestTooltipData", () => {
         },
       ];
       const label = "2025-06-01";
-      const result = useBacktestTooltipData({ payload, label });
+      const result = buildBacktestTooltipData({ payload, label });
       expect(result?.dateStr).toBe(new Date(label).toLocaleDateString());
     });
   });
@@ -215,7 +215,7 @@ describe("useBacktestTooltipData", () => {
         strategy_b: makeStrategyPoint({}),
         strategy_a: makeStrategyPoint({}),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         // sortedStrategyIds intentionally omitted
       });
@@ -230,7 +230,7 @@ describe("useBacktestTooltipData", () => {
         strategy_b: makeStrategyPoint({}),
         strategy_c: makeStrategyPoint({}),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["strategy_c", "strategy_a"],
       });
@@ -250,7 +250,7 @@ describe("useBacktestTooltipData", () => {
         zero_alloc: makeStrategyPoint({ spot: 0, stable: 0 }),
         normal: makeStrategyPoint({ spot: 5000, stable: 5000 }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["zero_alloc", "normal"],
       });
@@ -263,7 +263,7 @@ describe("useBacktestTooltipData", () => {
       const strategies = {
         spot_only: makeStrategyPoint({ spot: 8000, stable: 0 }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
       });
       const ids = result?.sections.allocations.map(a => a.id) ?? [];
@@ -274,7 +274,7 @@ describe("useBacktestTooltipData", () => {
       const strategies = {
         stable_only: makeStrategyPoint({ spot: 0, stable: 6000 }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
       });
       const ids = result?.sections.allocations.map(a => a.id) ?? [];
@@ -285,7 +285,7 @@ describe("useBacktestTooltipData", () => {
       const strategies = {
         my_strategy: makeStrategyPoint({ spot: 1000, stable: 1000 }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         // no sortedStrategyIds → index becomes undefined via optional chaining
       });
@@ -307,7 +307,7 @@ describe("useBacktestTooltipData", () => {
           },
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strategy"],
       });
@@ -329,7 +329,7 @@ describe("useBacktestTooltipData", () => {
           },
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strategy"],
       });
@@ -340,7 +340,7 @@ describe("useBacktestTooltipData", () => {
     it("updates the allocation label when portfolio.spot_asset flips and ignores stale decision metadata", () => {
       const sortedStrategyIds = ["my_strategy"];
 
-      const btcResult = useBacktestTooltipData({
+      const btcResult = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket("2026-01-15"), {
           my_strategy: makeStrategyPoint({
             spot: 1000,
@@ -358,7 +358,7 @@ describe("useBacktestTooltipData", () => {
         sortedStrategyIds,
       });
 
-      const ethResult = useBacktestTooltipData({
+      const ethResult = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket("2026-01-16"), {
           my_strategy: makeStrategyPoint({
             spot: 1000,
@@ -395,7 +395,7 @@ describe("useBacktestTooltipData", () => {
           },
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["stable_only"],
       });
@@ -419,7 +419,7 @@ describe("useBacktestTooltipData", () => {
           payload: { market },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const sentiment = result?.sections.signals.find(
         s => s.name === "Sentiment"
       );
@@ -436,7 +436,7 @@ describe("useBacktestTooltipData", () => {
           payload: { market },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const sentiment = result?.sections.signals.find(
         s => s.name === "Sentiment"
       );
@@ -459,7 +459,7 @@ describe("useBacktestTooltipData", () => {
           payload: {},
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const btc = result?.sections.signals.find(s => s.name === "BTC Price");
       expect(btc?.value).toBe("");
     });
@@ -473,7 +473,7 @@ describe("useBacktestTooltipData", () => {
           payload: {},
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const dma = result?.sections.signals.find(s => s.name === "DMA 200");
       expect(dma?.value).toBe("");
     });
@@ -493,7 +493,7 @@ describe("useBacktestTooltipData", () => {
           payload: {},
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const vix = result?.sections.signals.find(s => s.name === "VIX");
       expect(vix?.value).toBe(18.46);
     });
@@ -507,7 +507,7 @@ describe("useBacktestTooltipData", () => {
           payload: {},
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const vix = result?.sections.signals.find(s => s.name === "VIX");
       // value ?? "" → ""
       expect(vix?.value).toBe("");
@@ -538,7 +538,7 @@ describe("useBacktestTooltipData", () => {
           },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       expect(result).not.toBeNull();
       expect(result?.sections.strategies).toHaveLength(1);
     });
@@ -567,7 +567,7 @@ describe("useBacktestTooltipData", () => {
           payload: object;
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       // Empty-name entry is not a known signal or event, but has a numeric value
       expect(result?.sections.strategies[0]?.name).toBe("");
     });
@@ -590,7 +590,7 @@ describe("useBacktestTooltipData", () => {
           payload: object;
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       expect(result?.sections.strategies[0]?.color).toBe("#fff");
     });
   });
@@ -613,7 +613,7 @@ describe("useBacktestTooltipData", () => {
           },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const buyEvent = result?.sections.events.find(e => e.name === "Buy Spot");
       expect(buyEvent?.strategies).toEqual([]);
     });
@@ -634,7 +634,7 @@ describe("useBacktestTooltipData", () => {
           },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const sellEvent = result?.sections.events.find(
         e => e.name === "Sell Spot"
       );
@@ -665,7 +665,7 @@ describe("useBacktestTooltipData", () => {
           payload: object;
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       expect(result?.sections.strategies).toHaveLength(0);
     });
   });
@@ -684,7 +684,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: null,
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -702,7 +702,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: null,
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -728,7 +728,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: null,
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -760,7 +760,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: null,
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -795,7 +795,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: null,
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -813,7 +813,7 @@ describe("useBacktestTooltipData", () => {
           buy_gate: { block_reason: "sideways_pending" },
         }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["my_strat"],
       });
@@ -826,7 +826,7 @@ describe("useBacktestTooltipData", () => {
       const strategies = {
         no_signal: makeStrategyPoint({ signal: null }),
       };
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: minimalPayload(makeMarket(), strategies),
         sortedStrategyIds: ["no_signal"],
       });
@@ -840,7 +840,7 @@ describe("useBacktestTooltipData", () => {
 
   describe("BTC / DMA 200 ratio signal", () => {
     it("appends BTC/DMA200 ratio when both signals have numeric values", () => {
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: createTooltipPayload(),
         label: "2026-01-01",
       });
@@ -865,7 +865,7 @@ describe("useBacktestTooltipData", () => {
           },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const ratio = result?.sections.signals.find(
         s => s.name === "BTC / DMA 200"
       );
@@ -885,7 +885,7 @@ describe("useBacktestTooltipData", () => {
           },
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const ratio = result?.sections.signals.find(
         s => s.name === "BTC / DMA 200"
       );
@@ -911,7 +911,7 @@ describe("useBacktestTooltipData", () => {
           payload: {},
         },
       ];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const ratio = result?.sections.signals.find(
         s => s.name === "BTC / DMA 200"
       );
@@ -945,7 +945,7 @@ describe("useBacktestTooltipData", () => {
         color: string;
         payload: object;
       }[];
-      const result = useBacktestTooltipData({ payload });
+      const result = buildBacktestTooltipData({ payload });
       const ratio = result?.sections.signals.find(
         s => s.name === "BTC / DMA 200"
       );
@@ -960,7 +960,7 @@ describe("useBacktestTooltipData", () => {
 
   describe("full integration — categorizes strategies, signals, events, allocations", () => {
     it("produces correct sections from a complete payload", () => {
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: createTooltipPayload(),
         label: "2026-01-01",
         sortedStrategyIds: ["dca_classic", "dma_gated_fgi_default"],
@@ -991,7 +991,7 @@ describe("useBacktestTooltipData", () => {
     });
 
     it("includes decision, blocked, and buy-gate details for strategies with signals", () => {
-      const result = useBacktestTooltipData({
+      const result = buildBacktestTooltipData({
         payload: createTooltipPayload(),
         label: "2026-01-01",
         sortedStrategyIds: ["dca_classic", "dma_gated_fgi_default"],

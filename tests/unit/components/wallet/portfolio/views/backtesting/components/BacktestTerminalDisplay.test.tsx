@@ -7,21 +7,6 @@ import type {
   BacktestStrategyCatalogResponseV3,
 } from "@/types/backtesting";
 
-vi.mock("framer-motion", () => ({
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-  motion: {
-    div: ({
-      children,
-      ...props
-    }: {
-      children: React.ReactNode;
-      [key: string]: unknown;
-    }) => <div {...props}>{children}</div>,
-  },
-}));
-
 vi.mock("@/components/wallet/portfolio/views/backtesting/constants", () => ({
   DEFAULT_DAYS: 500,
   DMA_GATED_FGI_STRATEGY_ID: "dma_gated_fgi",
@@ -86,16 +71,12 @@ vi.mock(
           ]
         : []
     ),
-    createSecondaryMetrics: vi.fn(strategy =>
-      strategy
-        ? [
-            { label: "INVESTED", value: "$10,000" },
-            { label: "TRADES", value: "12" },
-            { label: "STABLE", value: "20.0%" },
-            { label: "SIGNAL", value: "dma_gated_fgi" },
-          ]
-        : []
-    ),
+    formatTradeFrequency: vi.fn((tradeCount: number, actualDays: number) => {
+      if (tradeCount <= 0 || actualDays <= 0) return null;
+      const daysPerTrade = Math.round(actualDays / tradeCount);
+      if (daysPerTrade <= 1) return "1+ trades per day";
+      return `1 trade every ${daysPerTrade} days`;
+    }),
   })
 );
 
@@ -118,6 +99,9 @@ describe("BacktestTerminalDisplay", () => {
     editorValue: '{"days":500}',
     onEditorValueChange: mockOnEditorValueChange,
     catalog: null,
+    days: 500,
+    selectedStrategyId: "dma_gated_fgi",
+    strategyOptions: [],
   };
 
   const mockSummary: { strategies: BacktestResponse["strategies"] } = {
@@ -212,7 +196,17 @@ describe("BacktestTerminalDisplay", () => {
   });
 
   it("renders a dropdown when catalog has multiple strategies", () => {
-    render(<BacktestTerminalDisplay {...defaultProps} catalog={mockCatalog} />);
+    const strategyOptions = [
+      { value: "dma_gated_fgi", label: "DMA Gated FGI" },
+      { value: "momentum_alpha", label: "Momentum Alpha" },
+    ];
+    render(
+      <BacktestTerminalDisplay
+        {...defaultProps}
+        catalog={mockCatalog}
+        strategyOptions={strategyOptions}
+      />
+    );
 
     const dropdownTrigger = screen.getByRole("button", {
       name: /DMA Gated FGI/i,
@@ -254,31 +248,23 @@ describe("BacktestTerminalDisplay", () => {
     expect(screen.queryByTestId("backtest-chart")).toBeNull();
   });
 
-  it("toggles secondary metrics", () => {
+  it("shows trade frequency when summary data is available", () => {
     render(
       <BacktestTerminalDisplay
         {...defaultProps}
         summary={mockSummary}
         sortedStrategyIds={["dma_gated_fgi_default"]}
+        actualDays={500}
       />
     );
 
-    expect(screen.queryByText("INVESTED")).toBeNull();
+    // 500 days / 12 trades ≈ 42 days
+    expect(screen.getByText(/1 trade every 42 days/)).toBeDefined();
+  });
 
-    const toggleButton = screen.getByText("show_metrics").closest("button");
-    if (!toggleButton) {
-      throw new Error("Toggle button not found");
-    }
+  it("hides trade frequency when no summary data exists", () => {
+    render(<BacktestTerminalDisplay {...defaultProps} />);
 
-    fireEvent.click(toggleButton);
-
-    expect(screen.getByText("INVESTED")).toBeDefined();
-    expect(screen.getByText("$10,000")).toBeDefined();
-    expect(screen.getByText("TRADES")).toBeDefined();
-    expect(screen.getByText("12")).toBeDefined();
-    expect(screen.getByText("STABLE")).toBeDefined();
-    expect(screen.getByText("20.0%")).toBeDefined();
-    expect(screen.getByText("SIGNAL")).toBeDefined();
-    expect(screen.getByText("[Y/n]")).toBeDefined();
+    expect(screen.queryByText(/trade every/)).toBeNull();
   });
 });

@@ -2,8 +2,8 @@
 
 import {
   type BacktestTooltipProps,
-  useBacktestTooltipData,
-} from "../hooks/useBacktestTooltipData";
+  buildBacktestTooltipData,
+} from "../utils/buildBacktestTooltipData";
 import { BacktestAllocationBar } from "./BacktestAllocationBar";
 
 export type { BacktestTooltipProps };
@@ -36,7 +36,7 @@ function MetricRow({
  */
 export function BacktestTooltip(props: BacktestTooltipProps) {
   const { active } = props;
-  const data = useBacktestTooltipData(props);
+  const data = buildBacktestTooltipData(props);
 
   if (!active || !data) return null;
 

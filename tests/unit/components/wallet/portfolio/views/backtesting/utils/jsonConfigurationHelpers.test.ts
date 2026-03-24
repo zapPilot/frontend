@@ -170,14 +170,10 @@ describe("updateConfigStrategy", () => {
 
   it("replaces params with empty object when defaultParams is {}", () => {
     const json = JSON.stringify({
-      configs: [
-        { config_id: "x", strategy_id: "old", params: { k: 5, r: 1 } },
-      ],
+      configs: [{ config_id: "x", strategy_id: "old", params: { k: 5, r: 1 } }],
     });
 
-    const result = JSON.parse(
-      updateConfigStrategy(json, "new_strat", {})
-    );
+    const result = JSON.parse(updateConfigStrategy(json, "new_strat", {}));
 
     expect(result.configs[0].params).toEqual({});
   });

@@ -7,11 +7,6 @@ export interface HeroMetric {
   color: string;
 }
 
-export interface SecondaryMetric {
-  label: string;
-  value: string;
-}
-
 function asciiBar(value: number, max: number, width: number): string {
   if (max <= 0) {
     return "\u2591".repeat(width);
@@ -54,23 +49,24 @@ export function createHeroMetrics(
   ];
 }
 
-export function createSecondaryMetrics(
-  strategy: BacktestStrategySummary | undefined
-): SecondaryMetric[] {
-  if (!strategy) {
-    return [];
-  }
-
-  return [
-    {
-      label: "INVESTED",
-      value: `$${strategy.total_invested.toLocaleString()}`,
-    },
-    { label: "TRADES", value: String(strategy.trade_count) },
-    {
-      label: "STABLE",
-      value: `${(strategy.final_allocation.stable * 100).toFixed(1)}%`,
-    },
-    { label: "SIGNAL", value: strategy.signal_id ?? "N/A" },
-  ];
+/**
+ * Computes a human-readable trade frequency label.
+ *
+ * @param tradeCount - Total number of trades in the backtest period
+ * @param actualDays - Number of simulated days
+ * @returns A label like "1 trade every 42 days", or null if inputs are invalid
+ *
+ * @example
+ * ```ts
+ * formatTradeFrequency(12, 500) // "1 trade every 42 days"
+ * ```
+ */
+export function formatTradeFrequency(
+  tradeCount: number,
+  actualDays: number
+): string | null {
+  if (tradeCount <= 0 || actualDays <= 0) return null;
+  const daysPerTrade = Math.round(actualDays / tradeCount);
+  if (daysPerTrade <= 1) return "1+ trades per day";
+  return `1 trade every ${daysPerTrade} days`;
 }

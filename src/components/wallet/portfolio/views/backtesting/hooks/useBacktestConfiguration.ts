@@ -10,6 +10,11 @@ import type {
 } from "@/types/backtesting";
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
+import { DEFAULT_DAYS, DMA_GATED_FGI_STRATEGY_ID } from "../constants";
+import {
+  parseConfigStrategyId,
+  parseJsonField,
+} from "../utils/jsonConfigurationHelpers";
 import {
   buildDefaultPayloadFromCatalog,
   buildDefaultPayloadFromPresets,
@@ -294,15 +299,35 @@ export function useBacktestConfiguration() {
     setEditorValue(val);
   };
 
+  // Compute display values from the editor JSON
+  const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
+  const selectedStrategyId = parseConfigStrategyId(
+    editorValue,
+    DMA_GATED_FGI_STRATEGY_ID
+  );
+
+  const strategyOptions = useMemo(() => {
+    if (!catalog?.strategies?.length) {
+      return [{ value: selectedStrategyId, label: selectedStrategyId }];
+    }
+    return catalog.strategies.map(s => ({
+      value: s.strategy_id,
+      label: s.display_name,
+    }));
+  }, [catalog, selectedStrategyId]);
+
   return {
     backtestData,
     catalog,
+    days,
     editorError,
     editorValue,
     error,
     isInitializing,
     isPending,
+    selectedStrategyId,
     setEditorError,
+    strategyOptions,
     handleRunBacktest,
     resetConfiguration,
     updateEditorValue,

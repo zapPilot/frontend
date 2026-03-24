@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createHeroMetrics,
-  createSecondaryMetrics,
+  formatTradeFrequency,
 } from "@/components/wallet/portfolio/views/backtesting/components/backtestTerminalMetrics";
 import type { BacktestStrategySummary } from "@/types/backtesting";
 
@@ -98,27 +98,24 @@ describe("createHeroMetrics", () => {
   });
 });
 
-describe("createSecondaryMetrics", () => {
-  it("returns an empty array for undefined strategy", () => {
-    expect(createSecondaryMetrics(undefined)).toEqual([]);
+describe("formatTradeFrequency", () => {
+  it("returns null for zero trades", () => {
+    expect(formatTradeFrequency(0, 500)).toBeNull();
   });
 
-  it("returns INVESTED, TRADES, STABLE, and SIGNAL metrics", () => {
-    const metrics = createSecondaryMetrics(createMockSummary());
-
-    expect(metrics).toEqual([
-      { label: "INVESTED", value: "$10,000" },
-      { label: "TRADES", value: "42" },
-      { label: "STABLE", value: "30.0%" },
-      { label: "SIGNAL", value: "dma_gated_fgi" },
-    ]);
+  it("returns null for zero days", () => {
+    expect(formatTradeFrequency(12, 0)).toBeNull();
   });
 
-  it("falls back to N/A when signal_id is absent", () => {
-    const metrics = createSecondaryMetrics(
-      createMockSummary({ signal_id: null })
-    );
+  it("returns average days between trades", () => {
+    expect(formatTradeFrequency(12, 500)).toBe("1 trade every 42 days");
+  });
 
-    expect(metrics[3]).toEqual({ label: "SIGNAL", value: "N/A" });
+  it("returns '1+ trades per day' for very active strategies", () => {
+    expect(formatTradeFrequency(500, 100)).toBe("1+ trades per day");
+  });
+
+  it("handles exactly one trade per day", () => {
+    expect(formatTradeFrequency(100, 100)).toBe("1+ trades per day");
   });
 });

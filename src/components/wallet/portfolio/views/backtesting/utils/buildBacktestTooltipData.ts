@@ -35,7 +35,11 @@ export interface BacktestTooltipProps {
   activeIndicators?: Set<IndicatorKey>;
 }
 
-export function useBacktestTooltipData({
+/**
+ * Builds tooltip data from Recharts payload, filtering signals based on active indicators.
+ * This is a pure data transformation function (not a React hook despite the naming pattern in the original).
+ */
+export function buildBacktestTooltipData({
   payload,
   label,
   sortedStrategyIds,
