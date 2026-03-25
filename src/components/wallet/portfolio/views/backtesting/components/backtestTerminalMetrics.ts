@@ -6,7 +6,6 @@ export interface HeroMetric {
   bar: string;
   color: string;
 }
-
 function asciiBar(value: number, max: number, width: number): string {
   if (max <= 0) {
     return "\u2591".repeat(width);
