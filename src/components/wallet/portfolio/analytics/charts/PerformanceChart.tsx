@@ -6,13 +6,19 @@
 
 import { memo, useMemo } from "react";
 
-import { ChartIndicator, ChartTooltip } from "@/components/charts";
-import { useChartHover } from "@/hooks/ui/useChartHover";
+// Shared chart imports are now loaded from ChartUI to prevent duplication
 import type { PerformanceHoverData } from "@/types/ui/chartHover";
 import { formatChartDate } from "@/utils/formatters";
 
-import { buildPath, CHART_GRID_POSITIONS } from "../utils/chartHelpers";
-import { ChartGridLines, ChartSurface } from "./ChartUI";
+import {
+  buildPath,
+  CHART_GRID_POSITIONS,
+  ChartGridLines,
+  ChartIndicator,
+  ChartSurface,
+  ChartTooltip,
+  useChartHover,
+} from "./ChartUI";
 
 /**
  * Performance chart data point

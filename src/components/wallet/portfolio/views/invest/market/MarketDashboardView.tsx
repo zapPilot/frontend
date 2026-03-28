@@ -7,83 +7,31 @@ import {
   Legend,
   Line,
   ReferenceArea,
-  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
+import { LoadingState } from "@/components/ui";
 import { useMarketDashboardQuery } from "@/hooks/queries/market/useMarketDashboardQuery";
 import { REGIME_LABELS } from "@/lib/domain/regimeMapper";
 import type { MarketDashboardPoint } from "@/services";
 
-// Regime hex colors keyed by short RegimeId (ef/f/n/g/eg)
-const REGIME_COLORS: Record<string, string> = {
-  ef: "#ef4444", // Extreme Fear - Red
-  f: "#f97316", // Fear - Orange
-  n: "#eab308", // Neutral - Yellow
-  g: "#84cc16", // Greed - Lime
-  eg: "#22c55e", // Extreme Greed - Green
-};
+import {
+  AXIS_COLOR,
+  formatPriceLabel,
+  formatXAxisDate,
+  getRegimeColor,
+  getRegimeLabel,
+  REGIME_COLORS,
+  type Timeframe,
+  TIMEFRAMES,
+} from "./sections/marketDashboardConstants";
+import { RelativeStrengthSection } from "./sections/RelativeStrengthSection";
+import { SimpleStatCard } from "./sections/SimpleStatCard";
 
 type RegimeKey = keyof typeof REGIME_COLORS;
-
-function getRegimeColor(
-  regime: string | null | undefined,
-  fallback = "#eab308"
-): string {
-  if (!regime || !(regime in REGIME_COLORS)) return fallback;
-  return REGIME_COLORS[regime] ?? fallback;
-}
-
-function getRegimeLabel(regime: string | null | undefined): string {
-  return regime && regime in REGIME_LABELS
-    ? REGIME_LABELS[regime as keyof typeof REGIME_LABELS]
-    : "";
-}
-
-const TIMEFRAMES = [
-  { id: "1M", days: 30 },
-  { id: "3M", days: 90 },
-  { id: "1Y", days: 365 },
-  { id: "MAX", days: 1900 },
-] as const;
-
-type Timeframe = (typeof TIMEFRAMES)[number]["id"];
-
-const AXIS_COLOR = "#9CA3AF";
-const RATIO_AXIS_COLOR = "#6EE7B7";
-
-interface RelativeStrengthPoint {
-  snapshot_date: string;
-  ratio: number | null;
-  dma_200: number | null;
-  is_above_dma: boolean | null;
-}
-
-interface CrossPoint {
-  snapshot_date: string;
-  ratio: number;
-  direction: "above" | "below";
-}
-
-function formatXAxisDate(val: string): string {
-  const d = new Date(val);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
-
-function formatPriceLabel(val: number): string {
-  return `$${(val / 1000).toFixed(0)}k`;
-}
-
-function formatRatioLabel(val: number): string {
-  return Number(val).toFixed(4);
-}
-
-function formatRatioValue(val: number | null | undefined): string {
-  return val == null ? "---" : Number(val).toFixed(4);
-}
 
 function formatTooltipValue(
   value: string | number | (string | number)[] | undefined,
@@ -102,7 +50,7 @@ function formatTooltipValue(
     return [`$${Number(value ?? 0).toLocaleString()}`, labelName];
   }
   if (labelName === "ETH/BTC Ratio" || labelName === "Ratio 200 DMA") {
-    return [formatRatioLabel(Number(value ?? 0)), labelName];
+    return [Number(value ?? 0).toFixed(4), labelName];
   }
   if (labelName === "Fear & Greed Index") {
     const rawFgi = props.payload?.sentiment_value;
@@ -113,54 +61,6 @@ function formatTooltipValue(
     return [`${String(rawFgi)} (${label})`, labelName];
   }
   return [value as string | number, labelName];
-}
-
-function SimpleStatCard({
-  label,
-  value,
-  valueClass,
-  detail,
-}: {
-  label: string;
-  value: string;
-  valueClass: string;
-  detail?: string;
-}): JSX.Element {
-  return (
-    <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
-      <p className="text-sm font-medium text-gray-400 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
-      {detail ? <p className="mt-2 text-xs text-gray-500">{detail}</p> : null}
-    </div>
-  );
-}
-
-function getRelativeStrengthSignal(isAboveDma: boolean | null | undefined): {
-  label: string;
-  valueClass: string;
-  detail: string;
-} {
-  if (isAboveDma === true) {
-    return {
-      label: "ETH leading",
-      valueClass: "text-emerald-300",
-      detail: "ETH/BTC is trading above its 200-day trend.",
-    };
-  }
-
-  if (isAboveDma === false) {
-    return {
-      label: "BTC leading",
-      valueClass: "text-amber-300",
-      detail: "ETH/BTC is below its 200-day trend.",
-    };
-  }
-
-  return {
-    label: "Insufficient data",
-    valueClass: "text-gray-300",
-    detail: "Need 200 overlapping ETH/BTC daily points for a crossover signal.",
-  };
 }
 
 function renderFgiActiveDot(dotProps: {
@@ -177,33 +77,12 @@ function renderFgiActiveDot(dotProps: {
 
 export function MarketDashboardView(): JSX.Element {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
-  const [ratioTimeframe, setRatioTimeframe] = useState<Timeframe>("MAX");
   const activeDays = TIMEFRAMES.find(tf => tf.id === timeframe)?.days ?? 365;
-  const ratioDays =
-    TIMEFRAMES.find(tf => tf.id === ratioTimeframe)?.days ?? 1900;
   const { data: dashboardData, isLoading } =
     useMarketDashboardQuery(activeDays);
-  const { data: ratioData, isLoading: isRatioLoading } =
-    useMarketDashboardQuery(ratioDays);
   const filteredData = useMemo<MarketDashboardPoint[]>(
     () => dashboardData?.snapshots ?? [],
     [dashboardData?.snapshots]
-  );
-
-  const ratioSnapshots = useMemo<MarketDashboardPoint[]>(
-    () => ratioData?.snapshots ?? [],
-    [ratioData?.snapshots]
-  );
-
-  const relativeStrengthData = useMemo<RelativeStrengthPoint[]>(
-    () =>
-      ratioSnapshots.map(snapshot => ({
-        snapshot_date: snapshot.snapshot_date,
-        ratio: snapshot.eth_btc_relative_strength?.ratio ?? null,
-        dma_200: snapshot.eth_btc_relative_strength?.dma_200 ?? null,
-        is_above_dma: snapshot.eth_btc_relative_strength?.is_above_dma ?? null,
-      })),
-    [ratioSnapshots]
   );
 
   const regimeBlocks = useMemo(() => {
@@ -241,44 +120,13 @@ export function MarketDashboardView(): JSX.Element {
   }, [filteredData]);
 
   const latestPoint = filteredData[filteredData.length - 1];
-  const latestRelativeStrengthPoint = useMemo(
-    () =>
-      [...relativeStrengthData].reverse().find(point => point.ratio != null) ??
-      null,
-    [relativeStrengthData]
-  );
-  const relativeStrengthSignal = getRelativeStrengthSignal(
-    latestRelativeStrengthPoint?.is_above_dma
-  );
-
-  const crossPoints = useMemo<CrossPoint[]>(() => {
-    const points: CrossPoint[] = [];
-    for (let i = 1; i < relativeStrengthData.length; i++) {
-      const prev = relativeStrengthData[i - 1] as
-        | RelativeStrengthPoint
-        | undefined;
-      const curr = relativeStrengthData[i] as RelativeStrengthPoint | undefined;
-      if (
-        prev?.is_above_dma != null &&
-        curr?.is_above_dma != null &&
-        prev.is_above_dma !== curr.is_above_dma &&
-        curr.ratio != null
-      ) {
-        points.push({
-          snapshot_date: curr.snapshot_date,
-          ratio: curr.ratio,
-          direction: curr.is_above_dma ? "above" : "below",
-        });
-      }
-    }
-    return points;
-  }, [relativeStrengthData]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center w-full h-[600px] bg-gray-900/50 rounded-xl border border-gray-800">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
+      <LoadingState
+        size="lg"
+        className="w-full h-[600px] bg-gray-900/50 rounded-xl border border-gray-800"
+      />
     );
   }
 
@@ -327,7 +175,6 @@ export function MarketDashboardView(): JSX.Element {
                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
               </linearGradient>
-              {/* Dynamic horizontal gradient for FGI line coloring by regime */}
               <linearGradient id="fgiLineGradient" x1="0" y1="0" x2="1" y2="0">
                 {filteredData.map((d, i) => {
                   const offset =
@@ -357,7 +204,6 @@ export function MarketDashboardView(): JSX.Element {
               tickFormatter={formatXAxisDate}
             />
 
-            {/* Left Y-axis for Price / DMA / Normalized FGI */}
             <YAxis
               yAxisId="left"
               stroke={AXIS_COLOR}
@@ -366,7 +212,6 @@ export function MarketDashboardView(): JSX.Element {
               tickFormatter={formatPriceLabel}
             />
 
-            {/* Right Y-axis for raw FGI reference */}
             <YAxis
               yAxisId="right"
               orientation="right"
@@ -383,10 +228,8 @@ export function MarketDashboardView(): JSX.Element {
               }}
             />
 
-            {/* Ribbon Y-axis (hidden) */}
             <YAxis yAxisId="ribbon" hide={true} domain={[0, 100]} />
 
-            {/* Regime Ribbon at the bottom */}
             {regimeBlocks.map((block, idx) => (
               <ReferenceArea
                 key={`ribbon-${idx}`}
@@ -495,7 +338,6 @@ export function MarketDashboardView(): JSX.Element {
                 </span>
               )}
             </p>
-            {/* Regime Mini-legend */}
             <div className="flex items-center gap-2 mt-2">
               {Object.entries(REGIME_COLORS).map(([key, color]) => (
                 <div
@@ -517,175 +359,7 @@ export function MarketDashboardView(): JSX.Element {
         </div>
       </div>
 
-      <section className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-gray-900/90 via-gray-900/70 to-emerald-950/20 p-5">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(52,211,153,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_35%)]" />
-        <div className="relative">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300/70">
-                Relative Strength
-              </p>
-              <h3 className="mt-2 text-lg font-semibold text-white">
-                ETH/BTC Ratio vs 200 DMA
-              </h3>
-              <p className="mt-1 text-sm text-gray-400">
-                Track whether ETH is gaining leadership over BTC on a
-                long-horizon trend basis.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1 border border-emerald-500/20">
-                {TIMEFRAMES.map(tf => (
-                  <button
-                    key={`ratio-${tf.id}`}
-                    onClick={() => setRatioTimeframe(tf.id)}
-                    data-testid={`ratio-tf-${tf.id}`}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                      ratioTimeframe === tf.id
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                    }`}
-                  >
-                    {tf.id}
-                  </button>
-                ))}
-              </div>
-              <div className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
-                {relativeStrengthSignal.label}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 h-[260px] rounded-2xl border border-gray-800/80 bg-black/10 p-3 relative">
-            {isRatioLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/30">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-              </div>
-            )}
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={relativeStrengthData}
-                margin={{ top: 20, right: 20, left: 20, bottom: 10 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#374151"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="snapshot_date"
-                  stroke={AXIS_COLOR}
-                  tick={{ fill: AXIS_COLOR, fontSize: 11 }}
-                  minTickGap={40}
-                  tickFormatter={formatXAxisDate}
-                />
-                <YAxis
-                  yAxisId="ratio"
-                  orientation="right"
-                  stroke={RATIO_AXIS_COLOR}
-                  tick={{ fill: RATIO_AXIS_COLOR, fontSize: 11 }}
-                  domain={["auto", "auto"]}
-                  tickFormatter={formatRatioLabel}
-                />
-                <Tooltip
-                  cursor={{ stroke: "#4B5563", strokeWidth: 1 }}
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload?.length) return null;
-                    const data = payload[0]?.payload as
-                      | RelativeStrengthPoint
-                      | undefined;
-                    const cross = crossPoints.find(
-                      cp => cp.snapshot_date === label
-                    );
-                    return (
-                      <div className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 shadow-xl">
-                        <p className="mb-2 text-xs font-bold text-gray-400">
-                          {label}
-                        </p>
-                        <p className="text-sm text-emerald-300">
-                          ETH/BTC Ratio: {formatRatioValue(data?.ratio)}
-                        </p>
-                        <p className="text-sm text-amber-300">
-                          Ratio 200 DMA: {formatRatioValue(data?.dma_200)}
-                        </p>
-                        {cross ? (
-                          <p
-                            className={`mt-2 text-xs font-semibold ${cross.direction === "above" ? "text-emerald-400" : "text-amber-400"}`}
-                          >
-                            {cross.direction === "above" ? "\u2B06" : "\u2B07"}{" "}
-                            ETH crosses {cross.direction} DMA200
-                          </p>
-                        ) : null}
-                      </div>
-                    );
-                  }}
-                />
-                <Legend
-                  verticalAlign="top"
-                  height={32}
-                  iconType="circle"
-                  wrapperStyle={{ paddingTop: "0", marginBottom: "10px" }}
-                />
-                <Line
-                  yAxisId="ratio"
-                  type="monotone"
-                  name="ETH/BTC Ratio"
-                  dataKey="ratio"
-                  stroke="#34D399"
-                  strokeWidth={2.5}
-                  dot={false}
-                  connectNulls
-                />
-                <Line
-                  yAxisId="ratio"
-                  type="monotone"
-                  name="Ratio 200 DMA"
-                  dataKey="dma_200"
-                  stroke="#F59E0B"
-                  strokeWidth={2}
-                  dot={false}
-                  strokeDasharray="5 5"
-                  connectNulls
-                />
-                {crossPoints.map(cp => (
-                  <ReferenceDot
-                    key={cp.snapshot_date}
-                    yAxisId="ratio"
-                    x={cp.snapshot_date}
-                    y={cp.ratio}
-                    r={6}
-                    fill={cp.direction === "above" ? "#34D399" : "#F59E0B"}
-                    stroke="#fff"
-                    strokeWidth={2}
-                    ifOverflow="extendDomain"
-                  />
-                ))}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <SimpleStatCard
-              label="Current ETH/BTC Ratio"
-              value={formatRatioValue(latestRelativeStrengthPoint?.ratio)}
-              valueClass="text-emerald-300"
-              detail="ETH price divided by BTC price on the latest overlapping day."
-            />
-            <SimpleStatCard
-              label="Ratio 200 DMA"
-              value={formatRatioValue(latestRelativeStrengthPoint?.dma_200)}
-              valueClass="text-amber-300"
-              detail="200-day moving average of the ETH/BTC ratio."
-            />
-            <SimpleStatCard
-              label="Leader Signal"
-              value={relativeStrengthSignal.label}
-              valueClass={relativeStrengthSignal.valueClass}
-              detail={relativeStrengthSignal.detail}
-            />
-          </div>
-        </div>
-      </section>
+      <RelativeStrengthSection />
     </div>
   );
 }

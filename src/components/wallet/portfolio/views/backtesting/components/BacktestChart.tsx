@@ -2,12 +2,9 @@
 
 import { memo, type ReactElement, useCallback, useState } from "react";
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
-  Line,
   ResponsiveContainer,
-  Scatter,
   Tooltip,
   XAxis,
   YAxis,
@@ -20,97 +17,21 @@ import {
   formatSentiment,
 } from "@/utils";
 
-import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
-import { CHART_SIGNALS, getPrimaryStrategyId } from "../utils/chartHelpers";
+import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
-  getStrategyColor,
-  getStrategyDisplayName,
-} from "../utils/strategyDisplay";
+  AXIS_DEFAULTS,
+  axisTick,
+  buildBacktestTooltipProps,
+} from "./backtestChartHelpers";
+import {
+  ChartDefs,
+  renderIndicatorLayers,
+  renderSignalScatterLayers,
+  StrategyArea,
+} from "./BacktestChartLayers";
 import { BacktestChartLegend } from "./BacktestChartLegend";
 import type { IndicatorKey } from "./backtestChartLegendData";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
-
-const AXIS_DEFAULTS = {
-  tickLine: false,
-  axisLine: false,
-} as const;
-
-function axisTick(fill: string): { fontSize: number; fill: string } {
-  return { fontSize: 10, fill };
-}
-
-interface ChartDefsProps {
-  strategyIds: string[];
-  prefix: string;
-}
-
-interface StrategyAreaProps {
-  strategyId: string;
-  index: number;
-  isPrimary: boolean;
-  prefix: string;
-}
-
-function buildBacktestTooltipProps(params: {
-  active: boolean | undefined;
-  payload:
-    | readonly {
-        name?: string;
-        value?: number;
-        color?: string;
-        payload?: Record<string, unknown>;
-      }[]
-    | undefined;
-  label: string | number | undefined;
-  sortedStrategyIds: string[];
-  activeIndicators: Set<IndicatorKey>;
-}): BacktestTooltipProps {
-  const { active, payload, label, sortedStrategyIds, activeIndicators } =
-    params;
-  const tooltipProps: BacktestTooltipProps = {
-    sortedStrategyIds,
-    activeIndicators,
-  };
-
-  if (active !== undefined) {
-    tooltipProps.active = active;
-  }
-
-  if (payload != null) {
-    tooltipProps.payload = Array.from(payload, item => ({ ...item }));
-  }
-
-  if (label != null) {
-    tooltipProps.label = label;
-  }
-
-  return tooltipProps;
-}
-
-function getStrokeDasharrayProps(isDcaClassic: boolean): {
-  strokeDasharray?: string;
-} {
-  if (!isDcaClassic) {
-    return {};
-  }
-
-  return { strokeDasharray: "4 4" };
-}
-
-function getStrategyVisualTier(index: number): {
-  strokeWidth: number;
-  strokeOpacity: number;
-} {
-  if (index === 0) {
-    return { strokeWidth: 1.5, strokeOpacity: 0.65 };
-  }
-
-  if (index === 1) {
-    return { strokeWidth: 2.5, strokeOpacity: 1.0 };
-  }
-
-  return { strokeWidth: 1.0, strokeOpacity: 0.35 };
-}
 
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
@@ -122,11 +43,11 @@ export interface BacktestChartProps {
 }
 
 export const BacktestChart = memo(function BacktestChart({
+  actualDays,
   chartData,
+  chartIdPrefix = "default",
   sortedStrategyIds,
   yAxisDomain,
-  actualDays,
-  chartIdPrefix = "default",
 }: BacktestChartProps): ReactElement {
   const primarySeriesId = getPrimaryStrategyId(sortedStrategyIds);
   const [activeIndicators, setActiveIndicators] = useState<Set<IndicatorKey>>(
@@ -134,8 +55,8 @@ export const BacktestChart = memo(function BacktestChart({
   );
 
   const handleToggleIndicator = useCallback((key: IndicatorKey) => {
-    setActiveIndicators(prev => {
-      const next = new Set(prev);
+    setActiveIndicators(previous => {
+      const next = new Set(previous);
       if (next.has(key)) {
         next.delete(key);
       } else {
@@ -234,64 +155,21 @@ export const BacktestChart = memo(function BacktestChart({
               allowEscapeViewBox={{ x: false, y: true }}
               wrapperStyle={{ zIndex: 20 }}
               content={({ active, payload, label }) => {
-                const tooltipProps = buildBacktestTooltipProps({
-                  active,
-                  payload,
-                  label,
-                  sortedStrategyIds,
-                  activeIndicators,
-                });
+                const tooltipProps: BacktestTooltipProps =
+                  buildBacktestTooltipProps({
+                    active,
+                    payload,
+                    label,
+                    sortedStrategyIds,
+                    activeIndicators,
+                  });
 
                 return <BacktestTooltip {...tooltipProps} />;
               }}
             />
 
-            {/* Layer 1: Indicator lines (lowest visual priority, behind strategy fills) */}
-            {activeIndicators.has("sentiment") && (
-              <Line
-                yAxisId="sentimentRight"
-                type="monotone"
-                dataKey="sentiment"
-                name="Sentiment"
-                stroke="#a855f7"
-                strokeWidth={1}
-                dot={false}
-                connectNulls={true}
-                strokeOpacity={0.4}
-                legendType="none"
-              />
-            )}
+            {renderIndicatorLayers(activeIndicators)}
 
-            {activeIndicators.has("btcPrice") && (
-              <Line
-                yAxisId="priceRight"
-                type="monotone"
-                dataKey="btc_price"
-                name="BTC Price"
-                stroke="#3b82f6"
-                strokeWidth={1.5}
-                dot={false}
-                connectNulls={true}
-                legendType="none"
-              />
-            )}
-
-            {activeIndicators.has("dma200") && (
-              <Line
-                yAxisId="priceRight"
-                type="monotone"
-                dataKey="dma_200"
-                name="DMA 200"
-                stroke="#f59e0b"
-                strokeWidth={1.25}
-                strokeDasharray="5 3"
-                dot={false}
-                connectNulls={true}
-                legendType="none"
-              />
-            )}
-
-            {/* Layer 2: Strategy areas (benchmark first, then primary with fill, then additional) */}
             {sortedStrategyIds.map((strategyId, index) => (
               <StrategyArea
                 key={strategyId}
@@ -302,72 +180,10 @@ export const BacktestChart = memo(function BacktestChart({
               />
             ))}
 
-            {/* Layer 3: Signal scatter points (highest, always on top) */}
-            {CHART_SIGNALS.map(signal => (
-              <Scatter
-                key={signal.key}
-                name={signal.name}
-                dataKey={signal.field}
-                fill={signal.color}
-                shape={signal.shape}
-                legendType="none"
-              />
-            ))}
+            {renderSignalScatterLayers()}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
     </BaseCard>
   );
 });
-
-// --- Sub-components for cleaner render ---
-
-function ChartDefs({ strategyIds, prefix }: ChartDefsProps): ReactElement {
-  return (
-    <defs>
-      {strategyIds.map((strategyId, index) => {
-        const color = getStrategyColor(strategyId, index);
-        return (
-          <linearGradient
-            key={`gradient-${strategyId}`}
-            id={`${prefix}-color-${strategyId}`}
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-            <stop offset="95%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        );
-      })}
-    </defs>
-  );
-}
-
-function StrategyArea({
-  strategyId,
-  index,
-  isPrimary,
-  prefix,
-}: StrategyAreaProps): ReactElement {
-  const color = getStrategyColor(strategyId, index);
-  const displayName = getStrategyDisplayName(strategyId);
-  const isDcaClassic = strategyId === DCA_CLASSIC_STRATEGY_ID;
-  const strokeDasharrayProps = getStrokeDasharrayProps(isDcaClassic);
-  const { strokeWidth, strokeOpacity } = getStrategyVisualTier(index);
-
-  return (
-    <Area
-      type="monotone"
-      dataKey={`${strategyId}_value`}
-      name={displayName}
-      stroke={color}
-      strokeOpacity={strokeOpacity}
-      fillOpacity={isPrimary ? 1 : 0}
-      fill={isPrimary ? `url(#${prefix}-color-${strategyId})` : "transparent"}
-      strokeWidth={strokeWidth}
-      {...strokeDasharrayProps}
-    />
-  );
-}

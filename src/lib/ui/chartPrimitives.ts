@@ -1,18 +1,15 @@
 /**
- * Chart Helper Utilities
- *
- * Reusable functions and components for chart rendering
+ * Shared chart geometry helpers used across custom SVG chart renderers.
  */
 
 /**
- * Build SVG path string from data points
+ * Build an SVG path string from normalized x coordinates.
  *
- * Converts normalized 0-100 coordinates to pixel coordinates
- *
- * @param points - Array of data points with x property (0-100 scale)
+ * @template T - Point type with an `x` percentage value
+ * @param points - Array of points with `x` values in the 0-100 range
  * @param width - SVG viewBox width in pixels
- * @param getY - Function to extract Y pixel coordinate from point
- * @returns SVG path string (space-separated "x,y" pairs)
+ * @param getY - Function that returns the pixel Y value for a point
+ * @returns SVG path string
  */
 export function buildPath<T extends { x: number }>(
   points: T[],
@@ -29,7 +26,7 @@ export function buildPath<T extends { x: number }>(
 }
 
 /**
- * Grid line positions (percentages from top)
+ * Common grid line positions (percentages from the top of the chart).
  */
 export const CHART_GRID_POSITIONS = {
   FIVE_LINES: [0, 25, 50, 75, 100] as number[],

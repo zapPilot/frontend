@@ -14,7 +14,7 @@ import {
   MOCK_ALLOCATION,
   MOCK_ROUTE,
   MOCK_STRATEGY,
-} from "./reviewModalMockData";
+} from "./reviewModalPreviewData";
 
 interface BacktestMetricProps {
   label: string;

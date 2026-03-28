@@ -1,6 +1,6 @@
 import { cn } from "@/lib/ui/classNames";
 
-import { MOCK_ROUTE } from "./reviewModalMockData";
+import { MOCK_ROUTE } from "./reviewModalPreviewData";
 
 type RouteStep = (typeof MOCK_ROUTE)[number];
 

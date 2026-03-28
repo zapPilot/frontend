@@ -1,7 +1,4 @@
-import {
-  type ServiceResult,
-  wrapServiceCall,
-} from "@/lib/errors/errorHandling";
+import { type ServiceResult, wrapServiceCall } from "@/lib/errors";
 import {
   transformWalletData,
   type WalletData,

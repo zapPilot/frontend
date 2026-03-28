@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData";
+import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/backtestTooltipDataUtils";
 
 vi.mock("@/utils", () => ({
   formatCurrency: (value: number) => `$${Math.round(value).toLocaleString()}`,

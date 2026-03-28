@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import { extractErrorMessage, walletLogger } from "@/utils";
+import { extractErrorMessage } from "@/lib/errors";
+import { walletLogger } from "@/utils";
 
 export interface SimplifiedWalletAccount {
   address: string;

@@ -8,6 +8,7 @@ export { Modal, ModalContent, ModalFooter, ModalHeader } from "./modal";
 // Loading system - only actively used exports
 export {
   CardSkeleton,
+  ChartSkeleton,
   Skeleton as LoadingSkeleton,
   Spinner as LoadingSpinner,
   LoadingState,

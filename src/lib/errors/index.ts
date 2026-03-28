@@ -34,6 +34,7 @@ export {
 
 // Legacy factory utilities (still used in some places)
 export { resolveErrorMessage } from "./errorFactory";
+export { extractErrorMessage } from "./extractErrorMessage";
 
 // Error handling utilities
 export type { ServiceResult } from "./errorHandling";

@@ -11,12 +11,16 @@ const ACTIVE_INDICATORS = new Set<IndicatorKey>([
 ]);
 
 describe("BacktestChartLegend", () => {
+  function noop(): void {
+    // noop
+  }
+
   it("renders grouped legends for strategy, indicators, and events", () => {
     render(
       <BacktestChartLegend
         sortedStrategyIds={["dca_classic", "dma_gated_fgi_default"]}
         activeIndicators={ACTIVE_INDICATORS}
-        onToggleIndicator={() => {}}
+        onToggleIndicator={noop}
       />
     );
 
@@ -30,7 +34,7 @@ describe("BacktestChartLegend", () => {
       <BacktestChartLegend
         sortedStrategyIds={["dca_classic", "dma_gated_fgi_default"]}
         activeIndicators={ACTIVE_INDICATORS}
-        onToggleIndicator={() => {}}
+        onToggleIndicator={noop}
       />
     );
 

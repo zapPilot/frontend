@@ -2,9 +2,9 @@
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
+import dynamic from "next/dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { LogViewer } from "@/components/debug/LogViewer";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { GlobalErrorHandler } from "@/components/errors/GlobalErrorHandler";
 import { UserProvider } from "@/contexts/UserContext";
@@ -12,6 +12,14 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
 import { ToastProvider } from "@/providers/ToastProvider";
 import { WalletProvider } from "@/providers/WalletProvider";
+
+const LogViewer =
+  process.env.NODE_ENV === "development"
+    ? dynamic(async () => {
+        const mod = await import("@/components/debug/LogViewer");
+        return mod.LogViewer;
+      })
+    : () => null;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

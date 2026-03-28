@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { extractErrorMessage } from "@/lib/errors";
 import {
   disconnectTelegram,
   getTelegramStatus,
   requestTelegramToken,
   type TelegramStatus,
 } from "@/services";
-import { extractErrorMessage } from "@/utils";
 
 const POLL_INTERVAL_MS = 3_000;
 const MAX_POLL_DURATION_MS = 120_000;

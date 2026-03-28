@@ -1,6 +1,6 @@
 "use client";
 
-import { MetricsSkeleton } from "@/components/ui";
+import { ChartSkeleton, MetricsSkeleton } from "@/components/ui";
 
 export function BacktestLoadingState() {
   return (
@@ -17,7 +17,9 @@ export function BacktestLoadingState() {
         <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
           Performance Chart
         </h4>
-        <div className="h-80 w-full bg-gray-800/50 rounded-xl animate-pulse" />
+        <div className="rounded-xl bg-gray-800/20 p-6 border border-gray-800/60 animate-pulse">
+          <ChartSkeleton className="bg-transparent" />
+        </div>
       </div>
 
       <span className="sr-only">Loading backtest results...</span>

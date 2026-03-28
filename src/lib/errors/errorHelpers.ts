@@ -1,6 +1,7 @@
 import { getIntentErrorMessage } from "@/lib/errors/errorMessages";
 
 import { resolveErrorMessage } from "./errorFactory";
+import { extractErrorMessage } from "./extractErrorMessage";
 import { IntentServiceError, type ServiceError } from "./ServiceError";
 
 interface ErrorWithStatus {
@@ -137,7 +138,7 @@ function buildErrorContext(
 
   const message = resolveErrorMessage(
     fallbackMessage,
-    errorObj.message,
+    extractErrorMessage(error, fallbackMessage),
     errorObj.response?.data,
     errorObj.details,
     errorObj
