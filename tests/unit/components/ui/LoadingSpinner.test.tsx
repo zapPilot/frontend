@@ -97,6 +97,62 @@ describe("LoadingSpinner", () => {
     });
   });
 
+  describe("Spinner Variants", () => {
+    it("should render dots variant with three dot elements", () => {
+      render(<LoadingSpinner variant="dots" />);
+
+      const spinner = screen.getByRole("status");
+      expect(spinner).toBeInTheDocument();
+      // dots variant renders div elements instead of svg
+      expect(spinner.querySelector("svg")).toBeNull();
+    });
+
+    it("should render pulse variant without svg", () => {
+      render(<LoadingSpinner variant="pulse" />);
+
+      const spinner = screen.getByRole("status");
+      expect(spinner).toBeInTheDocument();
+      expect(spinner.querySelector("svg")).toBeNull();
+    });
+
+    it("should render default variant with svg", () => {
+      render(<LoadingSpinner variant="default" />);
+
+      const spinner = screen.getByRole("status");
+      expect(spinner.querySelector("svg")).toBeInTheDocument();
+    });
+  });
+
+  describe("Custom Label", () => {
+    it("should use custom label for screen reader text", () => {
+      render(<LoadingSpinner label="Fetching data" />);
+
+      const spinner = screen.getByRole("status");
+      expect(spinner).toHaveAttribute("aria-label", "Fetching data");
+    });
+
+    it("should prefer aria-label over label prop", () => {
+      render(<LoadingSpinner label="Loading" aria-label="Custom label" />);
+
+      const spinner = screen.getByRole("status");
+      expect(spinner).toHaveAttribute("aria-label", "Custom label");
+    });
+  });
+
+  describe("Test ID", () => {
+    it("should use default test id", () => {
+      render(<LoadingSpinner />);
+
+      expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
+    });
+
+    it("should use custom test id", () => {
+      render(<LoadingSpinner data-testid="custom-spinner" />);
+
+      expect(screen.getByTestId("custom-spinner")).toBeInTheDocument();
+    });
+  });
+
   describe("Combined Props", () => {
     it("should work with multiple props combined", () => {
       render(

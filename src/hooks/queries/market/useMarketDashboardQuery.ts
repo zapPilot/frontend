@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getMarketDashboardData } from "@/services/analyticsService";
+import { getMarketDashboardData } from "@/services";
 
 import { createQueryConfig } from "../queryDefaults";
 

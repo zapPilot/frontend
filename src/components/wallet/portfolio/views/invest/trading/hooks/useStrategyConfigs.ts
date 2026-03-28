@@ -4,7 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { getStrategyConfigs } from "@/services/strategyService";
+import { getStrategyConfigs } from "@/services";
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
 export const strategyConfigKeys = {

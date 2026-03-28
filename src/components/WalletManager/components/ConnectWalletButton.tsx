@@ -5,7 +5,7 @@ import { ConnectButton } from "thirdweb/react";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { WALLET_LABELS } from "@/constants/wallet";
 import { QueryClientBoundary } from "@/utils/QueryClientBoundary";
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 interface ConnectWalletButtonProps {
   className?: string;

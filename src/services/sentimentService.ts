@@ -74,18 +74,3 @@ export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
     return transformSentimentData(validatedResponse);
   });
 }
-
-// ============================================================================
-// ARCHITECTURAL PURITY NOTE (Phase 12 - Deprecated Re-Export Cleanup)
-// ============================================================================
-
-/**
- * useSentimentData hook removed from this file (Phase 12)
- *
- * React hooks should be imported from @/hooks/queries/market/useSentimentQuery
- * Services should only export pure async functions, not React hooks.
- *
- * This maintains architectural separation:
- * - Service layer: Pure async functions for API operations
- * - Hook layer: React-specific logic and state management
- */

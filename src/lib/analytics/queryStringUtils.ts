@@ -5,7 +5,7 @@
  * with type-safe parameter handling.
  */
 
-import type { DashboardWindowParams } from "@/services/analyticsService";
+import type { DashboardWindowParams } from "@/services";
 
 /**
  * Numeric parameter keys for dashboard window params

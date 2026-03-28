@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Application Smoke Tests", () => {
   test("page loads without errors", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Basic structure should be present
     await expect(page.locator("html")).toBeVisible();
@@ -15,7 +15,7 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test("has application content", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have some content (not empty page)
     const bodyText = await page.locator("body").textContent();
@@ -23,7 +23,7 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test("has interactive elements", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have some buttons (for wallet, navigation, etc.)
     const buttons = page.locator("button");
@@ -32,7 +32,7 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test("page title is set", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have a proper title
     const title = await page.title();
@@ -41,7 +41,7 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test("has navigation elements", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have some form of navigation
     const hasNav = await page.evaluate(() => {
@@ -53,7 +53,7 @@ test.describe("Application Smoke Tests", () => {
   test("content renders within reasonable time", async ({ page }) => {
     const startTime = Date.now();
 
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("domcontentloaded");
 
     // Check content appeared
@@ -68,7 +68,7 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test("buttons are clickable", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Find any button and verify it's clickable
     const firstButton = page.locator("button").first();
@@ -85,7 +85,7 @@ test.describe("Application Smoke Tests", () => {
   test("responsive layout works", async ({ page }) => {
     // Test mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should still have content and be functional
     const bodyContent = await page.locator("body").textContent();
@@ -93,7 +93,7 @@ test.describe("Application Smoke Tests", () => {
 
     // Test desktop viewport
     await page.setViewportSize({ width: 1200, height: 800 });
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
 
     const desktopContent = await page.locator("body").textContent();
     expect(desktopContent?.length).toBeGreaterThan(10);
@@ -102,7 +102,7 @@ test.describe("Application Smoke Tests", () => {
 
 test.describe("Basic Functionality Validation", () => {
   test("financial data appears", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have some financial indicators ($ signs, % signs, numbers)
     const hasFinancialData = await page.evaluate(() => {
@@ -116,7 +116,7 @@ test.describe("Basic Functionality Validation", () => {
   });
 
   test("wallet-related content exists", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should have wallet or portfolio related content
     const hasWalletContent = await page.evaluate(() => {
@@ -133,7 +133,7 @@ test.describe("Basic Functionality Validation", () => {
   });
 
   test("defi branding present", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Should mention DeFi, crypto, or related terms
     const hasDeFiContent = await page.evaluate(() => {

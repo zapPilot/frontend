@@ -7,7 +7,10 @@
 
 import { describe, expect, it } from "vitest";
 
-import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
+import {
+  calculateAllocation,
+  calculateDelta,
+} from "@/adapters/portfolio/allocationAdapter";
 import type { LandingPageResponse } from "@/services/analyticsService";
 
 // Mock API response matching the actual API format
@@ -149,6 +152,15 @@ describe("calculateAllocation", () => {
       expect(result.simplifiedCrypto).toHaveLength(0);
     });
 
+    it("includes stablecoin constituents when stablecoins have value", () => {
+      const result = calculateAllocation(mockLandingData);
+
+      // Stablecoins present → 60/40 USDC/USDT split
+      expect(result.constituents.stable).toHaveLength(2);
+      expect(result.constituents.stable[0].symbol).toBe("USDC");
+      expect(result.constituents.stable[1].symbol).toBe("USDT");
+    });
+
     it("filters out assets with zero percentage", () => {
       const partialData: LandingPageResponse = {
         ...mockLandingData,
@@ -186,5 +198,23 @@ describe("calculateAllocation", () => {
       expect(result.simplifiedCrypto).toHaveLength(1);
       expect(result.simplifiedCrypto[0].symbol).toBe("BTC");
     });
+  });
+});
+
+describe("calculateDelta", () => {
+  it("returns absolute difference between current and target", () => {
+    expect(calculateDelta(60, 70)).toBe(10);
+  });
+
+  it("returns positive value when current exceeds target", () => {
+    expect(calculateDelta(80, 50)).toBe(30);
+  });
+
+  it("returns zero when values are equal", () => {
+    expect(calculateDelta(50, 50)).toBe(0);
+  });
+
+  it("handles decimal values", () => {
+    expect(calculateDelta(64.38, 70)).toBeCloseTo(5.62, 2);
   });
 });

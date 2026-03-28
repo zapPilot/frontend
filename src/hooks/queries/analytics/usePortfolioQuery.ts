@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/state/queryClient";
 import {
   getLandingPagePortfolioData,
   type LandingPageResponse,
-} from "@/services/analyticsService";
+} from "@/services";
 
 import { createQueryConfig } from "../queryDefaults";
 

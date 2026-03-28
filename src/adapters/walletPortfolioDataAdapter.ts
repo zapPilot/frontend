@@ -32,10 +32,10 @@ import type {
 import type {
   BorrowingSummary,
   LandingPageResponse,
+  MarketSentimentData,
+  RegimeHistoryData,
   RiskMetrics,
-} from "@/services/analyticsService";
-import type { RegimeHistoryData } from "@/services/regimeHistoryService";
-import type { MarketSentimentData } from "@/services/sentimentService";
+} from "@/services";
 
 /**
  * Wallet Portfolio Data Structure

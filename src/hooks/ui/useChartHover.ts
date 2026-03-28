@@ -16,7 +16,7 @@ import {
 } from "react";
 
 import type { ChartHoverState } from "@/types/ui/chartHover";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 import { clamp } from "@/utils/mathUtils";
 
 import {

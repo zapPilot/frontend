@@ -1,7 +1,7 @@
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
-import type { MarketSentimentData } from "@/services/sentimentService";
+import type { MarketSentimentData } from "@/services";
 
 export interface SentimentInfo {
   value: number;

@@ -11,7 +11,7 @@ import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
 import { useUserById } from "@/hooks/queries/wallet/useUserQuery";
-import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
+import { exportAnalyticsToCSV } from "@/services";
 import type {
   AnalyticsData,
   AnalyticsTimePeriod,

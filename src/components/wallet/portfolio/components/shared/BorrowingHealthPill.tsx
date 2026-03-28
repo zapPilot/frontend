@@ -10,10 +10,7 @@ import {
   RiskLevel,
 } from "@/constants/riskThresholds";
 import { useBorrowingPositions } from "@/hooks/queries/analytics/useBorrowingPositions";
-import type {
-  BorrowingPositionsResponse,
-  BorrowingSummary,
-} from "@/services/analyticsService";
+import type { BorrowingPositionsResponse, BorrowingSummary } from "@/services";
 
 import { BorrowingPositionsTooltip } from "./BorrowingPositionsTooltip";
 import { useTooltipPosition } from "./useTooltipPosition";

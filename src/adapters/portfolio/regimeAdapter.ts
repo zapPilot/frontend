@@ -9,7 +9,7 @@ import type {
   DirectionType,
   DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
-import type { RegimeHistoryData } from "@/services/regimeHistoryService";
+import type { RegimeHistoryData } from "@/services";
 
 export interface TargetAllocation {
   crypto: number;

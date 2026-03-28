@@ -6,7 +6,7 @@
  */
 
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 export const REGIME_LABELS: Record<RegimeId, string> = {
   ef: "Extreme Fear",

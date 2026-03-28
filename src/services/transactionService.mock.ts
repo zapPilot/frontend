@@ -10,6 +10,7 @@
  * @future Replace with real transaction service when backend is ready
  */
 
+import { delay } from "@/lib/http/retry";
 import type {
   AllocationBreakdown,
   TransactionFormData,
@@ -17,10 +18,6 @@ import type {
   TransactionToken,
 } from "@/types/domain/transaction";
 import { clamp } from "@/utils/mathUtils";
-
-function delay(ms = 700): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function simulateBasicTransaction(
   type: TransactionResult["type"],

@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/state/queryClient";
 import { handleWalletError } from "@/lib/validation/walletUtils";
 import { useToast } from "@/providers/ToastProvider";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { deleteUser as deleteUserAccount } from "@/services/accountService";
+import { deleteUser as deleteUserAccount } from "@/services";
 
 interface UseAccountDeletionParams {
   userId: string;

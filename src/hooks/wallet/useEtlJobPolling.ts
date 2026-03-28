@@ -18,7 +18,7 @@ import {
   type EtlJobStatus,
   getEtlJobStatus,
   triggerWalletDataFetch,
-} from "@/services/accountService";
+} from "@/services";
 
 /**
  * ETL job polling state
@@ -197,9 +197,5 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     queryClient.removeQueries({ queryKey: ETL_JOB_QUERY_KEY });
   }, [queryClient]);
 
-  const completeTransition = useCallback(() => {
-    reset();
-  }, [reset]);
-
-  return { state, triggerEtl, startPolling, reset, completeTransition };
+  return { state, triggerEtl, startPolling, reset, completeTransition: reset };
 }

@@ -21,23 +21,35 @@ export {
   addWalletToBundle,
   connectWallet,
   deleteUser,
+  type EtlJobResponse,
+  type EtlJobStatus,
+  getEtlJobStatus,
   getUserProfile,
   getUserWallets,
   removeUserEmail,
   removeWalletFromBundle,
+  triggerWalletDataFetch,
   updateUserEmail,
   updateWalletLabel,
 } from "./accountService";
 
 // Analytics & Portfolio Data
 export {
+  type BorrowingPosition,
+  type BorrowingPositionsResponse,
+  type BorrowingSummary,
   type DailyYieldReturnsResponse,
   type DashboardWindowParams,
+  getBorrowingPositions,
   getDailyYieldReturns,
   getLandingPagePortfolioData,
+  getMarketDashboardData,
   getPortfolioDashboard,
   type LandingPageResponse,
+  type MarketDashboardPoint,
+  type MarketDashboardResponse,
   type PoolDetail,
+  type RiskMetrics,
   type UnifiedDashboardResponse,
 } from "./analyticsService";
 
@@ -71,12 +83,16 @@ export {
 export { exportAnalyticsToCSV } from "./analyticsExportService";
 
 // Backtesting
-export { runBacktest } from "./backtestingService";
+export { getBacktestingStrategiesV3, runBacktest } from "./backtestingService";
 
 // Strategy Suggestions
 export {
+  type BacktestDefaults,
   type DailySuggestionResponse,
   getDailySuggestion,
+  getStrategyConfigs,
+  type StrategyConfigsResponse,
+  type StrategyPreset,
 } from "./strategyService";
 
 // Strategy Admin

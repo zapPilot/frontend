@@ -8,6 +8,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { AllocationLegend } from "@/components/wallet/portfolio/components/allocation/AllocationLegend";
 import {
   BalanceCardSkeleton,
   DashboardSkeleton,
@@ -192,6 +193,111 @@ describe("DashboardSkeleton", () => {
     render(<DashboardSkeleton />);
     const skeleton = screen.getByTestId("dashboard-loading");
     expect(skeleton).toBeInTheDocument();
+  });
+});
+
+// AllocationLegend sub-component tests - covers branches used by PortfolioCompositionSkeleton
+describe("AllocationLegend", () => {
+  it("should render nothing when items array is empty", () => {
+    const { container } = render(<AllocationLegend items={[]} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("should render legend container when items are provided", () => {
+    render(
+      <AllocationLegend
+        items={[{ symbol: "BTC", percentage: 50, color: "#F7931A" }]}
+      />
+    );
+    expect(screen.getByTestId("allocation-legend")).toBeInTheDocument();
+  });
+
+  it("should use item.label as display text when label is provided", () => {
+    render(
+      <AllocationLegend
+        items={[
+          {
+            symbol: "BTC",
+            percentage: 50,
+            color: "#F7931A",
+            label: "Bitcoin",
+          },
+        ]}
+      />
+    );
+    expect(screen.getByText("Bitcoin")).toBeInTheDocument();
+    expect(screen.queryByText("BTC")).not.toBeInTheDocument();
+  });
+
+  it("should fall back to item.symbol when label is not provided", () => {
+    render(
+      <AllocationLegend
+        items={[{ symbol: "ETH", percentage: 30, color: "#627EEA" }]}
+      />
+    );
+    expect(screen.getByText("ETH")).toBeInTheDocument();
+  });
+
+  it("should display formatted percentage for each item", () => {
+    render(
+      <AllocationLegend
+        items={[
+          { symbol: "BTC", percentage: 33.7, color: "#F7931A" },
+          { symbol: "ETH", percentage: 66.3, color: "#627EEA" },
+        ]}
+      />
+    );
+    expect(screen.getByText("34%")).toBeInTheDocument();
+    expect(screen.getByText("66%")).toBeInTheDocument();
+  });
+
+  it("should apply custom className to the legend container", () => {
+    const { container } = render(
+      <AllocationLegend
+        items={[{ symbol: "BTC", percentage: 100, color: "#F7931A" }]}
+        className="custom-class"
+      />
+    );
+    const legend = container.querySelector("[data-testid='allocation-legend']");
+    expect(legend).toHaveClass("custom-class");
+  });
+
+  it("should render a colored dot for each item", () => {
+    const { container } = render(
+      <AllocationLegend
+        items={[
+          { symbol: "BTC", percentage: 40, color: "#F7931A" },
+          { symbol: "ETH", percentage: 35, color: "#627EEA" },
+          {
+            symbol: "Stables",
+            percentage: 25,
+            color: "#26A17B",
+            label: "Stables",
+          },
+        ]}
+      />
+    );
+    const dots = container.querySelectorAll(".w-2.h-2.rounded-full");
+    expect(dots).toHaveLength(3);
+  });
+
+  it("should set backgroundColor on dots using item color", () => {
+    const { container } = render(
+      <AllocationLegend
+        items={[{ symbol: "BTC", percentage: 100, color: "#F7931A" }]}
+      />
+    );
+    const dot = container.querySelector(".w-2.h-2.rounded-full") as HTMLElement;
+    expect(dot.style.backgroundColor).toBe("rgb(247, 147, 26)");
+  });
+
+  it("should render zero percentage items without error", () => {
+    render(
+      <AllocationLegend
+        items={[{ symbol: "BTC", percentage: 0, color: "#F7931A" }]}
+      />
+    );
+    expect(screen.getByText("0%")).toBeInTheDocument();
   });
 });
 

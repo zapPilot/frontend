@@ -33,7 +33,7 @@
 import { CACHE_WINDOW } from "@/config/cacheWindow";
 import { isClientError } from "@/lib/errors/errorHelpers";
 import { APIError } from "@/lib/http";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 /**
  * Data freshness profiles for different query types
@@ -58,8 +58,6 @@ const QUERY_TIMINGS = {
   /** Short-lived override for explicitly real-time data */
   volatile: VOLATILE_TIMINGS,
 } as const;
-
-// isClientError is now imported from errorHelpers
 
 /**
  * Retry configuration options
@@ -92,12 +90,6 @@ interface QueryConfigResult {
   retryDelay: (attemptIndex: number) => number;
 }
 
-/**
- * Create standardized React Query configuration
- *
- * @param options - Configuration options
- * @returns Query configuration object with retry, retryDelay, staleTime, and gcTime
- */
 /**
  * Log a query error with structured context
  *

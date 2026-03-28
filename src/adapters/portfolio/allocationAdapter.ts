@@ -1,5 +1,5 @@
 import { ASSET_COLORS } from "@/constants/assets";
-import type { LandingPageResponse } from "@/services/analyticsService";
+import type { LandingPageResponse } from "@/services";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /**

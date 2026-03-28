@@ -46,7 +46,7 @@ vi.mock("@/utils/logger", () => ({
 
 // Mock ThirdWeb client
 vi.mock("@/utils/thirdweb", () => ({
-  default: { clientId: "test-client-id" },
+  THIRDWEB_CLIENT: { clientId: "test-client-id" },
 }));
 
 async function invokeWalletProviderAction<T>(

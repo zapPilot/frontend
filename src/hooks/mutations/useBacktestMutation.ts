@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { runBacktest } from "@/services/backtestingService";
+import { runBacktest } from "@/services";
 import type { BacktestRequest } from "@/types/backtesting";
 
 /**

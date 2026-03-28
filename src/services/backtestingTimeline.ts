@@ -22,10 +22,6 @@ export const MIN_CHART_POINTS = 90;
  */
 export const MAX_CHART_POINTS = 150;
 
-function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
-  return isBacktestTransfer(t);
-}
-
 function extractTransfers(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): BacktestTransferMetadata[] {
@@ -35,7 +31,7 @@ function extractTransfers(
     return [];
   }
 
-  return transfers.filter(isValidTransfer);
+  return transfers.filter(isBacktestTransfer);
 }
 
 function sampleEvenlyFromIndices(

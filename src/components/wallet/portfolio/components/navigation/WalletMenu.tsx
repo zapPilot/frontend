@@ -9,7 +9,7 @@ import { WALLET_LABELS } from "@/constants/wallet";
 import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { copyTextToClipboard } from "@/utils";
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 import { WalletMenuButton, WalletMenuDropdown } from "./WalletMenuContent";
 

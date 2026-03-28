@@ -11,7 +11,7 @@ import {
   logQueryError,
 } from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
-import { getBorrowingPositions } from "@/services/analyticsService";
+import { getBorrowingPositions } from "@/services";
 
 const BORROWING_POSITIONS_CACHE_MS = 12 * 60 * 60 * 1000; // 12 hours (matches backend)
 

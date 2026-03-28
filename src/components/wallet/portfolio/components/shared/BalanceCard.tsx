@@ -3,10 +3,7 @@
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import type { ReactElement } from "react";
 
-import type {
-  BorrowingSummary,
-  RiskMetrics,
-} from "@/services/analyticsService";
+import type { BorrowingSummary, RiskMetrics } from "@/services";
 import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";

@@ -33,8 +33,8 @@ import {
   type WalletError,
 } from "@/providers/walletProviderUtils";
 import type { WalletProviderInterface } from "@/types";
-import { walletLogger } from "@/utils/logger";
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { walletLogger } from "@/utils";
+import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 type WalletContextValue = WalletProviderInterface;
 

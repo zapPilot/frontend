@@ -2,7 +2,6 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
 import {
-  _enrichTimelineWithDma200 as enrichTimelineWithDma200,
   _sampleTimelineData as sampleTimelineData,
   getBacktestingStrategiesV3,
   MAX_CHART_POINTS,
@@ -174,17 +173,6 @@ describe("backtestingService", () => {
       });
 
       expect(result.timeline.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
-    });
-  });
-
-  describe("enrichTimelineWithDma200", () => {
-    it("returns an empty array when timeline is undefined", () => {
-      expect(enrichTimelineWithDma200(undefined)).toEqual([]);
-    });
-
-    it("returns the timeline unchanged", () => {
-      const timeline = [createTimelinePoint(0)];
-      expect(enrichTimelineWithDma200(timeline)).toEqual(timeline);
     });
   });
 

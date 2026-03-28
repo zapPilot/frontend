@@ -33,7 +33,7 @@ export {
 // LOGGING
 // ============================================================================
 
-export { logger } from "./logger";
+export { logger, walletLogger } from "./logger";
 
 // ============================================================================
 // MATH UTILITIES
@@ -51,7 +51,7 @@ export { copyTextToClipboard } from "./clipboard";
 // ERROR UTILITIES
 // ============================================================================
 
-export { getErrorMessage } from "./errorUtils";
+export { extractErrorMessage } from "./errorUtils";
 
 // ============================================================================
 // CHART UTILITIES

@@ -6,10 +6,7 @@ import {
   mapBorrowingStatusToRiskLevel,
   RISK_DISPLAY_CONFIG,
 } from "@/constants/riskThresholds";
-import type {
-  BorrowingPosition,
-  BorrowingSummary,
-} from "@/services/analyticsService";
+import type { BorrowingPosition, BorrowingSummary } from "@/services";
 
 import { FinancialMetricRow } from "./FinancialMetricRow";
 import { IconBadge } from "./IconBadge";

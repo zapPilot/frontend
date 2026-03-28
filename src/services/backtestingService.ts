@@ -9,7 +9,6 @@ import type {
   BacktestRequest,
   BacktestResponse,
   BacktestStrategyCatalogResponseV3,
-  BacktestTimelinePoint,
 } from "@/types/backtesting";
 
 const callBacktestingApi = createApiServiceCaller(
@@ -26,18 +25,6 @@ const callBacktestingApi = createApiServiceCaller(
 /** @internal — test-only re-exports */
 export { sampleTimelineData as _sampleTimelineData };
 export { MAX_CHART_POINTS, MIN_CHART_POINTS };
-
-/**
- * Legacy test helper retained during the DMA-first migration.
- * The backend now returns DMA values directly inside strategy.signal.details.dma.
- *
- * @internal
- */
-export function _enrichTimelineWithDma200(
-  timeline: BacktestTimelinePoint[] | undefined
-): BacktestTimelinePoint[] {
-  return timeline ?? [];
-}
 
 export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
   return callBacktestingApi(() =>

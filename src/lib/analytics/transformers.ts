@@ -8,7 +8,7 @@ import { MONTH_ABBREVIATIONS } from "@/constants/dates";
 import type {
   DailyYieldReturnsResponse,
   UnifiedDashboardResponse,
-} from "@/services/analyticsService";
+} from "@/services";
 import type {
   DrawdownChartData,
   KeyMetrics,

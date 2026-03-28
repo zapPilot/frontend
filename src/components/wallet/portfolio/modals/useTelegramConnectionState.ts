@@ -6,7 +6,7 @@ import {
   requestTelegramToken,
   type TelegramStatus,
 } from "@/services";
-import { getErrorMessage } from "@/utils";
+import { extractErrorMessage } from "@/utils";
 
 const POLL_INTERVAL_MS = 3_000;
 const MAX_POLL_DURATION_MS = 120_000;
@@ -136,7 +136,10 @@ export const useTelegramConnectionState = ({
     } catch (error) {
       setView({
         kind: "error",
-        message: getErrorMessage(error, "Failed to generate connection link."),
+        message: extractErrorMessage(
+          error,
+          "Failed to generate connection link."
+        ),
       });
     }
   }, [startPolling, userId]);
@@ -154,7 +157,7 @@ export const useTelegramConnectionState = ({
     } catch (error) {
       setView({
         kind: "error",
-        message: getErrorMessage(error, "Failed to disconnect Telegram."),
+        message: extractErrorMessage(error, "Failed to disconnect Telegram."),
       });
     } finally {
       setIsDisconnecting(false);

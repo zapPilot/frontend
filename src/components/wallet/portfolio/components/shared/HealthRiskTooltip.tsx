@@ -1,7 +1,7 @@
 "use client";
 
 import { RISK_DISPLAY_CONFIG, RiskLevel } from "@/constants/riskThresholds";
-import type { RiskMetrics } from "@/services/analyticsService";
+import type { RiskMetrics } from "@/services";
 
 import { FinancialMetricRow } from "./FinancialMetricRow";
 

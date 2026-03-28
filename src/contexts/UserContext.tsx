@@ -6,10 +6,7 @@ import {
   useCurrentUser,
   type UserInfo,
 } from "@/hooks/queries/wallet/useUserQuery";
-
-import { logger } from "../utils/logger";
-
-// Types are now imported from useUserQuery hook
+import { logger } from "@/utils";
 
 interface UserContextType {
   userInfo: UserInfo | null;
@@ -71,5 +68,3 @@ export function useUser(): UserContextType {
   }
   return context;
 }
-
-// Removed unused default export (deadcode analysis)

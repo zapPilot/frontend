@@ -2,7 +2,7 @@
 
 import { Component, ErrorInfo, ReactNode } from "react";
 
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 import { BaseCard } from "../ui/BaseCard";
 import { GradientButton } from "../ui/GradientButton";

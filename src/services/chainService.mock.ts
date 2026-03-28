@@ -10,6 +10,7 @@
  * @future Replace with real chain service when backend is ready
  */
 
+import { delay } from "@/lib/http/retry";
 import type { ChainData } from "@/types/domain/transaction";
 
 const MOCK_CHAIN_DATA: ChainData[] = [
@@ -36,18 +37,14 @@ const MOCK_CHAIN_DATA: ChainData[] = [
   },
 ];
 
-function delay(ms = 120): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export async function getSupportedChains(): Promise<ChainData[]> {
-  await delay();
+  await delay(120);
   return MOCK_CHAIN_DATA;
 }
 
 export async function getChainById(
   chainId: number
 ): Promise<ChainData | undefined> {
-  await delay();
+  await delay(120);
   return MOCK_CHAIN_DATA.find(chain => chain.chainId === chainId);
 }

@@ -11,10 +11,7 @@ import {
   logQueryError,
 } from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
-import {
-  DEFAULT_REGIME_HISTORY,
-  fetchRegimeHistory,
-} from "@/services/regimeHistoryService";
+import { DEFAULT_REGIME_HISTORY, fetchRegimeHistory } from "@/services";
 
 const REGIME_HISTORY_CACHE_MS = 60 * 1000; // 60 seconds (regime transitions are infrequent)
 

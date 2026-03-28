@@ -3,7 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import type { ReactElement } from "react";
 
-import { logger } from "../../utils/logger";
+import { logger } from "@/utils";
+
 import { BundlePageClient } from "./BundlePageClient";
 
 export function BundlePageEntry(): ReactElement {
@@ -26,24 +27,12 @@ export function BundlePageEntry(): ReactElement {
     }
   }
 
-  const bundlePageClientProps: {
-    userId: string;
-    walletId?: string;
-    etlJobId?: string;
-    isNewUser?: boolean;
-  } = { userId };
-
-  if (walletId) {
-    bundlePageClientProps.walletId = walletId;
-  }
-
-  if (etlJobId) {
-    bundlePageClientProps.etlJobId = etlJobId;
-  }
-
-  if (isNewUser) {
-    bundlePageClientProps.isNewUser = true;
-  }
-
-  return <BundlePageClient {...bundlePageClientProps} />;
+  return (
+    <BundlePageClient
+      userId={userId}
+      {...(walletId && { walletId })}
+      {...(etlJobId && { etlJobId })}
+      {...(isNewUser && { isNewUser: true })}
+    />
+  );
 }

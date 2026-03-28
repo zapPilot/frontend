@@ -1,4 +1,4 @@
-import type { UnifiedDashboardResponse } from "@/services/analyticsService";
+import type { UnifiedDashboardResponse } from "@/services";
 import type { MetricData } from "@/types/analytics";
 
 /**

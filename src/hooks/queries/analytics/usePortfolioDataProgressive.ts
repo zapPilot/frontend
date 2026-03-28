@@ -25,7 +25,7 @@ import {
 } from "@/lib/portfolio/portfolioTransformers";
 import { createSectionState } from "@/lib/portfolio/sectionHelpers";
 import type { DashboardProgressiveState } from "@/types/portfolio-progressive";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 import { useLandingPageData } from "./usePortfolioQuery";
 
@@ -170,6 +170,8 @@ export function usePortfolioDataProgressive(
       strategy: strategySection,
       sentiment: sentimentSection,
     },
+    sentimentData: sentimentQuery.data,
+    regimeHistoryData: regimeQuery.data,
     isLoading: hasAnyLoadingState(landingQuery, sentimentQuery, regimeQuery),
     error: getProgressiveError(landingQuery, sentimentQuery, regimeQuery),
     refetch: refetchAll,

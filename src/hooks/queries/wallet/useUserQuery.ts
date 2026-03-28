@@ -3,8 +3,7 @@ import { useActiveAccount } from "thirdweb/react";
 
 import { queryKeys } from "@/lib/state/queryClient";
 import type { UserProfileResponse } from "@/schemas/api/accountSchemas";
-// Use account service directly for wallet connection and profile data
-import { connectWallet, getUserProfile } from "@/services/accountService";
+import { connectWallet, getUserProfile } from "@/services";
 
 import { createQueryConfig } from "../queryDefaults";
 

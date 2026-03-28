@@ -172,5 +172,3 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
     author: quote.author,
   };
 }
-
-// Removed unused export: sentimentQuotesConfig (deadcode analysis)

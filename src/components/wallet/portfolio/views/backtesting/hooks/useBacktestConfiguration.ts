@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
-import { getBacktestingStrategiesV3 } from "@/services/backtestingService";
-import { getStrategyConfigs } from "@/services/strategyService";
+import { getBacktestingStrategiesV3, getStrategyConfigs } from "@/services";
 import type {
   BacktestRequest,
   BacktestStrategyCatalogResponseV3,

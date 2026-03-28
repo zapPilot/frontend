@@ -22,7 +22,7 @@ import {
   type DashboardWindowParams,
   getPortfolioDashboard,
   type UnifiedDashboardResponse,
-} from "@/services/analyticsService";
+} from "@/services";
 
 /**
  * Query options override for usePortfolioDashboard

@@ -45,6 +45,11 @@ describe("queryKeys", () => {
       const key = queryKeys.user.wallets("user-123");
       expect(key).toEqual(["user-wallets", "user-123"]);
     });
+
+    it("should create byId key", () => {
+      const key = queryKeys.user.byId("user-123");
+      expect(key).toEqual(["user", "by-id", "user-123"]);
+    });
   });
 
   describe("portfolio", () => {
@@ -75,6 +80,11 @@ describe("queryKeys", () => {
     it("should create yieldSummary key", () => {
       const key = queryKeys.portfolio.yieldSummary("user-123");
       expect(key).toEqual(["portfolio", "yield-summary", "user-123"]);
+    });
+
+    it("should create borrowingPositions key", () => {
+      const key = queryKeys.portfolio.borrowingPositions("user-123");
+      expect(key).toEqual(["portfolio", "borrowing-positions", "user-123"]);
     });
   });
 
@@ -170,6 +180,22 @@ describe("queryKeys", () => {
     it("should create byChain key", () => {
       const key = queryKeys.zapTokens.byChain(1);
       expect(key).toEqual(["zapTokens", 1]);
+    });
+  });
+
+  describe("strategyAdmin", () => {
+    it("should have all base key", () => {
+      expect(queryKeys.strategyAdmin.all).toEqual(["strategyAdmin"]);
+    });
+
+    it("should create configs key", () => {
+      const key = queryKeys.strategyAdmin.configs();
+      expect(key).toEqual(["strategyAdmin", "configs"]);
+    });
+
+    it("should create config key", () => {
+      const key = queryKeys.strategyAdmin.config("config-456");
+      expect(key).toEqual(["strategyAdmin", "config", "config-456"]);
     });
   });
 

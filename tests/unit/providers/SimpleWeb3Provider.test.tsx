@@ -23,7 +23,7 @@ vi.mock("@/config/wallets", () => ({
 }));
 
 vi.mock("@/utils/thirdweb", () => ({
-  default: {},
+  THIRDWEB_CLIENT: {},
 }));
 
 describe("SimpleWeb3Provider", () => {

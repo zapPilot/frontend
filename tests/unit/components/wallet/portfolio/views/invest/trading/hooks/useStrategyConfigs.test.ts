@@ -9,9 +9,13 @@ import {
 import { getStrategyConfigs } from "@/services/strategyService";
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: vi.fn(),
-}));
+vi.mock("@tanstack/react-query", async importOriginal => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQuery: vi.fn(),
+  };
+});
 
 vi.mock("@/services/strategyService", () => ({
   getStrategyConfigs: vi.fn(),

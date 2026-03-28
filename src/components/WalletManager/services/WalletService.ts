@@ -6,7 +6,6 @@ import {
   transformWalletData,
   type WalletData,
 } from "@/lib/validation/walletUtils";
-
 import {
   addWalletToBundle,
   getUserWallets,
@@ -14,7 +13,7 @@ import {
   removeWalletFromBundle,
   updateUserEmail,
   updateWalletLabel as updateWalletLabelRequest,
-} from "../../../services/accountService";
+} from "@/services";
 
 /**
  * Load wallets for a specific user and normalise the API response.

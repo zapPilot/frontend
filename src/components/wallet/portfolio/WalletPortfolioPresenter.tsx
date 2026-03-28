@@ -16,7 +16,7 @@ import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
 import { useToast } from "@/providers/ToastProvider";
-import { connectWallet } from "@/services/accountService";
+import { connectWallet } from "@/services";
 import type { DashboardSections, TabType } from "@/types";
 
 /** Layout class constants for consistent styling */

@@ -11,7 +11,7 @@ import {
   generateBundleUrl,
   getBundleUser,
   isOwnBundle as isBundleOwned,
-} from "@/services/bundleService";
+} from "@/services";
 
 import {
   buildBundlePageUrl,

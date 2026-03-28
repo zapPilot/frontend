@@ -50,7 +50,7 @@ vi.mock("@/services", () => ({
 }));
 
 vi.mock("@/utils", () => ({
-  getErrorMessage: (err: unknown, fallback: string) => {
+  extractErrorMessage: (err: unknown, fallback: string) => {
     if (err instanceof Error) return err.message;
     return fallback;
   },

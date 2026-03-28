@@ -16,7 +16,7 @@ import {
 
 import { useMarketDashboardQuery } from "@/hooks/queries/market/useMarketDashboardQuery";
 import { REGIME_LABELS } from "@/lib/domain/regimeMapper";
-import type { MarketDashboardPoint } from "@/services/analyticsService";
+import type { MarketDashboardPoint } from "@/services";
 
 // Regime hex colors keyed by short RegimeId (ef/f/n/g/eg)
 const REGIME_COLORS: Record<string, string> = {

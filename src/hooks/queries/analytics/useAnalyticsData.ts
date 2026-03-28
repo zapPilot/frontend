@@ -15,7 +15,7 @@ import {
   transformToDrawdownChart,
   transformToPerformanceChart,
 } from "@/lib/analytics/transformers";
-import { getDailyYieldReturns } from "@/services/analyticsService";
+import { getDailyYieldReturns } from "@/services";
 import type {
   AnalyticsData,
   AnalyticsTimePeriod,

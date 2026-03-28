@@ -4,7 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { getDailySuggestion } from "@/services/strategyService";
+import { getDailySuggestion } from "@/services";
 import type { DailySuggestionResponse } from "@/types/strategy";
 
 /**

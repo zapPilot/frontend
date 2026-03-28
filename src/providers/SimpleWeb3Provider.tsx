@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 import { AutoConnect, ThirdwebProvider } from "thirdweb/react";
 
 import { DEFAULT_WALLETS } from "@/config/wallets";
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 interface SimpleWeb3ProviderProps {
   children: ReactNode;

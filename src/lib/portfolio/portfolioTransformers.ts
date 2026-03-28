@@ -12,9 +12,11 @@ import {
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import { extractROIChanges } from "@/lib/portfolio/portfolioUtils";
-import type { LandingPageResponse } from "@/services/analyticsService";
-import { type RegimeHistoryData } from "@/services/regimeHistoryService";
-import { type MarketSentimentData } from "@/services/sentimentService";
+import type {
+  LandingPageResponse,
+  MarketSentimentData,
+  RegimeHistoryData,
+} from "@/services";
 import type {
   BalanceData,
   CompositionData,

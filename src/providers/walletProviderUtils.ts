@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import { getErrorMessage } from "@/utils";
-import { walletLogger } from "@/utils/logger";
+import { extractErrorMessage, walletLogger } from "@/utils";
 
 export interface SimplifiedWalletAccount {
   address: string;
@@ -97,7 +96,7 @@ export const handleWalletOperationError = (
   code: string,
   logPrefix: string
 ): never => {
-  const errorMessage = getErrorMessage(error, fallbackMessage);
+  const errorMessage = extractErrorMessage(error, fallbackMessage);
   setError({ message: errorMessage, code });
   walletLogger.error(logPrefix, error);
   throw error;

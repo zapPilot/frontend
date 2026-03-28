@@ -5,7 +5,7 @@
  * Extracted to eliminate duplication across adapters and hooks.
  */
 
-import type { LandingPageResponse } from "@/services/analyticsService";
+import type { LandingPageResponse } from "@/services";
 
 /**
  * ROI change data structure

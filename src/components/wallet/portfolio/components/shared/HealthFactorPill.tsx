@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 
 import { getRiskConfig, RiskLevel } from "@/constants/riskThresholds";
-import type { RiskMetrics } from "@/services/analyticsService";
+import type { RiskMetrics } from "@/services";
 
 import { HealthRiskTooltip } from "./HealthRiskTooltip";
 import { useTooltipPosition } from "./useTooltipPosition";

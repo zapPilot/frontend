@@ -11,7 +11,7 @@ import {
   logQueryError,
 } from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
-import { fetchMarketSentiment } from "@/services/sentimentService";
+import { fetchMarketSentiment } from "@/services";
 
 const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes (matches backend cache)
 

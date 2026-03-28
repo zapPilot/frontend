@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 export interface ConnectedWalletItem {
   address: string;

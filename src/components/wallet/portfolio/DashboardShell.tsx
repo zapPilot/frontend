@@ -9,10 +9,8 @@ import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/L
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
 import { queryKeys } from "@/hooks/queries";
 import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfolioDataProgressive";
-import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
-import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
 import { useEtlJobPolling } from "@/hooks/wallet";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 interface DashboardShellProps {
   urlUserId: string;
@@ -224,8 +222,15 @@ export function DashboardShell({
   const activeEtlJobIdRef = useRef<string | null>(null);
 
   // Portfolio data with ETL-aware queries
-  const { unifiedData, sections, isLoading, error, refetch } =
-    usePortfolioDataProgressive(urlUserId, isEtlInProgress);
+  const {
+    unifiedData,
+    sections,
+    sentimentData,
+    regimeHistoryData,
+    isLoading,
+    error,
+    refetch,
+  } = usePortfolioDataProgressive(urlUserId, isEtlInProgress);
 
   useStartPollingFromInitialJobId(
     initialEtlJobId,
@@ -242,8 +247,6 @@ export function DashboardShell({
     router,
     completeTransition,
   });
-  const { data: sentimentData } = useSentimentData();
-  const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = getSafeError(error);
 
   if (safeError && !unifiedData) {

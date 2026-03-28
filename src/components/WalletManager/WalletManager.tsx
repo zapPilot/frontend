@@ -10,7 +10,7 @@ import { ModalBackdrop } from "@/components/ui/modal";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { useAsyncRetryButton } from "@/hooks/ui/useAsyncRetryButton";
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";

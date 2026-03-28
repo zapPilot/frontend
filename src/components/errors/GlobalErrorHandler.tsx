@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { logger } from "@/utils/logger";
+import { logger } from "@/utils";
 
 const globalErrorLogger = logger.createContextLogger("GlobalErrorHandler");
 
