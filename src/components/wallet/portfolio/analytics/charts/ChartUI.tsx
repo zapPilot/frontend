@@ -88,7 +88,6 @@ export function ChartSurface({
     </svg>
   );
 }
-
 // Re-export shared chart dependencies to avoid import duplication
 export { ChartIndicator, ChartTooltip } from "@/components/charts";
 export { useChartHover } from "@/hooks/ui/useChartHover";

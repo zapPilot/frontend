@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
@@ -90,17 +90,21 @@ const DEFAULT_ETL_STATE = {
   isInProgress: false,
 };
 
+const pushMock = vi.fn();
+const replaceMock = vi.fn();
+let currentSearchParams = new URLSearchParams();
+
 // Mock Next.js router
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
+    push: pushMock,
+    replace: replaceMock,
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => currentSearchParams,
   usePathname: () => "/bundle",
 }));
 
@@ -127,7 +131,18 @@ vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
 }));
 
 vi.mock("@/components/wallet/portfolio/views/invest/InvestView", () => ({
-  InvestView: () => <div data-testid="invest-view">Invest View</div>,
+  InvestView: ({
+    activeSubTab,
+    activeMarketSection,
+  }: {
+    activeSubTab?: string;
+    activeMarketSection?: string;
+  }) => (
+    <div data-testid="invest-view">
+      Invest View {activeSubTab ?? "trading"}{" "}
+      {activeMarketSection ?? "overview"}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/wallet/portfolio/modals", () => ({
@@ -162,7 +177,7 @@ vi.mock("@/components/Footer/Footer", () => ({
   Footer: () => <footer data-testid="footer">Footer</footer>,
 }));
 
-vi.mock("@/components/wallet/portfolio/components/WalletNavigation", () => ({
+vi.mock("@/components/wallet/portfolio/components/navigation", () => ({
   WalletNavigation: ({ setActiveTab }: any) => (
     <nav data-testid="wallet-navigation">
       <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
@@ -202,6 +217,12 @@ vi.mock("@/hooks/queries/analytics/useAllocationWeights", () => ({
     error: null,
   }),
 }));
+
+beforeEach(() => {
+  pushMock.mockReset();
+  replaceMock.mockReset();
+  currentSearchParams = new URLSearchParams();
+});
 
 describe("WalletPortfolioPresenter - Regime Highlighting", () => {
   describe("Regime Spectrum Display", () => {
@@ -777,6 +798,40 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
   });
 
   describe("Navigation and Layout", () => {
+    it("renders the deep-linked analytics view on first load", () => {
+      currentSearchParams = new URLSearchParams("tab=analytics");
+
+      render(
+        <WalletPortfolioPresenter
+          data={{ ...MOCK_DATA }}
+          userId="user1"
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
+    });
+
+    it("renders the deep-linked invest sub-tab on first load", () => {
+      currentSearchParams = new URLSearchParams(
+        "tab=invest&invest=market&market=relative-strength"
+      );
+
+      render(
+        <WalletPortfolioPresenter
+          data={{ ...MOCK_DATA }}
+          userId="user1"
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      expect(screen.getByTestId("invest-view")).toHaveTextContent(
+        "Invest View market relative-strength"
+      );
+    });
+
     it("navigates to analytics tab", async () => {
       const user = userEvent.setup();
       render(
@@ -794,8 +849,9 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       // Switch to analytics
       await user.click(screen.getByText("Analytics"));
 
-      // Verify analytics content is shown
-      expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
+      expect(replaceMock).toHaveBeenCalledWith("/bundle?tab=analytics", {
+        scroll: false,
+      });
     });
 
     it("navigates to invest tab", async () => {
@@ -811,8 +867,10 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       // Switch to invest
       await user.click(screen.getByText("Invest"));
 
-      // Verify invest content is shown
-      expect(screen.getByTestId("invest-content")).toBeInTheDocument();
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/bundle?tab=invest&invest=trading",
+        { scroll: false }
+      );
     });
   });
 

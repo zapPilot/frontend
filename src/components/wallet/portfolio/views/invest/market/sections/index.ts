@@ -10,3 +10,4 @@ export {
 } from "./marketDashboardConstants";
 export { RelativeStrengthSection } from "./RelativeStrengthSection";
 export { SimpleStatCard } from "./SimpleStatCard";
+export { TimeframePicker } from "./TimeframePicker";

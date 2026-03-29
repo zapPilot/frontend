@@ -1,5 +1,6 @@
-import { TABS, type TabType } from "@/types/portfolio";
+import type { TabType } from "@/types/portfolio";
 
+import { PORTFOLIO_TABS } from "./portfolioNavigationConfig";
 import { WalletSearchNav } from "./search/WalletSearchNav";
 import { WalletMenu } from "./WalletMenu";
 
@@ -52,7 +53,7 @@ export function WalletNavigation({
 
       <div className="flex items-center gap-2 md:gap-4">
         <div className={STYLES.tabContainer}>
-          {TABS.map(tab => (
+          {PORTFOLIO_TABS.map(tab => (
             <button
               key={tab.id}
               data-testid={`v22-tab-${tab.id}`}

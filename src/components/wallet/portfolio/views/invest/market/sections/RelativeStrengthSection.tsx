@@ -16,6 +16,7 @@ import {
 import { useMarketDashboardQuery } from "@/hooks/queries/market/useMarketDashboardQuery";
 import type { MarketDashboardPoint } from "@/services";
 
+import { SimpleStatCard, TimeframePicker } from ".";
 import {
   AXIS_COLOR,
   formatRatioLabel,
@@ -24,7 +25,6 @@ import {
   type Timeframe,
   TIMEFRAMES,
 } from "./marketDashboardConstants";
-import { SimpleStatCard } from "./SimpleStatCard";
 
 const RATIO_AXIS_COLOR = "#6EE7B7";
 
@@ -148,22 +148,15 @@ export function RelativeStrengthSection(): JSX.Element {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1 border border-emerald-500/20">
-              {TIMEFRAMES.map(tf => (
-                <button
-                  key={`ratio-${tf.id}`}
-                  onClick={() => setRatioTimeframe(tf.id)}
-                  data-testid={`ratio-tf-${tf.id}`}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                    ratioTimeframe === tf.id
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                  }`}
-                >
-                  {tf.id}
-                </button>
-              ))}
-            </div>
+            <TimeframePicker
+              value={ratioTimeframe}
+              onChange={setRatioTimeframe}
+              testIdPrefix="ratio-tf-"
+              keyPrefix="ratio-"
+              borderColor="border-emerald-500/20"
+              activeColor="bg-emerald-600"
+              buttonSize="px-3 py-1 text-xs"
+            />
             <div className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
               {relativeStrengthSignal.label}
             </div>

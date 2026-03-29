@@ -4,13 +4,20 @@ import { describe, expect, it, vi } from "vitest";
 import { DrawdownChart } from "@/components/wallet/portfolio/analytics/charts/DrawdownChart";
 
 // Mock ChartUI components
-vi.mock("@/components/wallet/portfolio/analytics/charts/ChartUI", () => ({
-  ChartGridLines: () => <div data-testid="grid-lines" />,
-  ChartSurface: ({ children }: any) => (
-    <svg data-testid="chart-surface">{children}</svg>
-  ),
-  YAxisLabels: () => <div data-testid="y-axis-labels" />,
-}));
+vi.mock(
+  "@/components/wallet/portfolio/analytics/charts/ChartUI",
+  async importOriginal => {
+    const actual = await importOriginal<any>();
+    return {
+      ...actual,
+      ChartGridLines: () => <div data-testid="grid-lines" />,
+      ChartSurface: ({ children }: any) => (
+        <svg data-testid="chart-surface">{children}</svg>
+      ),
+      YAxisLabels: () => <div data-testid="y-axis-labels" />,
+    };
+  }
+);
 
 // Mock Chart components
 vi.mock("@/components/charts", () => ({
@@ -35,7 +42,7 @@ vi.mock("@/hooks/ui/useChartHover", () => ({
   }),
 }));
 
-vi.mock("../utils/chartHelpers", () => ({
+vi.mock("@/lib/ui/chartPrimitives", () => ({
   buildPath: () => "M 0,0 L 100,100",
   CHART_GRID_POSITIONS: { FOUR_LINES: [] },
 }));

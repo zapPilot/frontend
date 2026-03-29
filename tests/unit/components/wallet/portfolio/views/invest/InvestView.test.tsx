@@ -1,6 +1,8 @@
+import { type ReactElement, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { InvestView } from "@/components/wallet/portfolio/views/invest/InvestView";
+import type { InvestSubTab, MarketSection } from "@/types";
 
 import { fireEvent, render, screen } from "../../../../../../test-utils";
 
@@ -21,7 +23,20 @@ vi.mock("@/components/wallet/portfolio/views/BacktestingView", () => ({
 vi.mock(
   "@/components/wallet/portfolio/views/invest/market/MarketDashboardView",
   () => ({
-    MarketDashboardView: () => <div data-testid="market-dashboard-view" />,
+    MarketDashboardView: ({
+      activeSection,
+      onSectionChange,
+    }: {
+      activeSection?: MarketSection;
+      onSectionChange?: (section: MarketSection) => void;
+    }) => (
+      <div data-testid="market-dashboard-view">
+        <span>{activeSection}</span>
+        <button onClick={() => onSectionChange?.("relative-strength")}>
+          Select Relative Strength
+        </button>
+      </div>
+    ),
   })
 );
 
@@ -29,16 +44,42 @@ vi.mock("@/components/wallet/portfolio/views/invest/configManager", () => ({
   ConfigManagerView: () => <div data-testid="config-manager-view" />,
 }));
 
+interface ControlledInvestViewProps {
+  userId?: string;
+  initialSubTab?: InvestSubTab;
+  initialMarketSection?: MarketSection;
+}
+
+function ControlledInvestView({
+  userId,
+  initialSubTab = "trading",
+  initialMarketSection = "overview",
+}: ControlledInvestViewProps): ReactElement {
+  const [activeSubTab, setActiveSubTab] = useState<InvestSubTab>(initialSubTab);
+  const [activeMarketSection, setActiveMarketSection] =
+    useState<MarketSection>(initialMarketSection);
+
+  return (
+    <InvestView
+      userId={userId}
+      activeSubTab={activeSubTab}
+      activeMarketSection={activeMarketSection}
+      onSubTabChange={setActiveSubTab}
+      onMarketSectionChange={setActiveMarketSection}
+    />
+  );
+}
+
 describe("InvestView", () => {
   it("renders trading tab by default", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     expect(screen.getByTestId("trading-view")).toBeDefined();
     expect(screen.getByText("0xabc")).toBeDefined();
   });
 
   it("renders all four tab buttons", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     expect(screen.getByText("market data")).toBeDefined();
     expect(screen.getByText("trading")).toBeDefined();
@@ -47,7 +88,7 @@ describe("InvestView", () => {
   });
 
   it("switches to market tab on click", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     fireEvent.click(screen.getByText("market data"));
 
@@ -56,7 +97,7 @@ describe("InvestView", () => {
   });
 
   it("switches to backtesting tab on click", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     fireEvent.click(screen.getByText("backtesting"));
 
@@ -65,7 +106,7 @@ describe("InvestView", () => {
   });
 
   it("switches back to trading tab", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     fireEvent.click(screen.getByText("backtesting"));
     fireEvent.click(screen.getByText("trading"));
@@ -75,13 +116,13 @@ describe("InvestView", () => {
   });
 
   it("passes undefined userId to TradingView", () => {
-    render(<InvestView userId={undefined} />);
+    render(<ControlledInvestView userId={undefined} />);
 
     expect(screen.getByText("no-user")).toBeDefined();
   });
 
   it("switches to config manager tab on click", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     fireEvent.click(screen.getByText("config manager"));
 
@@ -89,8 +130,23 @@ describe("InvestView", () => {
     expect(screen.queryByTestId("trading-view")).toBeNull();
   });
 
+  it("passes market section updates through to the market view", () => {
+    render(
+      <ControlledInvestView
+        userId="0xabc"
+        initialSubTab="market"
+        initialMarketSection="overview"
+      />
+    );
+
+    expect(screen.getByText("overview")).toBeDefined();
+    fireEvent.click(screen.getByText("Select Relative Strength"));
+
+    expect(screen.getByText("relative-strength")).toBeDefined();
+  });
+
   it("applies active style to the selected tab", () => {
-    render(<InvestView userId="0xabc" />);
+    render(<ControlledInvestView userId="0xabc" />);
 
     const tradingBtn = screen.getByText("trading").closest("button");
     expect(tradingBtn?.className).toContain("text-white");

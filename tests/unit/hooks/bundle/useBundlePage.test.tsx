@@ -50,6 +50,7 @@ describe("useBundlePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue(mockRouter as any);
+    window.history.pushState({}, "", "/bundle");
 
     // Default UserContext
     vi.mocked(useUser).mockReturnValue({
@@ -200,6 +201,11 @@ describe("useBundlePage", () => {
         isConnected: true,
         userInfo: { userId: "user-me", etlJobId: "job-1" },
       } as any);
+      window.history.pushState(
+        {},
+        "",
+        "/bundle?userId=user-other&tab=invest&invest=market&market=relative-strength"
+      );
 
       const { result } = renderHook(() => useBundlePage("user-other"), {
         wrapper,
@@ -210,10 +216,7 @@ describe("useBundlePage", () => {
       });
 
       expect(mockRouter.replace).toHaveBeenCalledWith(
-        expect.stringContaining("/bundle?userId=user-me")
-      );
-      expect(mockRouter.replace).toHaveBeenCalledWith(
-        expect.stringContaining("etlJobId=job-1")
+        "/bundle?userId=user-me&tab=invest&invest=market&market=relative-strength&etlJobId=job-1"
       );
     });
 

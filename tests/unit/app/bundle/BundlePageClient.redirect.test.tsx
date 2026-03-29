@@ -114,6 +114,27 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
         );
       });
     });
+
+    it("should preserve portfolio deep-link parameters during redirect", async () => {
+      searchParamsMock.mockReturnValue(
+        new URLSearchParams("tab=invest&invest=market&market=relative-strength")
+      );
+
+      mockIsConnected = true;
+      mockUserId = "0xUSER123";
+      mockLoading = false;
+
+      await act(async () => {
+        render(<BundlePageClient userId="" />);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/bundle?tab=invest&invest=market&market=relative-strength&userId=0xUSER123"
+        );
+      });
+    });
   });
 
   describe("no redirect scenarios - loading states", () => {

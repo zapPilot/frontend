@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactElement, type ReactNode, useRef, useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
@@ -15,9 +15,18 @@ import { InvestView } from "@/components/wallet/portfolio/views/invest/InvestVie
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
+import {
+  buildPortfolioRouteSearchParams,
+  readPortfolioRouteState,
+} from "@/lib/portfolio/portfolioRouteState";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services";
-import type { DashboardSections, TabType } from "@/types";
+import type {
+  DashboardSections,
+  InvestSubTab,
+  MarketSection,
+  TabType,
+} from "@/types";
 
 /** Layout class constants for consistent styling */
 const LAYOUT = {
@@ -57,19 +66,37 @@ function buildBundleUrlFromSearchResult(params: {
   searchedUserId: string;
   etlJobId?: string | null | undefined;
   searchedIsNewUser?: boolean;
+  currentSearchParams: Pick<URLSearchParams, "toString">;
 }): string {
-  const { searchedUserId, etlJobId, searchedIsNewUser } = params;
-  const searchParams = new URLSearchParams({ userId: searchedUserId });
+  const { searchedUserId, etlJobId, searchedIsNewUser, currentSearchParams } =
+    params;
+  const searchParams = new URLSearchParams(currentSearchParams.toString());
+
+  searchParams.set("userId", searchedUserId);
+  searchParams.delete("walletId");
 
   if (etlJobId) {
     searchParams.set("etlJobId", etlJobId);
+  } else {
+    searchParams.delete("etlJobId");
   }
 
   if (searchedIsNewUser) {
     searchParams.set("isNewUser", "true");
+  } else {
+    searchParams.delete("isNewUser");
   }
 
   return `/bundle?${searchParams.toString()}`;
+}
+
+function buildPathWithSearchParams(
+  pathname: string,
+  nextSearchParams: URLSearchParams
+): string {
+  const queryString = nextSearchParams.toString();
+
+  return queryString ? `${pathname}?${queryString}` : pathname;
 }
 
 export function WalletPortfolioPresenter({
@@ -84,13 +111,16 @@ export function WalletPortfolioPresenter({
   footerOverlays,
 }: WalletPortfolioPresenterProps): ReactElement {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
   const currentRegime = getRegimeById(data.currentRegime);
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const pendingSearchCountRef = useRef(0);
   const [showNewWalletLoading, setShowNewWalletLoading] = useState(false);
+  const routeState = readPortfolioRouteState(searchParams);
+  const activeTab = routeState.tab;
 
   const {
     activeModal,
@@ -100,6 +130,33 @@ export function WalletPortfolioPresenter({
     openSettings,
     setIsSettingsOpen,
   } = usePortfolioModalState();
+
+  function syncRouteState(patch: {
+    tab?: TabType;
+    invest?: InvestSubTab;
+    market?: MarketSection;
+  }): void {
+    const nextSearchParams = buildPortfolioRouteSearchParams(
+      searchParams,
+      patch
+    );
+
+    router.replace(buildPathWithSearchParams(pathname, nextSearchParams), {
+      scroll: false,
+    });
+  }
+
+  function handleTabChange(tab: TabType): void {
+    syncRouteState({ tab });
+  }
+
+  function handleInvestSubTabChange(invest: InvestSubTab): void {
+    syncRouteState({ tab: "invest", invest });
+  }
+
+  function handleMarketSectionChange(market: MarketSection): void {
+    syncRouteState({ tab: "invest", invest: "market", market });
+  }
 
   async function handleSearch(address: string): Promise<void> {
     const trimmedAddress = address.trim();
@@ -128,6 +185,7 @@ export function WalletPortfolioPresenter({
         searchedUserId,
         etlJobId: etlJob?.job_id,
         searchedIsNewUser,
+        currentSearchParams: searchParams,
       });
 
       // Navigate with Next.js router
@@ -175,7 +233,13 @@ export function WalletPortfolioPresenter({
     ) : null,
     invest: (
       <div data-testid="invest-content">
-        <InvestView userId={userId} />
+        <InvestView
+          userId={userId}
+          activeSubTab={routeState.invest}
+          activeMarketSection={routeState.market}
+          onSubTabChange={handleInvestSubTabChange}
+          onMarketSectionChange={handleMarketSectionChange}
+        />
       </div>
     ),
   };
@@ -207,7 +271,7 @@ export function WalletPortfolioPresenter({
       {/* Top navigation */}
       <WalletNavigation
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         onOpenWalletManager={openWalletManager}
         onOpenSettings={openSettings}
         onSearch={handleSearch}

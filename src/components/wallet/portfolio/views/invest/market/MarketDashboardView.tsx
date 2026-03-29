@@ -1,6 +1,6 @@
 "use client";
 
-import { type JSX, useMemo, useState } from "react";
+import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -14,10 +14,13 @@ import {
 } from "recharts";
 
 import { LoadingState } from "@/components/ui";
+import { MARKET_SECTION_TABS } from "@/components/wallet/portfolio/components/navigation";
 import { useMarketDashboardQuery } from "@/hooks/queries/market/useMarketDashboardQuery";
 import { REGIME_LABELS } from "@/lib/domain/regimeMapper";
 import type { MarketDashboardPoint } from "@/services";
+import type { MarketSection } from "@/types";
 
+import { TimeframePicker } from "./sections";
 import {
   AXIS_COLOR,
   formatPriceLabel,
@@ -32,6 +35,15 @@ import { RelativeStrengthSection } from "./sections/RelativeStrengthSection";
 import { SimpleStatCard } from "./sections/SimpleStatCard";
 
 type RegimeKey = keyof typeof REGIME_COLORS;
+
+interface MarketDashboardViewProps {
+  activeSection?: MarketSection;
+  onSectionChange?: (section: MarketSection) => void;
+}
+
+const noop = (): void => {
+  /* no-op */
+};
 
 function formatTooltipValue(
   value: string | number | (string | number)[] | undefined,
@@ -75,8 +87,23 @@ function renderFgiActiveDot(dotProps: {
   );
 }
 
-export function MarketDashboardView(): JSX.Element {
+function getSectionButtonClassName(isActive: boolean): string {
+  return [
+    "rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] transition-colors",
+    isActive
+      ? "border-purple-400/30 bg-purple-500/15 text-white"
+      : "border-gray-700 bg-gray-800/60 text-gray-400 hover:border-gray-500 hover:text-gray-200",
+  ].join(" ");
+}
+
+export function MarketDashboardView({
+  activeSection = "overview",
+  onSectionChange = noop,
+}: MarketDashboardViewProps): JSX.Element {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
+  const overviewSectionRef = useRef<HTMLDivElement>(null);
+  const relativeStrengthSectionRef = useRef<HTMLDivElement>(null);
+  const hasMountedRef = useRef(false);
   const activeDays = TIMEFRAMES.find(tf => tf.id === timeframe)?.days ?? 365;
   const { data: dashboardData, isLoading } =
     useMarketDashboardQuery(activeDays);
@@ -121,6 +148,30 @@ export function MarketDashboardView(): JSX.Element {
 
   const latestPoint = filteredData[filteredData.length - 1];
 
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    const shouldScrollToOverview =
+      hasMountedRef.current && activeSection === "overview";
+    const shouldScrollToRelativeStrength =
+      activeSection === "relative-strength";
+
+    if (!shouldScrollToOverview && !shouldScrollToRelativeStrength) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    const targetElement =
+      activeSection === "relative-strength"
+        ? relativeStrengthSectionRef.current
+        : overviewSectionRef.current;
+
+    targetElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+    hasMountedRef.current = true;
+  }, [activeSection, isLoading]);
+
   if (isLoading) {
     return (
       <LoadingState
@@ -132,234 +183,262 @@ export function MarketDashboardView(): JSX.Element {
 
   return (
     <div className="flex flex-col gap-6 w-full h-full p-6 bg-gray-900/50 rounded-xl border border-gray-800">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Market Overview</h2>
-          <p className="text-sm text-gray-400">
-            BTC Price, 200 DMA, and Fear & Greed Index
-          </p>
-        </div>
-        <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1 border border-gray-700">
-          {TIMEFRAMES.map(tf => (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {MARKET_SECTION_TABS.map(section => (
             <button
-              key={tf.id}
-              onClick={() => setTimeframe(tf.id)}
-              data-testid={`btc-tf-${tf.id}`}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                timeframe === tf.id
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-              }`}
+              key={section.id}
+              type="button"
+              data-testid={`market-section-${section.id}`}
+              onClick={() => onSectionChange(section.id)}
+              className={getSectionButtonClassName(
+                activeSection === section.id
+              )}
             >
-              {tf.id}
+              {section.label}
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="w-full h-[540px] mt-4 relative">
-        {/* Market Sentiment Ribbon Label */}
-        <div className="absolute bottom-[68px] left-[72px] z-10">
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-            Market Sentiment Regime
-          </span>
-        </div>
+        <div
+          ref={overviewSectionRef}
+          data-testid="market-section-content-overview"
+          className="flex flex-col gap-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white">Market Overview</h2>
+              <p className="text-sm text-gray-400">
+                BTC Price, 200 DMA, and Fear & Greed Index
+              </p>
+            </div>
+            <TimeframePicker
+              value={timeframe}
+              onChange={setTimeframe}
+              testIdPrefix="btc-tf-"
+              borderColor="border-gray-700"
+              activeColor="bg-purple-600"
+              buttonSize="px-4 py-1.5 text-sm"
+            />
+          </div>
 
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
-            data={filteredData}
-            margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
-          >
-            <defs>
-              <linearGradient id="colorFgi" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="fgiLineGradient" x1="0" y1="0" x2="1" y2="0">
-                {filteredData.map((d, i) => {
-                  const offset =
-                    filteredData.length > 1 ? i / (filteredData.length - 1) : 0;
-                  const color = getRegimeColor(d.regime);
-                  return (
-                    <stop
-                      key={i}
-                      offset={`${(offset * 100).toFixed(2)}%`}
-                      stopColor={color}
-                    />
-                  );
-                })}
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#374151"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="snapshot_date"
-              stroke={AXIS_COLOR}
-              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
-              tickMargin={35}
-              minTickGap={40}
-              tickFormatter={formatXAxisDate}
-            />
+          <div className="w-full h-[540px] mt-4 relative">
+            {/* Market Sentiment Ribbon Label */}
+            <div className="absolute bottom-[68px] left-[72px] z-10">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                Market Sentiment Regime
+              </span>
+            </div>
 
-            <YAxis
-              yAxisId="left"
-              stroke={AXIS_COLOR}
-              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
-              domain={["auto", "auto"]}
-              tickFormatter={formatPriceLabel}
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={filteredData}
+                margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+              >
+                <defs>
+                  <linearGradient id="colorFgi" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient
+                    id="fgiLineGradient"
+                    x1="0"
+                    y1="0"
+                    x2="1"
+                    y2="0"
+                  >
+                    {filteredData.map((d, i) => {
+                      const offset =
+                        filteredData.length > 1
+                          ? i / (filteredData.length - 1)
+                          : 0;
+                      const color = getRegimeColor(d.regime);
+                      return (
+                        <stop
+                          key={i}
+                          offset={`${(offset * 100).toFixed(2)}%`}
+                          stopColor={color}
+                        />
+                      );
+                    })}
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#374151"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="snapshot_date"
+                  stroke={AXIS_COLOR}
+                  tick={{ fill: AXIS_COLOR, fontSize: 11 }}
+                  tickMargin={35}
+                  minTickGap={40}
+                  tickFormatter={formatXAxisDate}
+                />
 
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              stroke={AXIS_COLOR}
-              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
-              domain={[0, 100]}
-              tickFormatter={String}
-              label={{
-                value: "FGI",
-                angle: 90,
-                position: "insideRight",
-                fill: AXIS_COLOR,
-                fontSize: 10,
-              }}
-            />
+                <YAxis
+                  yAxisId="left"
+                  stroke={AXIS_COLOR}
+                  tick={{ fill: AXIS_COLOR, fontSize: 11 }}
+                  domain={["auto", "auto"]}
+                  tickFormatter={formatPriceLabel}
+                />
 
-            <YAxis yAxisId="ribbon" hide={true} domain={[0, 100]} />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  stroke={AXIS_COLOR}
+                  tick={{ fill: AXIS_COLOR, fontSize: 11 }}
+                  domain={[0, 100]}
+                  tickFormatter={String}
+                  label={{
+                    value: "FGI",
+                    angle: 90,
+                    position: "insideRight",
+                    fill: AXIS_COLOR,
+                    fontSize: 10,
+                  }}
+                />
 
-            {regimeBlocks.map((block, idx) => (
-              <ReferenceArea
-                key={`ribbon-${idx}`}
-                yAxisId="ribbon"
-                x1={block.start}
-                x2={block.end}
-                y1={0}
-                y2={8}
-                fill={REGIME_COLORS[block.regime]}
-                fillOpacity={0.9}
-                stroke="none"
-              />
-            ))}
+                <YAxis yAxisId="ribbon" hide={true} domain={[0, 100]} />
 
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#111827",
-                borderColor: "#374151",
-                borderRadius: "12px",
-                color: "#fff",
-                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
-              }}
-              itemStyle={{ color: "#E5E7EB", fontSize: "13px" }}
-              labelStyle={{
-                color: AXIS_COLOR,
-                marginBottom: "8px",
-                fontWeight: "bold",
-              }}
-              cursor={{ stroke: "#4B5563", strokeWidth: 1 }}
-              formatter={formatTooltipValue}
-            />
-            <Legend
-              verticalAlign="top"
-              height={36}
-              iconType="circle"
-              wrapperStyle={{ paddingTop: "0", marginBottom: "20px" }}
-            />
-
-            <Line
-              yAxisId="left"
-              type="monotone"
-              name="BTC Price"
-              dataKey="price_usd"
-              stroke={AXIS_COLOR}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{
-                r: 5,
-                fill: AXIS_COLOR,
-                strokeWidth: 2,
-                stroke: "#fff",
-              }}
-            />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              name="200 DMA"
-              dataKey="dma_200"
-              stroke="#A855F7"
-              strokeWidth={2}
-              dot={false}
-              strokeDasharray="5 5"
-              connectNulls
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              name="Fear & Greed Index"
-              dataKey="sentiment_value"
-              stroke="url(#fgiLineGradient)"
-              strokeWidth={2.5}
-              dot={false}
-              connectNulls
-              activeDot={renderFgiActiveDot}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-        <SimpleStatCard
-          label="Current BTC Price"
-          value={`$${latestPoint?.price_usd.toLocaleString() ?? "---"}`}
-          valueClass="text-white"
-        />
-        <SimpleStatCard
-          label="Current 200 DMA"
-          value={`$${latestPoint?.dma_200?.toLocaleString() ?? "---"}`}
-          valueClass="text-[#A855F7]"
-        />
-        <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
-          <p className="text-sm font-medium text-gray-400 mb-1">
-            Fear & Greed Index
-          </p>
-          <div className="flex flex-col">
-            <p
-              className="text-2xl font-bold"
-              style={{
-                color: getRegimeColor(latestPoint?.regime, "#10B981"),
-              }}
-            >
-              {latestPoint?.sentiment_value ?? "---"} / 100
-              {latestPoint?.regime && (
-                <span className="text-sm ml-2 font-medium opacity-80">
-                  ({getRegimeLabel(latestPoint.regime)})
-                </span>
-              )}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              {Object.entries(REGIME_COLORS).map(([key, color]) => (
-                <div
-                  key={key}
-                  className="flex items-center gap-1"
-                  title={REGIME_LABELS[key as keyof typeof REGIME_LABELS]}
-                >
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: color }}
+                {regimeBlocks.map((block, idx) => (
+                  <ReferenceArea
+                    key={`ribbon-${idx}`}
+                    yAxisId="ribbon"
+                    x1={block.start}
+                    x2={block.end}
+                    y1={0}
+                    y2={8}
+                    fill={REGIME_COLORS[block.regime]}
+                    fillOpacity={0.9}
+                    stroke="none"
                   />
-                  <span className="text-[10px] text-gray-500 font-medium uppercase">
-                    {key}
-                  </span>
+                ))}
+
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#111827",
+                    borderColor: "#374151",
+                    borderRadius: "12px",
+                    color: "#fff",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
+                  }}
+                  itemStyle={{ color: "#E5E7EB", fontSize: "13px" }}
+                  labelStyle={{
+                    color: AXIS_COLOR,
+                    marginBottom: "8px",
+                    fontWeight: "bold",
+                  }}
+                  cursor={{ stroke: "#4B5563", strokeWidth: 1 }}
+                  formatter={formatTooltipValue}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: "0", marginBottom: "20px" }}
+                />
+
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  name="BTC Price"
+                  dataKey="price_usd"
+                  stroke={AXIS_COLOR}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{
+                    r: 5,
+                    fill: AXIS_COLOR,
+                    strokeWidth: 2,
+                    stroke: "#fff",
+                  }}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  name="200 DMA"
+                  dataKey="dma_200"
+                  stroke="#A855F7"
+                  strokeWidth={2}
+                  dot={false}
+                  strokeDasharray="5 5"
+                  connectNulls
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  name="Fear & Greed Index"
+                  dataKey="sentiment_value"
+                  stroke="url(#fgiLineGradient)"
+                  strokeWidth={2.5}
+                  dot={false}
+                  connectNulls
+                  activeDot={renderFgiActiveDot}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <SimpleStatCard
+              label="Current BTC Price"
+              value={`$${latestPoint?.price_usd.toLocaleString() ?? "---"}`}
+              valueClass="text-white"
+            />
+            <SimpleStatCard
+              label="Current 200 DMA"
+              value={`$${latestPoint?.dma_200?.toLocaleString() ?? "---"}`}
+              valueClass="text-[#A855F7]"
+            />
+            <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
+              <p className="text-sm font-medium text-gray-400 mb-1">
+                Fear & Greed Index
+              </p>
+              <div className="flex flex-col">
+                <p
+                  className="text-2xl font-bold"
+                  style={{
+                    color: getRegimeColor(latestPoint?.regime, "#10B981"),
+                  }}
+                >
+                  {latestPoint?.sentiment_value ?? "---"} / 100
+                  {latestPoint?.regime && (
+                    <span className="text-sm ml-2 font-medium opacity-80">
+                      ({getRegimeLabel(latestPoint.regime)})
+                    </span>
+                  )}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  {Object.entries(REGIME_COLORS).map(([key, color]) => (
+                    <div
+                      key={key}
+                      className="flex items-center gap-1"
+                      title={REGIME_LABELS[key as keyof typeof REGIME_LABELS]}
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-[10px] text-gray-500 font-medium uppercase">
+                        {key}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <RelativeStrengthSection />
+      <div
+        ref={relativeStrengthSectionRef}
+        data-testid="market-section-content-relative-strength"
+      >
+        <RelativeStrengthSection />
+      </div>
     </div>
   );
 }

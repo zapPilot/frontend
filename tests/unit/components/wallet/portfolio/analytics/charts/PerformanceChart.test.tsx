@@ -44,17 +44,21 @@ vi.mock("@/utils/formatters", () => ({
   formatChartDate: (date: string) => date,
 }));
 
-vi.mock("../utils/chartHelpers", () => ({
+vi.mock("@/lib/ui/chartPrimitives", () => ({
   buildPath: () => "M 0 0 L 100 100",
   CHART_GRID_POSITIONS: { FIVE_LINES: [] },
 }));
 
-vi.mock("./ChartUI", () => ({
-  ChartGridLines: () => <div data-testid="chart-grid-lines" />,
-  ChartSurface: ({ children }: any) => (
-    <svg data-testid="chart-surface">{children}</svg>
-  ),
-}));
+vi.mock("./ChartUI", async importOriginal => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    ChartGridLines: () => <div data-testid="chart-grid-lines" />,
+    ChartSurface: ({ children }: any) => (
+      <svg data-testid="chart-surface">{children}</svg>
+    ),
+  };
+});
 
 describe("PerformanceChart", () => {
   const mockData = [

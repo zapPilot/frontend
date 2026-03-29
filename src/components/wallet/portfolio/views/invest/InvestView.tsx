@@ -1,6 +1,9 @@
 "use client";
 
-import { type JSX, useState } from "react";
+import { type JSX } from "react";
+
+import { INVEST_SUB_TABS } from "@/components/wallet/portfolio/components/navigation";
+import type { InvestSubTab, MarketSection } from "@/types";
 
 import { BacktestingView } from "../BacktestingView";
 import { ConfigManagerView } from "./configManager";
@@ -9,16 +12,15 @@ import { TradingView } from "./trading/TradingView";
 
 interface InvestViewProps {
   userId: string | undefined;
+  activeSubTab?: InvestSubTab;
+  activeMarketSection?: MarketSection;
+  onSubTabChange?: (subTab: InvestSubTab) => void;
+  onMarketSectionChange?: (section: MarketSection) => void;
 }
 
-const SUB_TABS = [
-  { id: "trading", label: "trading" },
-  { id: "backtesting", label: "backtesting" },
-  { id: "market", label: "market data" },
-  { id: "config-manager", label: "config manager" },
-] as const;
-
-type SubTab = (typeof SUB_TABS)[number]["id"];
+const noop = (): void => {
+  /* no-op */
+};
 
 function getSubTabClassName(isActive: boolean): string {
   const state = isActive ? "text-white" : "text-gray-500 hover:text-gray-300";
@@ -26,8 +28,10 @@ function getSubTabClassName(isActive: boolean): string {
 }
 
 function renderActiveSubTab(
-  activeSubTab: SubTab,
-  userId: string | undefined
+  activeSubTab: InvestSubTab,
+  userId: string | undefined,
+  activeMarketSection: MarketSection,
+  onMarketSectionChange: (section: MarketSection) => void
 ): JSX.Element {
   switch (activeSubTab) {
     case "trading":
@@ -35,23 +39,32 @@ function renderActiveSubTab(
     case "backtesting":
       return <BacktestingView />;
     case "market":
-      return <MarketDashboardView />;
+      return (
+        <MarketDashboardView
+          activeSection={activeMarketSection}
+          onSectionChange={onMarketSectionChange}
+        />
+      );
     case "config-manager":
       return <ConfigManagerView />;
   }
 }
 
-export function InvestView({ userId }: InvestViewProps): JSX.Element {
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>("trading");
-
+export function InvestView({
+  userId,
+  activeSubTab = "trading",
+  activeMarketSection = "overview",
+  onSubTabChange = noop,
+  onMarketSectionChange = noop,
+}: InvestViewProps): JSX.Element {
   return (
     <div className="space-y-8">
       <div className="border-b border-gray-800">
         <div className="flex items-center gap-8">
-          {SUB_TABS.map(({ id, label }) => (
+          {INVEST_SUB_TABS.map(({ id, label }) => (
             <button
               key={id}
-              onClick={() => setActiveSubTab(id)}
+              onClick={() => onSubTabChange(id)}
               className={getSubTabClassName(activeSubTab === id)}
             >
               <span className="capitalize">{label}</span>
@@ -64,7 +77,12 @@ export function InvestView({ userId }: InvestViewProps): JSX.Element {
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-        {renderActiveSubTab(activeSubTab, userId)}
+        {renderActiveSubTab(
+          activeSubTab,
+          userId,
+          activeMarketSection,
+          onMarketSectionChange
+        )}
       </div>
     </div>
   );

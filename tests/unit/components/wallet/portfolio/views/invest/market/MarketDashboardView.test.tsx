@@ -113,6 +113,7 @@ vi.mock("@/services/analyticsService", () => ({
 }));
 
 const mockGetMarketDashboardData = vi.mocked(getMarketDashboardData);
+const scrollIntoViewMock = vi.fn();
 
 const mockData = {
   snapshots: [
@@ -167,6 +168,11 @@ describe("MarketDashboardView", () => {
     capturedXAxisTickFormatter = null;
     capturedPriceTickFormatter = null;
     capturedFgiActiveDot = null;
+    scrollIntoViewMock.mockReset();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
   });
 
   it("shows loading spinner while fetching", () => {
@@ -215,6 +221,41 @@ describe("MarketDashboardView", () => {
     expect(screen.getByText("Current ETH/BTC Ratio")).toBeDefined();
     expect(screen.getByText("Ratio 200 DMA")).toBeDefined();
     expect(screen.getByText("Leader Signal")).toBeDefined();
+  });
+
+  it("renders section pills for deep-link targets", async () => {
+    mockGetMarketDashboardData.mockResolvedValue(mockData);
+    render(<MarketDashboardView />, { wrapper: createWrapper() });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("market-section-overview")).toBeDefined()
+    );
+    expect(
+      screen.getByTestId("market-section-relative-strength")
+    ).toBeDefined();
+  });
+
+  it("notifies parent when switching market sections", async () => {
+    const onSectionChange = vi.fn();
+
+    mockGetMarketDashboardData.mockResolvedValue(mockData);
+    render(<MarketDashboardView onSectionChange={onSectionChange} />, {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => screen.getByTestId("market-section-relative-strength"));
+    fireEvent.click(screen.getByTestId("market-section-relative-strength"));
+
+    expect(onSectionChange).toHaveBeenCalledWith("relative-strength");
+  });
+
+  it("scrolls to the relative strength section for deep links", async () => {
+    mockGetMarketDashboardData.mockResolvedValue(mockData);
+    render(<MarketDashboardView activeSection="relative-strength" />, {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(scrollIntoViewMock).toHaveBeenCalled());
   });
 
   it("switches BTC timeframe on button click", async () => {
