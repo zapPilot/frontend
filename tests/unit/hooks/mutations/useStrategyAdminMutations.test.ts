@@ -40,10 +40,10 @@ const mockCreateRequest: CreateStrategyConfigRequest = {
   config_id: "test_config",
   display_name: "Test Config",
   description: null,
-  strategy_id: "dca_classic",
+  strategy_id: "dma_gated_fgi",
   primary_asset: "BTC",
   supports_daily_suggestion: true,
-  params: { param1: "value1" },
+  params: { signal: { cross_cooldown_days: 30 } },
   composition: {
     kind: "standard",
     bucket_mapper_id: "default",
@@ -58,10 +58,10 @@ const mockCreateRequest: CreateStrategyConfigRequest = {
 const mockUpdateBody: UpdateStrategyConfigRequest = {
   display_name: "Updated Config",
   description: "updated description",
-  strategy_id: "dca_classic",
+  strategy_id: "dma_gated_fgi",
   primary_asset: "ETH",
   supports_daily_suggestion: false,
-  params: { param1: "updated" },
+  params: { signal: { cross_cooldown_days: 21 } },
   composition: {
     kind: "standard",
     bucket_mapper_id: "default",

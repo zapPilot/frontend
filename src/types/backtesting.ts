@@ -5,14 +5,41 @@
  * - POST /api/v3/backtesting/compare
  */
 
-export interface BacktestCompareParamsV3 {
+export interface BacktestSignalParamsV3 {
   cross_cooldown_days?: number;
   cross_on_touch?: boolean;
-  pacing_k?: number;
-  pacing_r_max?: number;
-  buy_sideways_window_days?: number;
-  buy_sideways_max_range?: number;
-  buy_leg_caps?: number[];
+  rotation_neutral_band?: number;
+  rotation_max_deviation?: number;
+}
+
+export interface BacktestPacingParamsV3 {
+  k?: number;
+  r_max?: number;
+}
+
+export interface BacktestBuyGateParamsV3 {
+  window_days?: number;
+  sideways_max_range?: number;
+  leg_caps?: number[];
+}
+
+export interface BacktestTradeQuotaParamsV3 {
+  min_trade_interval_days?: number | null;
+  max_trades_7d?: number | null;
+  max_trades_30d?: number | null;
+}
+
+export interface BacktestRotationParamsV3 {
+  drift_threshold?: number;
+  cooldown_days?: number;
+}
+
+export interface BacktestCompareParamsV3 {
+  signal?: BacktestSignalParamsV3;
+  pacing?: BacktestPacingParamsV3;
+  buy_gate?: BacktestBuyGateParamsV3;
+  trade_quota?: BacktestTradeQuotaParamsV3;
+  rotation?: BacktestRotationParamsV3;
 }
 
 export interface BacktestCompareConfigV3 {
@@ -99,7 +126,14 @@ export interface BacktestDecisionDetails {
 export interface BacktestDecision {
   action: "buy" | "sell" | "hold";
   reason: string;
-  rule_group: "cross" | "cooldown" | "dma_fgi" | "ath" | "fgi" | "none";
+  rule_group:
+    | "cross"
+    | "cooldown"
+    | "dma_fgi"
+    | "ath"
+    | "fgi"
+    | "rotation"
+    | "none";
   target_allocation: BacktestPortfolioAllocation;
   immediate: boolean;
   details?: BacktestDecisionDetails;
@@ -179,7 +213,7 @@ export interface BacktestStrategyCatalogEntryV3 {
   display_name: string;
   description?: string | null;
   param_schema: Record<string, unknown>;
-  default_params: Record<string, unknown>;
+  default_params: BacktestCompareParamsV3;
   supports_daily_suggestion: boolean;
 }
 

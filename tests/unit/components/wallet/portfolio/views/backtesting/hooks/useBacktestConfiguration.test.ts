@@ -16,6 +16,26 @@ vi.mock("@/hooks/mutations/useBacktestMutation");
 vi.mock("@/services/backtestingService");
 vi.mock("@/services/strategyService");
 
+const mockDmaPresetParams = {
+  signal: {
+    cross_cooldown_days: 30,
+  },
+  pacing: {
+    k: 5,
+    r_max: 1,
+  },
+};
+
+const mockCatalogDmaDefaultParams = {
+  signal: {
+    cross_cooldown_days: 14,
+  },
+  pacing: {
+    k: 3,
+    r_max: 1,
+  },
+};
+
 const mockStrategyConfigs = {
   presets: [
     {
@@ -23,11 +43,7 @@ const mockStrategyConfigs = {
       display_name: "DMA Gated FGI Default",
       description: "Curated DMA-first preset",
       strategy_id: "dma_gated_fgi" as const,
-      params: {
-        cross_cooldown_days: 30,
-        pacing_k: 5,
-        pacing_r_max: 1,
-      },
+      params: mockDmaPresetParams,
       is_benchmark: false,
       is_default: true,
     },
@@ -46,11 +62,7 @@ const mockCatalog = {
       display_name: "DMA Gated FGI",
       description: "DMA-first strategy",
       param_schema: {},
-      default_params: {
-        cross_cooldown_days: 14,
-        pacing_k: 3,
-        pacing_r_max: 1,
-      },
+      default_params: mockCatalogDmaDefaultParams,
       supports_daily_suggestion: true,
     },
   ],
@@ -133,7 +145,7 @@ describe("useBacktestConfiguration", () => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(500);
       expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
-      expect(parsed.configs[0].params.pacing_k).toBe(3);
+      expect(parsed.configs[0].params.pacing.k).toBe(3);
     });
   });
 
@@ -230,7 +242,7 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       // catalog fallback was used: default params from the DMA catalog entry
       const parsed = JSON.parse(result.current.editorValue);
-      expect(parsed.configs[0].params.pacing_k).toBe(3);
+      expect(parsed.configs[0].params.pacing.k).toBe(3);
     });
   });
 
@@ -261,9 +273,13 @@ describe("useBacktestConfiguration", () => {
                 config_id: "dma_gated_fgi_default",
                 strategy_id: "dma_gated_fgi",
                 params: {
-                  cross_cooldown_days: 30,
-                  pacing_k: 5,
-                  pacing_r_max: 1,
+                  signal: {
+                    cross_cooldown_days: 30,
+                  },
+                  pacing: {
+                    k: 5,
+                    r_max: 1,
+                  },
                 },
               },
             ],
@@ -290,9 +306,13 @@ describe("useBacktestConfiguration", () => {
           config_id: "dma_gated_fgi_default",
           strategy_id: "dma_gated_fgi",
           params: {
-            cross_cooldown_days: 30,
-            pacing_k: 5,
-            pacing_r_max: 1,
+            signal: {
+              cross_cooldown_days: 30,
+            },
+            pacing: {
+              k: 5,
+              r_max: 1,
+            },
           },
         },
       ],
@@ -390,7 +410,7 @@ describe("useBacktestConfiguration", () => {
     expect(result.current.editorError).toBe("Invalid JSON: unable to parse.");
   });
 
-  it("passes unknown params through to backend with passthrough schema", () => {
+  it("rejects unknown params that are outside the nested public contract", () => {
     mockPendingDefaults();
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
@@ -417,19 +437,8 @@ describe("useBacktestConfiguration", () => {
       result.current.handleRunBacktest();
     });
 
-    // With passthrough schema, unknown params are accepted and forwarded to backend
-    expect(result.current.editorError).toBeNull();
-    expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        configs: [
-          expect.objectContaining({
-            params: {
-              signal_provider: "fgi",
-            },
-          }),
-        ],
-      })
-    );
+    expect(result.current.editorError).toContain("signal_provider");
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -489,6 +498,38 @@ describe("useBacktestConfiguration", () => {
     expect(mockMutate).not.toHaveBeenCalled();
   });
 
+  it("sets editorError when params use stale flat cooldown keys", () => {
+    mockPendingDefaults();
+
+    const { result } = renderHook(() => useBacktestConfiguration(), {
+      wrapper: QueryClientWrapper,
+    });
+
+    act(() => {
+      result.current.updateEditorValue(
+        JSON.stringify({
+          total_capital: 10000,
+          configs: [
+            {
+              config_id: "eth_btc_rotation_default",
+              strategy_id: "eth_btc_rotation",
+              params: {
+                rotation_cooldown_days: 7,
+              },
+            },
+          ],
+        })
+      );
+    });
+
+    act(() => {
+      result.current.handleRunBacktest();
+    });
+
+    expect(result.current.editorError).toContain("rotation_cooldown_days");
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
   // -------------------------------------------------------------------------
   // normalizeParams – supported DMA public params
   // -------------------------------------------------------------------------
@@ -509,13 +550,19 @@ describe("useBacktestConfiguration", () => {
               config_id: "dma_gated_fgi_default",
               strategy_id: "dma_gated_fgi",
               params: {
-                cross_cooldown_days: 21,
-                cross_on_touch: false,
-                pacing_k: 5,
-                pacing_r_max: 1,
-                buy_sideways_window_days: 7,
-                buy_sideways_max_range: 0.08,
-                buy_leg_caps: [0.05, 0.1, 0.2],
+                signal: {
+                  cross_cooldown_days: 21,
+                  cross_on_touch: false,
+                },
+                pacing: {
+                  k: 5,
+                  r_max: 1,
+                },
+                buy_gate: {
+                  window_days: 7,
+                  sideways_max_range: 0.08,
+                  leg_caps: [0.05, 0.1, 0.2],
+                },
               },
             },
           ],
@@ -532,13 +579,19 @@ describe("useBacktestConfiguration", () => {
         configs: [
           expect.objectContaining({
             params: {
-              cross_cooldown_days: 21,
-              cross_on_touch: false,
-              pacing_k: 5,
-              pacing_r_max: 1,
-              buy_sideways_window_days: 7,
-              buy_sideways_max_range: 0.08,
-              buy_leg_caps: [0.05, 0.1, 0.2],
+              signal: {
+                cross_cooldown_days: 21,
+                cross_on_touch: false,
+              },
+              pacing: {
+                k: 5,
+                r_max: 1,
+              },
+              buy_gate: {
+                window_days: 7,
+                sideways_max_range: 0.08,
+                leg_caps: [0.05, 0.1, 0.2],
+              },
             },
           }),
         ],
@@ -865,7 +918,7 @@ describe("useBacktestConfiguration", () => {
 
     const parsed = JSON.parse(result.current.editorValue);
     // catalog fallback: dma_gated_fgi default_params from mockCatalog
-    expect(parsed.configs[0].params.pacing_k).toBe(3);
+    expect(parsed.configs[0].params.pacing.k).toBe(3);
     expect(result.current.editorError).toBeNull();
   });
 
@@ -966,7 +1019,9 @@ describe("useBacktestConfiguration", () => {
               config_id: "dma_gated_fgi_default",
               strategy_id: "dma_gated_fgi",
               params: {
-                pacing_k: 4,
+                pacing: {
+                  k: 4,
+                },
               },
             },
           ],
@@ -982,7 +1037,11 @@ describe("useBacktestConfiguration", () => {
       expect.objectContaining({
         configs: [
           expect.objectContaining({
-            params: { pacing_k: 4 },
+            params: {
+              pacing: {
+                k: 4,
+              },
+            },
           }),
         ],
       })

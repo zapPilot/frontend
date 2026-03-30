@@ -95,23 +95,31 @@ describe("updateConfigStrategy", () => {
   it("updates strategy_id on the first config entry", () => {
     const json = JSON.stringify({
       days: 500,
-      configs: [{ config_id: "x", strategy_id: "old", params: { k: 1 } }],
+      configs: [
+        { config_id: "x", strategy_id: "old", params: { pacing: { k: 1 } } },
+      ],
     });
     const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
     expect(result.configs[0].strategy_id).toBe("new_strat");
-    expect(result.configs[0].params).toEqual({ k: 1 });
+    expect(result.configs[0].params).toEqual({ pacing: { k: 1 } });
     expect(result.days).toBe(500);
   });
 
   it("replaces params when defaultParams is provided", () => {
     const json = JSON.stringify({
-      configs: [{ config_id: "x", strategy_id: "old", params: { k: 1 } }],
+      configs: [
+        { config_id: "x", strategy_id: "old", params: { pacing: { k: 1 } } },
+      ],
     });
     const result = JSON.parse(
-      updateConfigStrategy(json, "new_strat", { lookback: 14 })
+      updateConfigStrategy(json, "new_strat", {
+        signal: { cross_cooldown_days: 14 },
+      })
     );
     expect(result.configs[0].strategy_id).toBe("new_strat");
-    expect(result.configs[0].params).toEqual({ lookback: 14 });
+    expect(result.configs[0].params).toEqual({
+      signal: { cross_cooldown_days: 14 },
+    });
   });
 
   it("discards other config entries, keeping only the updated one", () => {
@@ -170,7 +178,13 @@ describe("updateConfigStrategy", () => {
 
   it("replaces params with empty object when defaultParams is {}", () => {
     const json = JSON.stringify({
-      configs: [{ config_id: "x", strategy_id: "old", params: { k: 5, r: 1 } }],
+      configs: [
+        {
+          config_id: "x",
+          strategy_id: "old",
+          params: { pacing: { k: 5, r_max: 1 } },
+        },
+      ],
     });
 
     const result = JSON.parse(updateConfigStrategy(json, "new_strat", {}));

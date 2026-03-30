@@ -20,18 +20,60 @@ import {
   FALLBACK_DEFAULTS,
 } from "./backtestConfigurationBuilders";
 
-const backtestParamsSchema = z
+const signalParamsSchema = z
   .object({
     cross_cooldown_days: z.coerce.number().int().nonnegative().optional(),
     cross_on_touch: z.boolean().optional(),
-    pacing_k: z.coerce.number().optional(),
-    pacing_r_max: z.coerce.number().optional(),
-    buy_sideways_window_days: z.coerce.number().int().positive().optional(),
-    buy_sideways_max_range: z.coerce.number().nonnegative().optional(),
-    buy_leg_caps: z.array(z.coerce.number()).optional(),
   })
-  /* eslint-disable-next-line sonarjs/deprecation */
-  .passthrough();
+  .extend({
+    rotation_neutral_band: z.coerce.number().nonnegative().optional(),
+    rotation_max_deviation: z.coerce.number().positive().optional(),
+  })
+  .strict();
+
+const pacingParamsSchema = z
+  .object({
+    k: z.coerce.number().optional(),
+    r_max: z.coerce.number().optional(),
+  })
+  .strict();
+
+const buyGateParamsSchema = z
+  .object({
+    window_days: z.coerce.number().int().positive().optional(),
+    sideways_max_range: z.coerce.number().nonnegative().optional(),
+    leg_caps: z.array(z.coerce.number()).optional(),
+  })
+  .strict();
+
+const nullablePositiveInt = z
+  .union([z.coerce.number().int().positive(), z.null()])
+  .optional();
+
+const tradeQuotaParamsSchema = z
+  .object({
+    min_trade_interval_days: nullablePositiveInt,
+    max_trades_7d: nullablePositiveInt,
+    max_trades_30d: nullablePositiveInt,
+  })
+  .strict();
+
+const rotationParamsSchema = z
+  .object({
+    drift_threshold: z.coerce.number().nonnegative().optional(),
+    cooldown_days: z.coerce.number().int().nonnegative().optional(),
+  })
+  .strict();
+
+const backtestParamsSchema = z
+  .object({
+    signal: signalParamsSchema.optional(),
+    pacing: pacingParamsSchema.optional(),
+    buy_gate: buyGateParamsSchema.optional(),
+    trade_quota: tradeQuotaParamsSchema.optional(),
+    rotation: rotationParamsSchema.optional(),
+  })
+  .strict();
 
 const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),
@@ -95,11 +137,32 @@ function normalizeParams(
   if (!params) {
     return undefined;
   }
-  const normalized = Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined)
-  );
-  return Object.keys(normalized).length > 0
+  const normalized = pruneUndefinedDeep(params);
+  return normalized !== undefined
     ? (normalized as BacktestRequest["configs"][number]["params"])
+    : undefined;
+}
+
+function pruneUndefinedDeep(value: unknown): unknown {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null || Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value !== "object") {
+    return value;
+  }
+
+  const normalizedEntries = Object.entries(value).flatMap(
+    ([key, entryValue]) => {
+      const normalizedEntry = pruneUndefinedDeep(entryValue);
+      return normalizedEntry === undefined ? [] : [[key, normalizedEntry]];
+    }
+  );
+
+  return normalizedEntries.length > 0
+    ? Object.fromEntries(normalizedEntries)
     : undefined;
 }
 

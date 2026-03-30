@@ -1,4 +1,7 @@
-import type { BacktestRequest } from "@/types/backtesting";
+import type {
+  BacktestCompareParamsV3,
+  BacktestRequest,
+} from "@/types/backtesting";
 
 type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
 type ValueType = string | number | boolean;
@@ -150,7 +153,7 @@ export function parseConfigStrategyId(json: string, fallback: string): string {
 export function updateConfigStrategy(
   json: string,
   strategyId: string,
-  defaultParams?: Record<string, unknown>
+  defaultParams?: BacktestCompareParamsV3
 ): string {
   const parsed = parseJsonObject(json);
   if (!parsed) {

@@ -131,7 +131,7 @@ describe("BacktestTerminalDisplay", () => {
         display_name: "DMA Gated FGI",
         description: "DMA-first strategy",
         param_schema: {},
-        default_params: { pacing_k: 3 },
+        default_params: { pacing: { k: 3 } },
         supports_daily_suggestion: true,
       },
       {
@@ -139,7 +139,7 @@ describe("BacktestTerminalDisplay", () => {
         display_name: "Momentum Alpha",
         description: "Momentum strategy",
         param_schema: {},
-        default_params: { lookback: 14 },
+        default_params: {},
         supports_daily_suggestion: false,
       },
     ],

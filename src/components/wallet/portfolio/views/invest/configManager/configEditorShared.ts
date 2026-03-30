@@ -2,7 +2,11 @@
 
 import type { Dispatch, SetStateAction } from "react";
 
-import type { SavedStrategyConfig, StrategyComposition } from "@/types";
+import type {
+  BacktestCompareParamsV3,
+  SavedStrategyConfig,
+  StrategyComposition,
+} from "@/types";
 
 export interface ConfigEditorViewProps {
   configId: string | null;
@@ -39,7 +43,7 @@ export interface ConfigFieldsPayload {
   composition: StrategyComposition;
   description: string | null;
   display_name: string;
-  params: Record<string, unknown>;
+  params: BacktestCompareParamsV3;
   primary_asset: string;
   strategy_id: string;
   supports_daily_suggestion: boolean;
@@ -113,7 +117,7 @@ export function getMutationErrorTitle(mode: ConfigEditorMode): string {
 
 export function buildFieldsPayload(
   formState: ConfigEditorFormState,
-  params: Record<string, unknown>,
+  params: BacktestCompareParamsV3,
   composition: StrategyComposition
 ): ConfigFieldsPayload {
   return {
@@ -130,7 +134,7 @@ export function buildFieldsPayload(
 export function getActiveJsonEditorState(
   activeJsonTab: JsonTab,
   formState: ConfigEditorFormState,
-  paramsValidation: ParsedJsonResult<Record<string, unknown>>,
+  paramsValidation: ParsedJsonResult<BacktestCompareParamsV3>,
   compositionValidation: ParsedJsonResult<StrategyComposition>,
   setFormState: Dispatch<SetStateAction<ConfigEditorFormState>>
 ): JsonEditorPanelProps {

@@ -125,7 +125,7 @@ describe("backtestingService", () => {
           {
             config_id: "dma_gated_fgi_default",
             strategy_id: "dma_gated_fgi",
-            params: { pacing_k: 5, pacing_r_max: 1 },
+            params: { pacing: { k: 5, r_max: 1 } },
           },
         ],
       };

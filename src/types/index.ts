@@ -16,6 +16,7 @@
 // ============================================================================
 
 export * from "./analytics";
+export * from "./backtesting";
 export * from "./export";
 export * from "./portfolio";
 export * from "./portfolio-allocation";

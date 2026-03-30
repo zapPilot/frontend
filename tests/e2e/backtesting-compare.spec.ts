@@ -86,9 +86,13 @@ const STRATEGIES_RESPONSE = {
       description: "DMA-first strategy",
       param_schema: { type: "object" },
       default_params: {
-        cross_cooldown_days: 30,
-        pacing_k: 5,
-        pacing_r_max: 1,
+        signal: {
+          cross_cooldown_days: 30,
+        },
+        pacing: {
+          k: 5,
+          r_max: 1,
+        },
       },
       supports_daily_suggestion: true,
     },
@@ -103,9 +107,13 @@ const STRATEGY_CONFIGS_RESPONSE = {
       description: "Curated DMA-first preset",
       strategy_id: "dma_gated_fgi",
       params: {
-        cross_cooldown_days: 30,
-        pacing_k: 5,
-        pacing_r_max: 1,
+        signal: {
+          cross_cooldown_days: 30,
+        },
+        pacing: {
+          k: 5,
+          r_max: 1,
+        },
       },
       is_default: true,
       is_benchmark: false,

@@ -5,6 +5,7 @@
  */
 
 import type {
+  BacktestCompareParamsV3,
   BacktestDecision,
   BacktestExecution,
   BacktestMarketPoint,
@@ -44,7 +45,7 @@ export interface StrategyPreset {
   display_name: string;
   description: string | null;
   strategy_id: string;
-  params: Record<string, unknown>;
+  params: BacktestCompareParamsV3;
   is_default: boolean;
   /** Whether this preset is the baseline for comparisons (e.g., DCA Classic) */
   is_benchmark: boolean;

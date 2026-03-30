@@ -25,7 +25,7 @@ const baseConfig: SavedStrategyConfig = {
   supports_daily_suggestion: true,
   is_default: false,
   is_benchmark: false,
-  params: { drift_threshold: 0.1 },
+  params: { rotation: { drift_threshold: 0.1 } },
   composition: {
     kind: "bucket_strategy",
     bucket_mapper_id: "spot_stable",
@@ -592,7 +592,7 @@ describe("ConfigEditorView", () => {
             strategy_id: "dma_gated_fgi",
             primary_asset: "BTC",
             supports_daily_suggestion: true,
-            params: { drift_threshold: 0.1 },
+            params: { rotation: { drift_threshold: 0.1 } },
             composition: baseConfig.composition,
           },
         });

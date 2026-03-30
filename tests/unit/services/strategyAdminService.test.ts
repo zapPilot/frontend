@@ -48,7 +48,7 @@ function createMockConfig(
     supports_daily_suggestion: true,
     is_default: false,
     is_benchmark: false,
-    params: { key: "value" },
+    params: { signal: { cross_cooldown_days: 30 } },
     composition: createMockComposition(),
     ...overrides,
   };
@@ -139,7 +139,7 @@ describe("strategyAdminService", () => {
         strategy_id: "dma_gated_fgi",
         primary_asset: "BTC",
         supports_daily_suggestion: true,
-        params: { updated: true },
+        params: { signal: { cross_cooldown_days: 21 } },
         composition: createMockComposition(),
       };
       const response: StrategyAdminConfigResponse = {

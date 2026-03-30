@@ -101,6 +101,11 @@
     "@walletconnect/utils": "2.22.4",
     "@walletconnect/logger": "3.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "minimatch@3>brace-expansion": "^1.1.11"
+    }
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "npx prettier --write",

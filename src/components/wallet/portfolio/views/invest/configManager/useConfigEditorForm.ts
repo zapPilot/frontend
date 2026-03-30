@@ -15,7 +15,11 @@ import {
 } from "@/hooks/mutations/useStrategyAdminMutations";
 import { useStrategyAdminConfig } from "@/hooks/queries/strategyAdmin";
 import { useToast } from "@/providers/ToastProvider";
-import type { SavedStrategyConfig, StrategyComposition } from "@/types";
+import type {
+  BacktestCompareParamsV3,
+  SavedStrategyConfig,
+  StrategyComposition,
+} from "@/types";
 
 import {
   buildFieldsPayload,
@@ -82,7 +86,7 @@ export function useConfigEditorForm({
 
   const isBenchmark = mode === "edit" && existingConfig?.is_benchmark === true;
   const paramsValidation = useMemo(
-    () => tryParseJson<Record<string, unknown>>(formState.paramsJson),
+    () => tryParseJson<BacktestCompareParamsV3>(formState.paramsJson),
     [formState.paramsJson]
   );
   const compositionValidation = useMemo(

@@ -44,13 +44,13 @@ describe("buildDefaultPayloadFromPresets", () => {
       createPreset({
         config_id: "dma_gated_fgi_alt",
         strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-        params: { pacing_k: 3, pacing_r_max: 0.8 },
+        params: { pacing: { k: 3, r_max: 0.8 } },
       }),
       createPreset({
         config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
         strategy_id: DMA_GATED_FGI_STRATEGY_ID,
         is_default: true,
-        params: { pacing_k: 5, pacing_r_max: 1 },
+        params: { pacing: { k: 5, r_max: 1 } },
       }),
     ];
 
@@ -63,7 +63,7 @@ describe("buildDefaultPayloadFromPresets", () => {
         {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-          params: { pacing_k: 5, pacing_r_max: 1 },
+          params: { pacing: { k: 5, r_max: 1 } },
         },
       ],
     });
@@ -106,7 +106,7 @@ describe("buildDefaultPayloadFromPresets", () => {
       createPreset({
         config_id: "only_one",
         strategy_id: "eth_btc_rotation",
-        params: { k: 2 },
+        params: { pacing: { k: 2 } },
       }),
     ];
 
@@ -116,7 +116,7 @@ describe("buildDefaultPayloadFromPresets", () => {
     expect(result.configs[0]).toEqual({
       config_id: "only_one",
       strategy_id: "eth_btc_rotation",
-      params: { k: 2 },
+      params: { pacing: { k: 2 } },
     });
   });
 
@@ -125,12 +125,12 @@ describe("buildDefaultPayloadFromPresets", () => {
       createPreset({
         config_id: "first_non_default",
         strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-        params: { k: 1 },
+        params: { pacing: { k: 1 } },
       }),
       createPreset({
         config_id: "second_non_default",
         strategy_id: "eth_btc_rotation",
-        params: { k: 2 },
+        params: { pacing: { k: 2 } },
       }),
     ];
 
@@ -194,9 +194,13 @@ describe("buildDefaultPayloadFromCatalog", () => {
           description: "DMA-first strategy",
           param_schema: {},
           default_params: {
-            cross_cooldown_days: 30,
-            pacing_k: 5,
-            pacing_r_max: 1,
+            signal: {
+              cross_cooldown_days: 30,
+            },
+            pacing: {
+              k: 5,
+              r_max: 1,
+            },
           },
           supports_daily_suggestion: true,
         },
@@ -213,9 +217,13 @@ describe("buildDefaultPayloadFromCatalog", () => {
           config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
           strategy_id: DMA_GATED_FGI_STRATEGY_ID,
           params: {
-            cross_cooldown_days: 30,
-            pacing_k: 5,
-            pacing_r_max: 1,
+            signal: {
+              cross_cooldown_days: 30,
+            },
+            pacing: {
+              k: 5,
+              r_max: 1,
+            },
           },
         },
       ],

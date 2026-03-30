@@ -5,6 +5,8 @@
  * analytics-engine/src/models/strategy_admin.py
  */
 
+import type { BacktestCompareParamsV3 } from "./backtesting";
+
 /**
  * Reference to a strategy component with its parameters.
  */
@@ -38,7 +40,7 @@ export interface SavedStrategyConfig {
   supports_daily_suggestion: boolean;
   is_default: boolean;
   is_benchmark: boolean;
-  params: Record<string, unknown>;
+  params: BacktestCompareParamsV3;
   composition: StrategyComposition;
 }
 
@@ -65,7 +67,7 @@ interface StrategyConfigRequestBase {
   strategy_id: string;
   primary_asset: string;
   supports_daily_suggestion: boolean;
-  params: Record<string, unknown>;
+  params: BacktestCompareParamsV3;
   composition: StrategyComposition;
 }
 
