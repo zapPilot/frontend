@@ -5,6 +5,7 @@
  */
 
 import type {
+  BacktestAssetAllocation,
   BacktestCompareParamsV3,
   BacktestDecision,
   BacktestExecution,
@@ -23,6 +24,14 @@ export type RegimeLabel =
   | "greed"
   | "extreme_greed";
 
+export interface DailySuggestionPortfolio extends BacktestStrategyPortfolio {
+  asset_allocation: BacktestAssetAllocation;
+}
+
+export interface DailySuggestionDecision extends BacktestDecision {
+  target_asset_allocation: BacktestAssetAllocation;
+}
+
 /**
  * Daily strategy suggestion response.
  */
@@ -31,9 +40,9 @@ export interface DailySuggestionResponse {
   config_id: string;
   strategy_id: string;
   market: BacktestMarketPoint;
-  portfolio: BacktestStrategyPortfolio;
+  portfolio: DailySuggestionPortfolio;
   signal: BacktestSignal;
-  decision: BacktestDecision;
+  decision: DailySuggestionDecision;
   execution: BacktestExecution;
 }
 

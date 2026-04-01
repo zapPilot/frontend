@@ -5,6 +5,8 @@
  * Single source of truth for asset categories, colors, and labels.
  */
 
+import { ALLOCATION_CATEGORIES } from "@/lib/domain/allocationCategories";
+
 /**
  * Asset Category Keys
  * Type-safe keys for all supported asset categories
@@ -37,35 +39,35 @@ interface AssetCategory {
 export const ASSET_CATEGORIES: Record<AssetCategoryKey, AssetCategory> = {
   btc: {
     key: "btc",
-    label: "Bitcoin",
-    shortLabel: "BTC",
-    chartColor: "#f59e0b", // Amber - optimized for chart visibility
-    brandColor: "#F7931A", // Bitcoin orange - official brand color
-    tailwindColor: "text-amber-400",
+    label: ALLOCATION_CATEGORIES.btc.label,
+    shortLabel: ALLOCATION_CATEGORIES.btc.shortLabel,
+    chartColor: ALLOCATION_CATEGORIES.btc.color,
+    brandColor: ALLOCATION_CATEGORIES.btc.color,
+    tailwindColor: ALLOCATION_CATEGORIES.btc.tailwindColor,
   },
   eth: {
     key: "eth",
-    label: "Ethereum",
-    shortLabel: "ETH",
-    chartColor: "#6366f1", // Indigo - optimized for chart visibility
-    brandColor: "#627EEA", // Ethereum blue - official brand color
-    tailwindColor: "text-indigo-400",
+    label: ALLOCATION_CATEGORIES.eth.label,
+    shortLabel: ALLOCATION_CATEGORIES.eth.shortLabel,
+    chartColor: ALLOCATION_CATEGORIES.eth.color,
+    brandColor: ALLOCATION_CATEGORIES.eth.color,
+    tailwindColor: ALLOCATION_CATEGORIES.eth.tailwindColor,
   },
   stablecoin: {
     key: "stablecoin",
-    label: "Stablecoins",
-    shortLabel: "Stablecoin",
-    chartColor: "#10b981", // Green - optimized for chart visibility
-    brandColor: "#26A69A", // Teal - common stablecoin color
-    tailwindColor: "text-emerald-400",
+    label: ALLOCATION_CATEGORIES.stable.label,
+    shortLabel: ALLOCATION_CATEGORIES.stable.shortLabel,
+    chartColor: ALLOCATION_CATEGORIES.stable.color,
+    brandColor: ALLOCATION_CATEGORIES.stable.color,
+    tailwindColor: ALLOCATION_CATEGORIES.stable.tailwindColor,
   },
   altcoin: {
     key: "altcoin",
-    label: "Altcoins",
-    shortLabel: "Altcoin",
-    chartColor: "#ef4444", // Red - optimized for chart visibility
-    brandColor: "#AB47BC", // Purple - alternative assets color
-    tailwindColor: "text-red-400",
+    label: ALLOCATION_CATEGORIES.alt.label,
+    shortLabel: ALLOCATION_CATEGORIES.alt.shortLabel,
+    chartColor: ALLOCATION_CATEGORIES.alt.color,
+    brandColor: ALLOCATION_CATEGORIES.alt.color,
+    tailwindColor: ALLOCATION_CATEGORIES.alt.tailwindColor,
   },
 } as const;
 

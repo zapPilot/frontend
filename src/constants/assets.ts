@@ -1,11 +1,13 @@
 /**
  * Asset color mapping for consistent visualization across components
  */
+import { ALLOCATION_CATEGORIES } from "@/lib/domain/allocationCategories";
+
 export const ASSET_COLORS = {
-  BTC: "#F7931A",
-  ETH: "#627EEA",
+  BTC: ALLOCATION_CATEGORIES.btc.color,
+  ETH: ALLOCATION_CATEGORIES.eth.color,
   SOL: "#14F195",
-  ALT: "#627EEA", // Updated to ETH Blue as generic "Ecosystem" color
+  ALT: ALLOCATION_CATEGORIES.alt.color,
   USDC: "#2775CA",
   USDT: "#26A17B",
 } as const;
@@ -19,14 +21,10 @@ export const ASSET_COLORS = {
  * - Backtesting (BacktestTooltip)
  */
 export const UNIFIED_COLORS = {
-  /** Bitcoin spot holdings - Bitcoin Orange */
-  BTC: "#F7931A",
-  /** BTC-USDC LP positions - Vibrant Amber (Yield/Gold) */
-  BTC_STABLE: "#F59E0B",
-  /** Stablecoins - USDC Blue */
-  STABLE: "#2775CA",
-  /** Everything else (ETH, alts, ETH-LP) - Ethereum Blue (Ecosystem) */
-  ALT: "#627EEA",
+  BTC: ALLOCATION_CATEGORIES.btc.color,
+  ETH: ALLOCATION_CATEGORIES.eth.color,
+  STABLE: ALLOCATION_CATEGORIES.stable.color,
+  ALT: ALLOCATION_CATEGORIES.alt.color,
 } as const;
 
 /**

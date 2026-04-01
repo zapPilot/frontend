@@ -10,10 +10,10 @@ import { UNIFIED_COLORS } from "@/constants/assets";
 const mockSegments: UnifiedSegment[] = [
   { category: "btc", label: "BTC", percentage: 40, color: UNIFIED_COLORS.BTC },
   {
-    category: "btc-stable",
-    label: "BTC-STABLE",
+    category: "eth",
+    label: "ETH",
     percentage: 20,
-    color: UNIFIED_COLORS.BTC_STABLE,
+    color: UNIFIED_COLORS.ETH,
   },
   {
     category: "stable",
@@ -34,9 +34,7 @@ describe("UnifiedAllocationBar", () => {
 
     // Check segments are rendered via test IDs
     expect(screen.getByTestId("unified-segment-btc")).toBeInTheDocument();
-    expect(
-      screen.getByTestId("unified-segment-btc-stable")
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("unified-segment-eth")).toBeInTheDocument();
     expect(screen.getByTestId("unified-segment-stable")).toBeInTheDocument();
     expect(screen.getByTestId("unified-segment-alt")).toBeInTheDocument();
   });
@@ -81,8 +79,8 @@ describe("UnifiedAllocationBar", () => {
     // BTC is 40% > 10% threshold, should show label
     expect(screen.getByText(/BTC 40%/)).toBeInTheDocument();
 
-    // BTC-STABLE is 20% > 10%, should show label
-    expect(screen.getByText(/BTC-STABLE 20%/)).toBeInTheDocument();
+    // ETH is 20% > 10%, should show label
+    expect(screen.getByText(/ETH 20%/)).toBeInTheDocument();
 
     // STABLE is 25% > 10%, should show label
     expect(screen.getByText(/STABLE 25%/)).toBeInTheDocument();
@@ -174,7 +172,7 @@ describe("UnifiedAllocationBar", () => {
 
     expect(screen.getByTestId("target-container")).toBeInTheDocument();
     expect(screen.getByTestId("target-btc")).toBeInTheDocument();
-    expect(screen.getByTestId("target-btc-stable")).toBeInTheDocument();
+    expect(screen.getByTestId("target-eth")).toBeInTheDocument();
   });
 
   // ─────────────────────────────────────────────────────────────────────────

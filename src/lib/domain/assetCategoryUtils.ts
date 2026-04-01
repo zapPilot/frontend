@@ -1,16 +1,22 @@
-/**
- * Asset Category Utilities
- *
- * Utilities for mapping tokens to asset categories and filtering
- * tokens by category for UI components.
- */
-
-import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
+import {
+  type AllocationCategoryKey,
+  getAllocationCategoryForToken,
+} from "@/lib/domain/allocationCategories";
 
 /**
- * Asset category keys matching portfolio.ts
+ * Asset category keys matching portfolio.ts aliases.
  */
 export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
+
+const ALLOCATION_TO_ASSET_CATEGORY: Record<
+  AllocationCategoryKey,
+  AssetCategoryKey
+> = {
+  btc: "btc",
+  eth: "eth",
+  stable: "stablecoin",
+  alt: "altcoin",
+};
 
 // Unused type removed: CategoryFilter
 
@@ -18,7 +24,7 @@ export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
  * Maps a token symbol to its asset category
  *
  * @param symbol - Token symbol (case-insensitive)
- * @returns The asset category key, defaults to "altcoin" if not found
+ * @returns The asset category key, derived from the shared allocation taxonomy
  *
  * @example
  * getCategoryForToken("WBTC") // "btc"
@@ -26,22 +32,7 @@ export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
  * getCategoryForToken("LINK") // "altcoin"
  */
 export function getCategoryForToken(symbol: string): AssetCategoryKey {
-  const normalized = symbol.toLowerCase();
-
-  if (ASSET_SYMBOL_SETS.btc.has(normalized)) {
-    return "btc";
-  }
-
-  if (ASSET_SYMBOL_SETS.eth.has(normalized)) {
-    return "eth";
-  }
-
-  if (ASSET_SYMBOL_SETS.stablecoins.has(normalized)) {
-    return "stablecoin";
-  }
-
-  // Default to altcoin for unrecognized tokens
-  return "altcoin";
+  return ALLOCATION_TO_ASSET_CATEGORY[getAllocationCategoryForToken(symbol)];
 }
 
 // Unused exports removed: filterTokensByCategory, getTokenCountsByCategory

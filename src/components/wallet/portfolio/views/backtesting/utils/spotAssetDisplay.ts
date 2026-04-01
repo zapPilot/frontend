@@ -1,4 +1,4 @@
-import { ASSET_CATEGORIES } from "@/constants/portfolio";
+import { UNIFIED_COLORS } from "@/constants/assets";
 import type {
   BacktestSpotAssetSymbol,
   BacktestStrategyPoint,
@@ -7,8 +7,8 @@ import type {
 export type SpotAssetSymbol = BacktestSpotAssetSymbol;
 
 const BACKTEST_SPOT_ASSET_COLORS: Record<SpotAssetSymbol, string> = {
-  BTC: ASSET_CATEGORIES.btc.chartColor,
-  ETH: ASSET_CATEGORIES.eth.chartColor,
+  BTC: UNIFIED_COLORS.BTC,
+  ETH: UNIFIED_COLORS.ETH,
 } as const;
 
 /**

@@ -88,15 +88,22 @@ const mockData: WalletPortfolioDataWithDirection = {
         asset: "bitcoin",
         symbol: "BTC",
         name: "Bitcoin",
-        value: 40,
+        value: 35,
         color: "#F7931A",
       },
       {
         asset: "ethereum",
         symbol: "ETH",
         name: "Ethereum",
-        value: 20,
+        value: 15,
         color: "#627EEA",
+      },
+      {
+        asset: "solana",
+        symbol: "SOL",
+        name: "Solana",
+        value: 10,
+        color: "#6B7280",
       },
     ],
   },
@@ -154,11 +161,11 @@ describe("PortfolioComposition", () => {
         />
       );
 
-      // Check for legend items (unified categories: BTC, ALT, STABLE)
-      // ETH is now categorized as ALT in the unified allocation model
+      // Check for legend items (unified categories: BTC, ETH, ALT, STABLE)
       expect(screen.getAllByText("BTC")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("ETH")[0]).toBeInTheDocument();
       expect(screen.getAllByText("ALT")[0]).toBeInTheDocument();
-      // We expect multiple '40%' (BTC, Stables) and possibly from bars if rendered text
+      // We expect multiple '40%' from the target/current stable segments.
       expect(screen.getAllByText("40%").length).toBeGreaterThanOrEqual(2);
     });
   });

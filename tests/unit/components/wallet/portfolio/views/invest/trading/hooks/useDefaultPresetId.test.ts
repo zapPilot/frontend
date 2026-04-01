@@ -52,47 +52,60 @@ describe("useDefaultPresetId", () => {
     expect(result.current).toBeUndefined();
   });
 
-  it("prefers dma_gated_fgi_default when present", () => {
+  it("prefers the backend default flag before the curated rotation fallback", () => {
     mockUseStrategyConfigs({
       presets: [
-        createPreset({ config_id: "some_other_default", is_default: true }),
         createPreset({ config_id: "dma_gated_fgi_default" }),
+        createPreset({
+          config_id: "eth_btc_rotation_default",
+          strategy_id: "eth_btc_rotation",
+          is_default: true,
+        }),
       ],
       backtest_defaults: { days: 500, total_capital: 10000 },
     });
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
-    expect(result.current).toBe("dma_gated_fgi_default");
+    expect(result.current).toBe("eth_btc_rotation_default");
   });
 
-  it("falls back to the backend default flag when the curated id is absent", () => {
+  it("falls back to the curated rotation id when no preset is flagged as default", () => {
     mockUseStrategyConfigs({
       presets: [
         createPreset({ config_id: "dca_classic", strategy_id: "dca_classic" }),
-        createPreset({ config_id: "dma_live_v2", is_default: true }),
+        createPreset({
+          config_id: "eth_btc_rotation_default",
+          strategy_id: "eth_btc_rotation",
+        }),
       ],
       backtest_defaults: { days: 500, total_capital: 10000 },
     });
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
-    expect(result.current).toBe("dma_live_v2");
+    expect(result.current).toBe("eth_btc_rotation_default");
   });
 
-  it("falls back to the first dma_gated_fgi preset", () => {
+  it("falls back to the first eth_btc_rotation preset", () => {
     mockUseStrategyConfigs({
       presets: [
         createPreset({ config_id: "dca_classic", strategy_id: "dca_classic" }),
-        createPreset({ config_id: "dma_alt_1" }),
-        createPreset({ config_id: "dma_alt_2" }),
+        createPreset({
+          config_id: "rotation_alt_1",
+          strategy_id: "eth_btc_rotation",
+        }),
+        createPreset({
+          config_id: "rotation_alt_2",
+          strategy_id: "eth_btc_rotation",
+        }),
       ],
       backtest_defaults: { days: 500, total_capital: 10000 },
     });
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
-    expect(result.current).toBe("dma_alt_1");
+    expect(result.current).toBe("rotation_alt_1");
   });
 
   it("falls back to the first preset when there is no DMA strategy", () => {

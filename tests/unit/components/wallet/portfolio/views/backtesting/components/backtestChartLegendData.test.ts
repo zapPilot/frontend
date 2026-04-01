@@ -47,8 +47,8 @@ describe("EVENT_LEGEND", () => {
     );
     expect(colorMap["Buy Spot"]).toBe("#22c55e");
     expect(colorMap["Sell Spot"]).toBe("#ef4444");
-    expect(colorMap["Switch to ETH"]).toBe("#6366f1");
-    expect(colorMap["Switch to BTC"]).toBe("#f59e0b");
+    expect(colorMap["Switch to ETH"]).toBe("#627EEA");
+    expect(colorMap["Switch to BTC"]).toBe("#F7931A");
   });
 
   it("every item has label and color properties", () => {

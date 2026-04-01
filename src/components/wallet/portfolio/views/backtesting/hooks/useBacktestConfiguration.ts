@@ -9,7 +9,7 @@ import type {
 } from "@/types/backtesting";
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
-import { DEFAULT_DAYS, DMA_GATED_FGI_STRATEGY_ID } from "../constants";
+import { DEFAULT_DAYS, ETH_BTC_ROTATION_STRATEGY_ID } from "../constants";
 import {
   parseConfigStrategyId,
   parseJsonField,
@@ -365,7 +365,7 @@ export function useBacktestConfiguration() {
   const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
   const selectedStrategyId = parseConfigStrategyId(
     editorValue,
-    DMA_GATED_FGI_STRATEGY_ID
+    ETH_BTC_ROTATION_STRATEGY_ID
   );
 
   const strategyOptions = useMemo(() => {

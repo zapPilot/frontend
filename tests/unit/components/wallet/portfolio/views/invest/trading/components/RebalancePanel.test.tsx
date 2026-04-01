@@ -80,6 +80,12 @@ const mockSuggestionData = {
       spot: 0.7,
       stable: 0.3,
     },
+    asset_allocation: {
+      btc: 0.4,
+      eth: 0.3,
+      stable: 0.3,
+      alt: 0,
+    },
   },
   signal: {
     id: "dma_gated_fgi" as const,
@@ -106,6 +112,12 @@ const mockSuggestionData = {
     target_allocation: {
       spot: 1,
       stable: 0,
+    },
+    target_asset_allocation: {
+      btc: 1,
+      eth: 0,
+      stable: 0,
+      alt: 0,
     },
     immediate: false,
     details: {
@@ -139,6 +151,12 @@ const mockHoldSuggestion = {
     ...mockSuggestionData.decision,
     action: "hold" as const,
     reason: "cooldown_hold",
+    target_asset_allocation: {
+      btc: 1,
+      eth: 0,
+      stable: 0,
+      alt: 0,
+    },
     details: {
       target_spot_asset: "btc",
     },
@@ -161,6 +179,12 @@ const mockSellSuggestion = {
     target_allocation: {
       spot: 0.3, // less than portfolio.allocation.spot (0.7) → stable bucket
       stable: 0.7,
+    },
+    target_asset_allocation: {
+      btc: 0.3,
+      eth: 0,
+      stable: 0.7,
+      alt: 0,
     },
   },
   execution: {
@@ -245,6 +269,27 @@ describe("RebalancePanel", () => {
 
     expect(screen.getAllByText("SPOT")).toHaveLength(2);
     expect(screen.getByText("STABLE -> SPOT")).toBeDefined();
+  });
+
+  it("prefers target_asset_allocation when deriving a no-transfer bucket label", () => {
+    vi.mocked(useDailySuggestion).mockReturnValue({
+      data: {
+        ...mockHoldSuggestion,
+        decision: {
+          ...mockHoldSuggestion.decision,
+          target_asset_allocation: {
+            btc: 0.1,
+            eth: 0.2,
+            stable: 0.3,
+            alt: 0.4,
+          },
+        },
+      },
+    } as ReturnType<typeof useDailySuggestion>);
+
+    render(<RebalancePanel userId="0xabc" />);
+
+    expect(screen.getByText("ALT")).toBeDefined();
   });
 
   it("opens and closes the review modal", () => {

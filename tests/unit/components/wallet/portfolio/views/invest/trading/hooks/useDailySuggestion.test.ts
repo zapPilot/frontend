@@ -34,6 +34,12 @@ const mockSuggestionResponse: DailySuggestionResponse = {
       spot: 0.5,
       stable: 0.5,
     },
+    asset_allocation: {
+      btc: 0.3,
+      eth: 0.2,
+      stable: 0.5,
+      alt: 0,
+    },
   },
   signal: {
     id: "dma_gated_fgi",
@@ -60,6 +66,12 @@ const mockSuggestionResponse: DailySuggestionResponse = {
     target_allocation: {
       spot: 0.6,
       stable: 0.4,
+    },
+    target_asset_allocation: {
+      btc: 0.6,
+      eth: 0,
+      stable: 0.4,
+      alt: 0,
     },
     immediate: false,
   },

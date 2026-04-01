@@ -7,8 +7,8 @@ import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 import {
   DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
-  DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-  DMA_GATED_FGI_STRATEGY_ID,
+  ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+  ETH_BTC_ROTATION_STRATEGY_ID,
 } from "../constants";
 
 /** Fallback defaults when API response is unavailable. */
@@ -65,18 +65,18 @@ export function buildDefaultPayloadFromCatalog(
   catalog: BacktestStrategyCatalogResponseV3 | null,
   defaults: BacktestDefaults = FALLBACK_DEFAULTS
 ): BacktestRequest {
-  const dmaGatedFgi = catalog?.strategies.find(
-    strategy => strategy.strategy_id === DMA_GATED_FGI_STRATEGY_ID
+  const ethBtcRotation = catalog?.strategies.find(
+    strategy => strategy.strategy_id === ETH_BTC_ROTATION_STRATEGY_ID
   );
-  const defaultParams = dmaGatedFgi?.default_params ?? {};
+  const defaultParams = ethBtcRotation?.default_params ?? {};
 
   return {
     days: defaults.days,
     total_capital: defaults.total_capital,
     configs: [
       {
-        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         params: defaultParams,
       },
     ],

@@ -739,7 +739,7 @@ describe("buildBacktestTooltipData", () => {
           {
             name: "my strat spot asset",
             value: "ETH",
-            color: "#6366f1",
+            color: "#627EEA",
           },
         ])
       );
@@ -771,7 +771,7 @@ describe("buildBacktestTooltipData", () => {
           {
             name: "my strat spot asset",
             value: "ETH",
-            color: "#6366f1",
+            color: "#627EEA",
           },
         ])
       );
@@ -1012,7 +1012,7 @@ describe("buildBacktestTooltipData", () => {
           {
             name: "DMA Gated FGI Default spot asset",
             value: "ETH",
-            color: "#6366f1",
+            color: "#627EEA",
           },
           {
             name: "DMA Gated FGI Default buy gate",

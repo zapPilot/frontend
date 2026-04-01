@@ -99,8 +99,9 @@ describe("updateConfigStrategy", () => {
         { config_id: "x", strategy_id: "old", params: { pacing: { k: 1 } } },
       ],
     });
-    const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
-    expect(result.configs[0].strategy_id).toBe("new_strat");
+    const result = JSON.parse(updateConfigStrategy(json, "eth_btc_rotation"));
+    expect(result.configs[0].strategy_id).toBe("eth_btc_rotation");
+    expect(result.configs[0].config_id).toBe("eth_btc_rotation_default");
     expect(result.configs[0].params).toEqual({ pacing: { k: 1 } });
     expect(result.days).toBe(500);
   });
@@ -112,11 +113,12 @@ describe("updateConfigStrategy", () => {
       ],
     });
     const result = JSON.parse(
-      updateConfigStrategy(json, "new_strat", {
+      updateConfigStrategy(json, "eth_btc_rotation", {
         signal: { cross_cooldown_days: 14 },
       })
     );
-    expect(result.configs[0].strategy_id).toBe("new_strat");
+    expect(result.configs[0].strategy_id).toBe("eth_btc_rotation");
+    expect(result.configs[0].config_id).toBe("eth_btc_rotation_default");
     expect(result.configs[0].params).toEqual({
       signal: { cross_cooldown_days: 14 },
     });
@@ -132,7 +134,7 @@ describe("updateConfigStrategy", () => {
     const result = JSON.parse(updateConfigStrategy(json, "changed"));
     expect(result.configs).toHaveLength(1);
     expect(result.configs[0].strategy_id).toBe("changed");
-    expect(result.configs[0].config_id).toBe("a");
+    expect(result.configs[0].config_id).toBe("changed");
   });
 
   it("returns original JSON on parse failure", () => {
@@ -163,17 +165,17 @@ describe("updateConfigStrategy", () => {
     expect(result.configs[0].strategy_id).toBe("new_strat");
   });
 
-  it("preserves config_id when only strategy_id is updated", () => {
+  it("synchronizes config_id to the default preset for known strategies", () => {
     const json = JSON.stringify({
       configs: [
         { config_id: "my_config", strategy_id: "old_strat", params: {} },
       ],
     });
 
-    const result = JSON.parse(updateConfigStrategy(json, "new_strat"));
+    const result = JSON.parse(updateConfigStrategy(json, "dma_gated_fgi"));
 
-    expect(result.configs[0].config_id).toBe("my_config");
-    expect(result.configs[0].strategy_id).toBe("new_strat");
+    expect(result.configs[0].config_id).toBe("dma_gated_fgi_default");
+    expect(result.configs[0].strategy_id).toBe("dma_gated_fgi");
   });
 
   it("replaces params with empty object when defaultParams is {}", () => {

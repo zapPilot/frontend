@@ -55,10 +55,10 @@ describe("useBacktestConfiguration regressions", () => {
     resolvePresets?.({
       presets: [
         {
-          config_id: "dma_gated_fgi_default",
-          display_name: "DMA Gated FGI Default",
-          description: "Curated DMA-first preset",
-          strategy_id: "dma_gated_fgi",
+          config_id: "eth_btc_rotation_default",
+          display_name: "ETH/BTC RS Rotation",
+          description: "Curated rotation preset",
+          strategy_id: "eth_btc_rotation",
           params: { pacing: { k: 5, r_max: 1 } },
           is_benchmark: false,
           is_default: true,

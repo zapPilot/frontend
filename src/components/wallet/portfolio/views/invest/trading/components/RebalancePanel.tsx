@@ -4,7 +4,10 @@ import { CircleDollarSign } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/ui/classNames";
-import type { BacktestBucket } from "@/types/backtesting";
+import type {
+  BacktestAssetAllocation,
+  BacktestBucket,
+} from "@/types/backtesting";
 import type { DailySuggestionResponse } from "@/types/strategy";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -24,6 +27,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const SPOT_BUCKET_LABEL = "SPOT";
 const STABLE_BUCKET_LABEL = "STABLE";
+const ALT_BUCKET_LABEL = "ALT";
 
 type SpotAssetSymbol = "BTC" | "ETH";
 
@@ -74,6 +78,10 @@ function getBucketLabel(
     return "BTC";
   }
 
+  if (bucket === "alt") {
+    return ALT_BUCKET_LABEL;
+  }
+
   return targetSpotAsset ?? SPOT_BUCKET_LABEL;
 }
 
@@ -81,6 +89,25 @@ function inferDecisionBucket(data: DailySuggestionResponse): "spot" | "stable" {
   return data.decision.target_allocation.spot >= data.portfolio.allocation.spot
     ? "spot"
     : "stable";
+}
+
+function getDominantAssetBucket(
+  allocation: BacktestAssetAllocation | null | undefined
+): BacktestBucket | null {
+  if (!allocation) {
+    return null;
+  }
+
+  const ranked = (
+    Object.entries(allocation) as [keyof BacktestAssetAllocation, number][]
+  ).sort((a, b) => b[1] - a[1]);
+
+  const [bucket, value] = ranked[0] ?? [];
+  if (!bucket || value == null || value <= 0) {
+    return null;
+  }
+
+  return bucket;
 }
 
 function buildTradeActions(
@@ -107,7 +134,9 @@ function buildTradeActions(
     });
   }
 
-  const decisionBucket = inferDecisionBucket(data);
+  const decisionBucket =
+    getDominantAssetBucket(data.decision.target_asset_allocation) ??
+    inferDecisionBucket(data);
   return [
     {
       action: data.decision.action,

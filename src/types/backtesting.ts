@@ -70,6 +70,7 @@ export interface BacktestStrategySummary {
   roi_percent: number;
   trade_count: number;
   final_allocation: BacktestPortfolioAllocation;
+  final_asset_allocation?: BacktestAssetAllocation | null;
   max_drawdown_percent?: number | null;
   calmar_ratio?: number | null;
   parameters: Record<string, unknown>;
@@ -80,6 +81,13 @@ export interface BacktestPortfolioAllocation {
   stable: number;
 }
 
+export interface BacktestAssetAllocation {
+  btc: number;
+  eth: number;
+  stable: number;
+  alt: number;
+}
+
 export type BacktestSpotAssetSymbol = "BTC" | "ETH";
 
 export interface BacktestStrategyPortfolio {
@@ -87,6 +95,7 @@ export interface BacktestStrategyPortfolio {
   stable_usd: number;
   total_value: number;
   allocation: BacktestPortfolioAllocation;
+  asset_allocation?: BacktestAssetAllocation | null;
   spot_asset?: BacktestSpotAssetSymbol | null;
 }
 
@@ -135,6 +144,7 @@ export interface BacktestDecision {
     | "rotation"
     | "none";
   target_allocation: BacktestPortfolioAllocation;
+  target_asset_allocation?: BacktestAssetAllocation | null;
   immediate: boolean;
   details?: BacktestDecisionDetails;
 }
@@ -143,7 +153,7 @@ export interface BacktestDecision {
 export type BacktestAllocationBucket = "spot" | "stable";
 
 /** All valid transfer bucket identifiers including per-asset buckets. */
-export type BacktestBucket = BacktestAllocationBucket | "eth" | "btc";
+export type BacktestBucket = BacktestAllocationBucket | "eth" | "btc" | "alt";
 
 export interface BacktestTransferMetadata {
   from_bucket: BacktestBucket;

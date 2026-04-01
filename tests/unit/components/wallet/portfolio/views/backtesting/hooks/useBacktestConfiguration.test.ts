@@ -16,7 +16,7 @@ vi.mock("@/hooks/mutations/useBacktestMutation");
 vi.mock("@/services/backtestingService");
 vi.mock("@/services/strategyService");
 
-const mockDmaPresetParams = {
+const mockRotationPresetParams = {
   signal: {
     cross_cooldown_days: 30,
   },
@@ -26,7 +26,7 @@ const mockDmaPresetParams = {
   },
 };
 
-const mockCatalogDmaDefaultParams = {
+const mockCatalogRotationDefaultParams = {
   signal: {
     cross_cooldown_days: 14,
   },
@@ -39,11 +39,11 @@ const mockCatalogDmaDefaultParams = {
 const mockStrategyConfigs = {
   presets: [
     {
-      config_id: "dma_gated_fgi_default",
-      display_name: "DMA Gated FGI Default",
-      description: "Curated DMA-first preset",
-      strategy_id: "dma_gated_fgi" as const,
-      params: mockDmaPresetParams,
+      config_id: "eth_btc_rotation_default",
+      display_name: "ETH/BTC RS Rotation",
+      description: "Curated rotation preset",
+      strategy_id: "eth_btc_rotation" as const,
+      params: mockRotationPresetParams,
       is_benchmark: false,
       is_default: true,
     },
@@ -58,11 +58,11 @@ const mockCatalog = {
   catalog_version: "2.0.0",
   strategies: [
     {
-      strategy_id: "dma_gated_fgi" as const,
-      display_name: "DMA Gated FGI",
-      description: "DMA-first strategy",
+      strategy_id: "eth_btc_rotation" as const,
+      display_name: "ETH/BTC Rotation",
+      description: "Rotation strategy",
       param_schema: {},
-      default_params: mockCatalogDmaDefaultParams,
+      default_params: mockCatalogRotationDefaultParams,
       supports_daily_suggestion: true,
     },
   ],
@@ -98,7 +98,7 @@ describe("useBacktestConfiguration", () => {
   // Initialization and defaults
   // -------------------------------------------------------------------------
 
-  it("starts with fallback DMA-first editor defaults", () => {
+  it("starts with fallback rotation editor defaults", () => {
     mockPendingDefaults();
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
@@ -109,7 +109,7 @@ describe("useBacktestConfiguration", () => {
     expect(parsed.days).toBe(500);
     expect(parsed.total_capital).toBe(10000);
     expect(parsed.configs).toHaveLength(1);
-    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
   });
 
   it("loads presets, seeds the editor, and auto-runs once", async () => {
@@ -123,7 +123,7 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(90);
-      expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+      expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
     });
 
     await waitFor(() => {
@@ -144,7 +144,7 @@ describe("useBacktestConfiguration", () => {
     await waitFor(() => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(500);
-      expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+      expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
       expect(parsed.configs[0].params.pacing.k).toBe(3);
     });
   });
@@ -886,7 +886,7 @@ describe("useBacktestConfiguration", () => {
 
     // Should restore catalog-based defaults and clear error
     const parsed = JSON.parse(result.current.editorValue);
-    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
     expect(result.current.editorError).toBeNull();
   });
 
@@ -917,7 +917,7 @@ describe("useBacktestConfiguration", () => {
     });
 
     const parsed = JSON.parse(result.current.editorValue);
-    // catalog fallback: dma_gated_fgi default_params from mockCatalog
+    // catalog fallback: eth_btc_rotation default_params from mockCatalog
     expect(parsed.configs[0].params.pacing.k).toBe(3);
     expect(result.current.editorError).toBeNull();
   });
@@ -936,7 +936,7 @@ describe("useBacktestConfiguration", () => {
 
     await waitFor(() => {
       expect(JSON.parse(result.current.editorValue).configs[0].config_id).toBe(
-        "dma_gated_fgi_default"
+        "eth_btc_rotation_default"
       );
     });
 
@@ -954,7 +954,7 @@ describe("useBacktestConfiguration", () => {
 
     const parsed = JSON.parse(result.current.editorValue);
     expect(parsed.days).toBe(90);
-    expect(parsed.configs[0].config_id).toBe("dma_gated_fgi_default");
+    expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
     expect(result.current.editorError).toBeNull();
   });
 

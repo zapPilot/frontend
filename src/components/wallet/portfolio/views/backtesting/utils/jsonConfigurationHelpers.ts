@@ -3,6 +3,8 @@ import type {
   BacktestRequest,
 } from "@/types/backtesting";
 
+import { getDefaultConfigIdForStrategyId } from "../constants";
+
 type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
 type ValueType = string | number | boolean;
 
@@ -136,8 +138,9 @@ export function parseConfigStrategyId(json: string, fallback: string): string {
 }
 
 /**
- * Update the `strategy_id` (and optionally `params`) on the first config entry
- * in the JSON editor value. Always produces a single config entry.
+ * Update the `strategy_id`, matching default `config_id`, and optionally
+ * `params` on the first config entry in the JSON editor value. Always
+ * produces a single config entry.
  *
  * @param json - Raw JSON string from the editor
  * @param strategyId - New strategy_id to set
@@ -166,6 +169,7 @@ export function updateConfigStrategy(
   }
 
   const first = { ...(configs[0] as Record<string, unknown>) };
+  first["config_id"] = getDefaultConfigIdForStrategyId(strategyId);
   first["strategy_id"] = strategyId;
   if (defaultParams !== undefined) {
     first["params"] = defaultParams;

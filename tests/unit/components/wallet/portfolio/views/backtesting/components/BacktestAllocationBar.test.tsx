@@ -74,7 +74,7 @@ describe("BacktestAllocationBar", () => {
 
     expect(screen.getByText("AWP Portfolio")).toBeInTheDocument();
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      `SPOT:60:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:40:#10b981`
+      `SPOT:60:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:40:#2775ca`
     );
   });
 
@@ -88,7 +88,7 @@ describe("BacktestAllocationBar", () => {
     );
 
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      `BTC:75:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:25:#10b981`
+      `BTC:75:${getBacktestSpotAssetColor("BTC").toLowerCase()}|STABLE:25:#2775ca`
     );
     expect(getRenderedSegments("backtest-default")[0]).toMatchObject({
       label: "BTC",
@@ -106,7 +106,7 @@ describe("BacktestAllocationBar", () => {
     );
 
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      `ETH:75:${getBacktestSpotAssetColor("ETH").toLowerCase()}|STABLE:25:#10b981`
+      `ETH:75:${getBacktestSpotAssetColor("ETH").toLowerCase()}|STABLE:25:#2775ca`
     );
     expect(getRenderedSegments("backtest-default")[0]).toMatchObject({
       label: "ETH",
@@ -160,6 +160,21 @@ describe("BacktestAllocationBar", () => {
     );
     expect(screen.getByTestId("backtest-spot_only")).not.toHaveTextContent(
       "STABLE"
+    );
+  });
+
+  it("prefers explicit asset allocation over spot labels when available", () => {
+    render(
+      <BacktestAllocationBar
+        displayName="Explicit Buckets"
+        allocation={{ spot: 0.7, stable: 0.3 }}
+        assetAllocation={{ btc: 0.4, eth: 0.2, stable: 0.3, alt: 0.1 }}
+        spotAssetLabel="BTC"
+      />
+    );
+
+    expect(screen.getByTestId("backtest-default")).toHaveTextContent(
+      "BTC:40:#f7931a|ETH:20:#627eea|STABLE:30:#2775ca|ALT:10:#6b7280"
     );
   });
 });

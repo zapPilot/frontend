@@ -38,11 +38,11 @@ function makeStrategy(overrides: {
 
 describe("getBacktestSpotAssetColor", () => {
   it("returns the BTC chart color", () => {
-    expect(getBacktestSpotAssetColor("BTC")).toBe("#f59e0b");
+    expect(getBacktestSpotAssetColor("BTC")).toBe("#F7931A");
   });
 
   it("returns the ETH chart color", () => {
-    expect(getBacktestSpotAssetColor("ETH")).toBe("#6366f1");
+    expect(getBacktestSpotAssetColor("ETH")).toBe("#627EEA");
   });
 });
 

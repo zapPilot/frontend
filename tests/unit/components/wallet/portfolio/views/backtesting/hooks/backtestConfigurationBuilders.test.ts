@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
-  DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-  DMA_GATED_FGI_STRATEGY_ID,
+  ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+  ETH_BTC_ROTATION_STRATEGY_ID,
 } from "@/components/wallet/portfolio/views/backtesting/constants";
 import {
   buildDefaultPayloadFromCatalog,
@@ -43,12 +43,12 @@ describe("buildDefaultPayloadFromPresets", () => {
     const presets = [
       createPreset({
         config_id: "dma_gated_fgi_alt",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: "dma_gated_fgi",
         params: { pacing: { k: 3, r_max: 0.8 } },
       }),
       createPreset({
-        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         is_default: true,
         params: { pacing: { k: 5, r_max: 1 } },
       }),
@@ -61,8 +61,8 @@ describe("buildDefaultPayloadFromPresets", () => {
       total_capital: 50000,
       configs: [
         {
-          config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
           params: { pacing: { k: 5, r_max: 1 } },
         },
       ],
@@ -73,12 +73,12 @@ describe("buildDefaultPayloadFromPresets", () => {
     const presets = [
       createPreset({
         config_id: "shared_config",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         is_default: true,
       }),
       createPreset({
         config_id: "shared_config",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         is_default: false,
       }),
     ];
@@ -89,13 +89,13 @@ describe("buildDefaultPayloadFromPresets", () => {
     expect(result.configs[0]?.config_id).toBe("shared_config");
   });
 
-  it("falls back to the canonical DMA payload when no presets are available", () => {
+  it("falls back to the canonical rotation payload when no presets are available", () => {
     const result = buildDefaultPayloadFromPresets([], TEST_DEFAULTS);
 
     expect(result.configs).toEqual([
       {
-        config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         params: {},
       },
     ]);
@@ -124,7 +124,7 @@ describe("buildDefaultPayloadFromPresets", () => {
     const presets = [
       createPreset({
         config_id: "first_non_default",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: "dma_gated_fgi",
         params: { pacing: { k: 1 } },
       }),
       createPreset({
@@ -144,16 +144,16 @@ describe("buildDefaultPayloadFromPresets", () => {
     const presets = [
       createPreset({
         config_id: "before",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: "dma_gated_fgi",
       }),
       createPreset({
         config_id: "the_default",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         is_default: true,
       }),
       createPreset({
         config_id: "after",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: "dma_gated_fgi",
       }),
     ];
 
@@ -167,7 +167,7 @@ describe("buildDefaultPayloadFromPresets", () => {
     const presets = [
       createPreset({
         config_id: "x",
-        strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+        strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
         is_default: true,
       }),
     ];
@@ -184,14 +184,14 @@ describe("buildDefaultPayloadFromPresets", () => {
 });
 
 describe("buildDefaultPayloadFromCatalog", () => {
-  it("builds a DCA plus DMA payload from the catalog", () => {
+  it("builds a default rotation payload from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
       catalog_version: "2.0.0",
       strategies: [
         {
-          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
-          display_name: "DMA Gated FGI",
-          description: "DMA-first strategy",
+          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
+          display_name: "ETH/BTC Rotation",
+          description: "ETH/BTC rotation strategy",
           param_schema: {},
           default_params: {
             signal: {
@@ -214,8 +214,8 @@ describe("buildDefaultPayloadFromCatalog", () => {
       total_capital: 50000,
       configs: [
         {
-          config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-          strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+          config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
           params: {
             signal: {
               cross_cooldown_days: 30,
@@ -230,7 +230,7 @@ describe("buildDefaultPayloadFromCatalog", () => {
     });
   });
 
-  it("uses empty params when the DMA strategy is missing from the catalog", () => {
+  it("uses empty params when the rotation strategy is missing from the catalog", () => {
     const catalog: BacktestStrategyCatalogResponseV3 = {
       catalog_version: "2.0.0",
       strategies: [],
@@ -239,8 +239,8 @@ describe("buildDefaultPayloadFromCatalog", () => {
     const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
 
     expect(result.configs[0]).toEqual({
-      config_id: DMA_GATED_FGI_DEFAULT_CONFIG_ID,
-      strategy_id: DMA_GATED_FGI_STRATEGY_ID,
+      config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
+      strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
       params: {},
     });
   });

@@ -6,6 +6,7 @@
  */
 
 import { UNIFIED_COLORS } from "@/constants/assets";
+import { getAllocationCategoryForToken } from "@/lib/domain/allocationCategories";
 
 import type {
   BacktestConstituentsSource,
@@ -22,9 +23,16 @@ import type {
 
 const CATEGORY_LABELS: Record<UnifiedCategory, string> = {
   btc: "BTC",
-  "btc-stable": "BTC-STABLE",
+  eth: "ETH",
   stable: "STABLE",
   alt: "ALT",
+};
+
+const CATEGORY_COLORS: Record<UnifiedCategory, string> = {
+  btc: UNIFIED_COLORS.BTC,
+  eth: UNIFIED_COLORS.ETH,
+  stable: UNIFIED_COLORS.STABLE,
+  alt: UNIFIED_COLORS.ALT,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,10 +50,7 @@ function createSegment(
     category,
     label: CATEGORY_LABELS[category],
     percentage,
-    color:
-      UNIFIED_COLORS[
-        category.toUpperCase().replace("-", "_") as keyof typeof UNIFIED_COLORS
-      ],
+    color: CATEGORY_COLORS[category],
   };
 }
 
@@ -91,8 +96,7 @@ function getRecordTotal(data: Record<string, number> | number): number {
  * Maps portfolio allocation data (dashboard) to unified segments.
  *
  * Source values are percentages (0-100).
- * ETH and others are combined into ALT.
- * BTC-STABLE is not available from this source (no LP breakdown).
+ * ETH and others are separated into their own display buckets.
  *
  * @example
  * ```ts
@@ -110,9 +114,9 @@ export function mapPortfolioToUnified(
 ): UnifiedSegment[] {
   const segments: UnifiedSegment[] = [
     createSegment("btc", data.btc),
+    createSegment("eth", data.eth),
     createSegment("stable", data.stablecoins),
-    createSegment("alt", data.eth + data.others),
-    // Note: BTC-STABLE not available from portfolio endpoint (no LP breakdown)
+    createSegment("alt", data.others),
   ];
 
   return normalizeSegments(segments);
@@ -122,8 +126,10 @@ export function mapPortfolioToUnified(
  * Maps strategy bucket data to unified segments.
  *
  * Source values are ratios (0-1), converted to percentages.
- * Assumes LP is primarily BTC-STABLE for strategy view.
- * Spot is mapped to BTC (simplified - actual BTC/ETH split not available).
+ * Strategy payloads do not expose asset-level spot/LP composition, so:
+ * - spot is mapped to BTC
+ * - lp is mapped to ALT
+ * - stable remains STABLE
  *
  * @example
  * ```ts
@@ -139,10 +145,8 @@ export function mapStrategyToUnified(
   data: StrategyBucketsSource
 ): UnifiedSegment[] {
   const segments: UnifiedSegment[] = [
-    // Spot → treated as BTC (simplified view for strategy comparison)
     createSegment("btc", data.spot * 100),
-    // LP → BTC-STABLE (strategy focuses on BTC-USDC LP)
-    createSegment("btc-stable", data.lp * 100),
+    createSegment("alt", data.lp * 100),
     createSegment("stable", data.stable * 100),
   ];
 
@@ -153,10 +157,10 @@ export function mapStrategyToUnified(
  * Maps backtest constituents to unified segments with LP pair breakdown.
  *
  * This is the richest mapper - it uses the full asset breakdown from backtesting:
- * - `spot.btc` → BTC
- * - `lp.btc` → BTC-STABLE
+ * - `spot.btc` + `lp.btc` → BTC
+ * - `spot.eth` + `lp.eth` → ETH
  * - `stable` → STABLE
- * - `spot.eth` + `lp.eth` + `spot.others` → ALT
+ * - `spot.others` + `lp.others` → ALT
  *
  * @example
  * ```ts
@@ -198,14 +202,10 @@ export function mapBacktestToUnified(
       : lpTotal - btcLp - ethLp;
 
   const segments: UnifiedSegment[] = [
-    createSegment("btc", (btcSpot / total) * 100),
-    createSegment("btc-stable", (btcLp / total) * 100),
+    createSegment("btc", ((btcSpot + btcLp) / total) * 100),
+    createSegment("eth", ((ethSpot + ethLp) / total) * 100),
     createSegment("stable", (data.stable / total) * 100),
-    // ALT = ETH spot + ETH LP + other spot + other LP
-    createSegment(
-      "alt",
-      ((ethSpot + ethLp + othersSpot + othersLp) / total) * 100
-    ),
+    createSegment("alt", ((othersSpot + othersLp) / total) * 100),
   ];
 
   return normalizeSegments(segments);
@@ -230,30 +230,26 @@ export function mapLegacyConstituentsToUnified(
   stablePercentage: number
 ): UnifiedSegment[] {
   let btcTotal = 0;
+  let ethTotal = 0;
   let altTotal = 0;
 
   for (const asset of cryptoAssets) {
-    const symbol = asset.symbol.toUpperCase();
+    const category = getAllocationCategoryForToken(asset.symbol);
 
-    // Match BTC and BTC-wrapped variants
-    if (
-      symbol === "BTC" ||
-      symbol === "WBTC" ||
-      symbol === "CBBTC" ||
-      symbol === "TBTC"
-    ) {
+    if (category === "btc") {
       btcTotal += asset.value;
-    } else {
-      // Everything else (ETH, SOL, etc.) goes to ALT
+    } else if (category === "eth") {
+      ethTotal += asset.value;
+    } else if (category === "alt") {
       altTotal += asset.value;
     }
   }
 
   const segments: UnifiedSegment[] = [
     createSegment("btc", btcTotal),
+    createSegment("eth", ethTotal),
     createSegment("stable", stablePercentage),
     createSegment("alt", altTotal),
-    // Note: BTC-STABLE not available from legacy format (no LP breakdown)
   ];
 
   return normalizeSegments(segments);
@@ -273,7 +269,7 @@ export function calculateTotalPercentage(segments: UnifiedSegment[]): number {
  * @example
  * ```ts
  * getAllocationSummary(segments);
- * // Returns: "BTC 40%, BTC-STABLE 20%, STABLE 25%, ALT 15%"
+ * // Returns: "BTC 40%, ETH 20%, STABLE 25%, ALT 15%"
  * ```
  */
 export function getAllocationSummary(segments: UnifiedSegment[]): string {

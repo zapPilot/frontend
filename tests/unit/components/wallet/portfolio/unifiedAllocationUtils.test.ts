@@ -24,9 +24,10 @@ describe("unifiedAllocationUtils", () => {
         stablecoins: 20,
       });
 
-      expect(result).toHaveLength(3); // btc, alt (eth+others), stable
+      expect(result).toHaveLength(4);
       expect(result.find(s => s.category === "btc")?.percentage).toBe(40);
-      expect(result.find(s => s.category === "alt")?.percentage).toBe(40); // 30+10
+      expect(result.find(s => s.category === "eth")?.percentage).toBe(30);
+      expect(result.find(s => s.category === "alt")?.percentage).toBe(10);
       expect(result.find(s => s.category === "stable")?.percentage).toBe(20);
     });
 
@@ -46,11 +47,11 @@ describe("unifiedAllocationUtils", () => {
       const result = mapPortfolioToUnified({
         btc: 10,
         eth: 5,
-        others: 25, // Combined with eth = 30% ALT
+        others: 25,
         stablecoins: 60,
       });
 
-      // 60% stable > 30% alt > 10% btc
+      // 60% stable > 25% alt > 10% btc > 5% eth
       expect(result[0].category).toBe("stable");
       expect(result[1].category).toBe("alt");
       expect(result[2].category).toBe("btc");
@@ -70,13 +71,16 @@ describe("unifiedAllocationUtils", () => {
     it("uses correct colors", () => {
       const result = mapPortfolioToUnified({
         btc: 50,
-        eth: 25,
-        others: 0,
+        eth: 15,
+        others: 10,
         stablecoins: 25,
       });
 
       expect(result.find(s => s.category === "btc")?.color).toBe(
         UNIFIED_COLORS.BTC
+      );
+      expect(result.find(s => s.category === "eth")?.color).toBe(
+        UNIFIED_COLORS.ETH
       );
       expect(result.find(s => s.category === "stable")?.color).toBe(
         UNIFIED_COLORS.STABLE
@@ -101,9 +105,7 @@ describe("unifiedAllocationUtils", () => {
 
       expect(result).toHaveLength(3);
       expect(result.find(s => s.category === "btc")?.percentage).toBe(50);
-      expect(result.find(s => s.category === "btc-stable")?.percentage).toBe(
-        30
-      );
+      expect(result.find(s => s.category === "alt")?.percentage).toBe(30);
       expect(result.find(s => s.category === "stable")?.percentage).toBe(20);
     });
 
@@ -115,9 +117,7 @@ describe("unifiedAllocationUtils", () => {
       });
 
       expect(result.find(s => s.category === "btc")?.percentage).toBe(75);
-      expect(result.find(s => s.category === "btc-stable")?.percentage).toBe(
-        25
-      );
+      expect(result.find(s => s.category === "alt")?.percentage).toBe(25);
     });
 
     it("filters zero values", () => {
@@ -146,17 +146,15 @@ describe("unifiedAllocationUtils", () => {
 
       // Total = 3000 + 2000 + 1000 + 500 + 3500 = 10000
       expect(result.find(s => s.category === "btc")?.percentage).toBeCloseTo(
-        30 // 3000/10000 = 30%
+        40 // (3000 + 1000) / 10000
       );
-      expect(
-        result.find(s => s.category === "btc-stable")?.percentage
-      ).toBeCloseTo(10); // 1000/10000 = 10%
+      expect(result.find(s => s.category === "eth")?.percentage).toBeCloseTo(
+        25 // (2000 + 500) / 10000
+      );
       expect(result.find(s => s.category === "stable")?.percentage).toBeCloseTo(
         35
       );
-      expect(result.find(s => s.category === "alt")?.percentage).toBeCloseTo(
-        25 // eth spot (2000) + eth lp (500) = 2500/10000 = 25%
-      );
+      expect(result.find(s => s.category === "alt")).toBeUndefined();
     });
 
     it("handles plain number spot/lp values", () => {
@@ -183,31 +181,31 @@ describe("unifiedAllocationUtils", () => {
       expect(result).toHaveLength(0);
     });
 
-    it("correctly categorizes BTC-LP as btc-stable", () => {
+    it("categorizes BTC-LP under BTC", () => {
       const result = mapBacktestToUnified({
         spot: { btc: 5000 },
         lp: { btc: 3000 }, // BTC-USDC LP
         stable: 2000,
       });
 
-      expect(result.find(s => s.category === "btc-stable")).toBeDefined();
-      expect(
-        result.find(s => s.category === "btc-stable")?.percentage
-      ).toBeCloseTo(30);
+      expect(result.find(s => s.category === "btc")).toBeDefined();
+      expect(result.find(s => s.category === "btc")?.percentage).toBeCloseTo(
+        80
+      );
     });
 
-    it("categorizes ETH and ETH-LP as ALT", () => {
+    it("categorizes ETH and ETH-LP under ETH", () => {
       const result = mapBacktestToUnified({
         spot: { eth: 4000 },
         lp: { eth: 2000 }, // ETH-USDC LP
         stable: 4000,
       });
 
-      expect(result.find(s => s.category === "alt")?.percentage).toBeCloseTo(
+      expect(result.find(s => s.category === "eth")?.percentage).toBeCloseTo(
         60 // eth spot + eth lp
       );
       expect(result.find(s => s.category === "btc")).toBeUndefined(); // no BTC
-      expect(result.find(s => s.category === "btc-stable")).toBeUndefined(); // no BTC-LP
+      expect(result.find(s => s.category === "alt")).toBeUndefined();
     });
   });
 
@@ -220,13 +218,15 @@ describe("unifiedAllocationUtils", () => {
       const result = mapLegacyConstituentsToUnified(
         [
           { symbol: "BTC", value: 50, color: "#F7931A" },
-          { symbol: "ETH", value: 30, color: "#627EEA" },
+          { symbol: "ETH", value: 20, color: "#627EEA" },
+          { symbol: "SOL", value: 10, color: "#6B7280" },
         ],
         20
       );
 
       expect(result.find(s => s.category === "btc")?.percentage).toBe(50);
-      expect(result.find(s => s.category === "alt")?.percentage).toBe(30);
+      expect(result.find(s => s.category === "eth")?.percentage).toBe(20);
+      expect(result.find(s => s.category === "alt")?.percentage).toBe(10);
       expect(result.find(s => s.category === "stable")?.percentage).toBe(20);
     });
 
@@ -271,8 +271,8 @@ describe("unifiedAllocationUtils", () => {
     it("returns human-readable summary", () => {
       const segments = mapPortfolioToUnified({
         btc: 50,
-        eth: 25,
-        others: 0,
+        eth: 0,
+        others: 25,
         stablecoins: 25,
       });
 

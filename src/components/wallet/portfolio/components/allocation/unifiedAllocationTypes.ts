@@ -12,11 +12,11 @@
  *
  * This model simplifies previous inconsistent categorizations into a clear hierarchy:
  * - `btc`: Pure BTC spot exposure
- * - `btc-stable`: BTC-USDC LP positions (yield with reduced volatility)
+ * - `eth`: Pure ETH spot exposure
  * - `stable`: Stablecoins (capital preservation)
- * - `alt`: Everything else (ETH, altcoins, ETH-LP positions)
+ * - `alt`: Everything else (non-BTC, non-ETH, non-stable)
  */
-export type UnifiedCategory = "btc" | "btc-stable" | "stable" | "alt";
+export type UnifiedCategory = "btc" | "eth" | "stable" | "alt";
 
 /**
  * A single segment in the unified allocation bar.
