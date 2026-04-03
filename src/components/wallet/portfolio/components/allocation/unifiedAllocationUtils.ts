@@ -9,6 +9,7 @@ import { UNIFIED_COLORS } from "@/constants/assets";
 import { getAllocationCategoryForToken } from "@/lib/domain/allocationCategories";
 
 import type {
+  AssetAllocationSource,
   BacktestConstituentsSource,
   LegacyAllocationConstituent,
   PortfolioAllocationSource,
@@ -62,6 +63,13 @@ function normalizeSegments(segments: UnifiedSegment[]): UnifiedSegment[] {
     .filter(s => s.percentage > 0)
     .sort((a, b) => b.percentage - a.percentage);
 }
+
+const DEFAULT_ASSET_CATEGORIES: readonly UnifiedCategory[] = [
+  "btc",
+  "eth",
+  "stable",
+  "alt",
+];
 
 /**
  * Extracts a numeric value from a Record or returns the number directly.
@@ -118,6 +126,23 @@ export function mapPortfolioToUnified(
     createSegment("stable", data.stablecoins),
     createSegment("alt", data.others),
   ];
+
+  return normalizeSegments(segments);
+}
+
+/**
+ * Maps explicit four-bucket asset allocation ratios to unified segments.
+ *
+ * Source values are normalized ratios (0-1) and converted to percentages.
+ * Consumers can optionally limit which categories are rendered.
+ */
+export function mapAssetAllocationToUnified(
+  data: AssetAllocationSource,
+  categories: readonly UnifiedCategory[] = DEFAULT_ASSET_CATEGORIES
+): UnifiedSegment[] {
+  const segments = categories.map(category =>
+    createSegment(category, (data[category] ?? 0) * 100)
+  );
 
   return normalizeSegments(segments);
 }

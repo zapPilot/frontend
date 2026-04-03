@@ -159,16 +159,16 @@ describe("backtestBuckets", () => {
         color: "#F7931A",
       },
       {
-        category: "eth",
-        label: "ETH",
-        percentage: 20,
-        color: "#627EEA",
-      },
-      {
         category: "stable",
         label: "STABLE",
         percentage: 30,
         color: "#2775CA",
+      },
+      {
+        category: "eth",
+        label: "ETH",
+        percentage: 20,
+        color: "#627EEA",
       },
       {
         category: "alt",

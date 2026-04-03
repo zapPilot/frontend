@@ -6,24 +6,30 @@ import { getStrategyColor } from "@/components/wallet/portfolio/views/backtestin
 
 import { render, screen } from "../../../../../../../test-utils";
 
-vi.mock("@/components/wallet/portfolio/components/allocation", () => ({
-  UnifiedAllocationBar: (props: {
-    testIdPrefix: string;
-    segments: { label: string; percentage: number; color: string }[];
-  }) => (
-    <div
-      data-testid={props.testIdPrefix}
-      data-segments={JSON.stringify(props.segments)}
-    >
-      {props.segments
-        .map(
-          segment =>
-            `${segment.label}:${segment.percentage}:${segment.color.toLowerCase()}`
-        )
-        .join("|")}
-    </div>
-  ),
-}));
+vi.mock(
+  "@/components/wallet/portfolio/components/allocation",
+  async importOriginal => ({
+    ...(await importOriginal<
+      typeof import("@/components/wallet/portfolio/components/allocation")
+    >()),
+    UnifiedAllocationBar: (props: {
+      testIdPrefix: string;
+      segments: { label: string; percentage: number; color: string }[];
+    }) => (
+      <div
+        data-testid={props.testIdPrefix}
+        data-segments={JSON.stringify(props.segments)}
+      >
+        {props.segments
+          .map(
+            segment =>
+              `${segment.label}:${segment.percentage}:${segment.color.toLowerCase()}`
+          )
+          .join("|")}
+      </div>
+    ),
+  })
+);
 
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay",
@@ -174,7 +180,7 @@ describe("BacktestAllocationBar", () => {
     );
 
     expect(screen.getByTestId("backtest-default")).toHaveTextContent(
-      "BTC:40:#f7931a|ETH:20:#627eea|STABLE:30:#2775ca|ALT:10:#6b7280"
+      "BTC:40:#f7931a|STABLE:30:#2775ca|ETH:20:#627eea|ALT:10:#6b7280"
     );
   });
 });

@@ -70,7 +70,7 @@ export interface BacktestStrategySummary {
   roi_percent: number;
   trade_count: number;
   final_allocation: BacktestPortfolioAllocation;
-  final_asset_allocation?: BacktestAssetAllocation | null;
+  final_asset_allocation: BacktestAssetAllocation;
   max_drawdown_percent?: number | null;
   calmar_ratio?: number | null;
   parameters: Record<string, unknown>;
@@ -95,7 +95,7 @@ export interface BacktestStrategyPortfolio {
   stable_usd: number;
   total_value: number;
   allocation: BacktestPortfolioAllocation;
-  asset_allocation?: BacktestAssetAllocation | null;
+  asset_allocation: BacktestAssetAllocation;
   spot_asset?: BacktestSpotAssetSymbol | null;
 }
 
@@ -144,7 +144,7 @@ export interface BacktestDecision {
     | "rotation"
     | "none";
   target_allocation: BacktestPortfolioAllocation;
-  target_asset_allocation?: BacktestAssetAllocation | null;
+  target_asset_allocation: BacktestAssetAllocation;
   immediate: boolean;
   details?: BacktestDecisionDetails;
 }

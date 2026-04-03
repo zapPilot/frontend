@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateTotalPercentage,
   getAllocationSummary,
+  mapAssetAllocationToUnified,
   mapBacktestToUnified,
   mapLegacyConstituentsToUnified,
   mapPortfolioToUnified,
@@ -88,6 +89,44 @@ describe("unifiedAllocationUtils", () => {
       expect(result.find(s => s.category === "alt")?.color).toBe(
         UNIFIED_COLORS.ALT
       );
+    });
+  });
+
+  describe("mapAssetAllocationToUnified", () => {
+    it("maps explicit four-bucket ratios to unified segments", () => {
+      const result = mapAssetAllocationToUnified({
+        btc: 0.4,
+        eth: 0.2,
+        stable: 0.3,
+        alt: 0.1,
+      });
+
+      expect(result).toHaveLength(4);
+      expect(result.find(s => s.category === "btc")?.percentage).toBe(40);
+      expect(result.find(s => s.category === "eth")?.percentage).toBe(20);
+      expect(result.find(s => s.category === "stable")?.percentage).toBe(30);
+      expect(result.find(s => s.category === "alt")?.percentage).toBe(10);
+    });
+
+    it("supports rendering a subset of categories", () => {
+      const result = mapAssetAllocationToUnified(
+        {
+          btc: 0.4,
+          eth: 0.2,
+          stable: 0.4,
+          alt: 0,
+        },
+        ["btc", "eth", "stable"]
+      );
+
+      expect(result.map(segment => segment.category)).toEqual([
+        "btc",
+        "stable",
+        "eth",
+      ]);
+      expect(
+        result.find(segment => segment.category === "alt")
+      ).toBeUndefined();
     });
   });
 

@@ -1,6 +1,5 @@
 export {
   AXIS_COLOR,
-  formatPriceLabel,
   formatXAxisDate,
   getRegimeColor,
   getRegimeLabel,

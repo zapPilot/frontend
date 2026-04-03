@@ -14,6 +14,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useDailySuggestion } from "../hooks/useDailySuggestion";
 import { useDefaultPresetId } from "../hooks/useDefaultPresetId";
 import { BaseTradingPanel } from "./BaseTradingPanel";
+import { ImpactVisual } from "./ImpactVisual";
 
 const ACTION_STYLES: Record<string, string> = {
   buy: "bg-green-500 shadow-green-200 dark:shadow-none",
@@ -241,6 +242,12 @@ export function RebalancePanel({ userId }: { userId: string }) {
       actionCardSubtitle="Suggested Moves"
       actionCardIcon={
         <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
+      }
+      impactVisual={
+        <ImpactVisual
+          currentAllocation={data.portfolio.asset_allocation}
+          targetAllocation={data.decision.target_asset_allocation}
+        />
       }
       footer={
         <button

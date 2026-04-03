@@ -2,14 +2,13 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { type ReactElement, type ReactNode, useEffect, useRef } from "react";
+import { type ReactElement, type ReactNode } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
-import { queryKeys } from "@/hooks/queries";
 import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfolioDataProgressive";
-import { useEtlJobPolling } from "@/hooks/wallet";
+import { useEtlJobPolling, useEtlJobSync } from "@/hooks/wallet";
 import { logger } from "@/utils";
 
 interface DashboardShellProps {
@@ -25,102 +24,6 @@ interface DashboardShellProps {
 
 type EtlState = ReturnType<typeof useEtlJobPolling>["state"];
 type UnifiedPortfolioSnapshot = { positions?: number; balance?: number } | null;
-
-function useStartPollingFromInitialJobId(
-  initialEtlJobId: string | undefined,
-  startPolling: (jobId: string) => void,
-  activeEtlJobIdRef: { current: string | null }
-): void {
-  useEffect(() => {
-    if (!initialEtlJobId || initialEtlJobId === activeEtlJobIdRef.current) {
-      return;
-    }
-
-    activeEtlJobIdRef.current = initialEtlJobId;
-    startPolling(initialEtlJobId);
-  }, [activeEtlJobIdRef, initialEtlJobId, startPolling]);
-}
-
-function useTrackActiveEtlJobId(
-  etlJobId: string | null,
-  activeEtlJobIdRef: { current: string | null }
-): void {
-  useEffect(() => {
-    activeEtlJobIdRef.current = etlJobId;
-  }, [activeEtlJobIdRef, etlJobId]);
-}
-
-function shouldClearEtlUrlParams(completingJobId: string): boolean {
-  const url = new URL(window.location.href);
-  const urlJobId = url.searchParams.get("etlJobId");
-  return urlJobId === completingJobId || url.searchParams.has("isNewUser");
-}
-
-function clearEtlUrlParams(router: ReturnType<typeof useRouter>): void {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("etlJobId");
-  url.searchParams.delete("isNewUser");
-  router.replace(url.pathname + url.search, { scroll: false });
-}
-
-interface CompletionSyncParams {
-  etlState: EtlState;
-  queryClient: ReturnType<typeof useQueryClient>;
-  urlUserId: string;
-  refetch: () => Promise<unknown>;
-  activeEtlJobIdRef: { current: string | null };
-  router: ReturnType<typeof useRouter>;
-  completeTransition: () => void;
-}
-
-function useSyncOnEtlCompletion({
-  etlState,
-  queryClient,
-  urlUserId,
-  refetch,
-  activeEtlJobIdRef,
-  router,
-  completeTransition,
-}: CompletionSyncParams): void {
-  useEffect(() => {
-    if (etlState.status !== "completing" || !etlState.jobId) {
-      return;
-    }
-
-    const handleCompletion = async (): Promise<void> => {
-      const completingJobId = etlState.jobId;
-      if (!completingJobId) {
-        return;
-      }
-
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.portfolio.landingPage(urlUserId),
-      });
-      await refetch();
-
-      if (activeEtlJobIdRef.current !== completingJobId) {
-        return;
-      }
-
-      if (shouldClearEtlUrlParams(completingJobId)) {
-        clearEtlUrlParams(router);
-      }
-
-      completeTransition();
-    };
-
-    void handleCompletion();
-  }, [
-    activeEtlJobIdRef,
-    completeTransition,
-    etlState.jobId,
-    etlState.status,
-    queryClient,
-    refetch,
-    router,
-    urlUserId,
-  ]);
-}
 
 function getSafeError(error: Error | null | unknown): Error | null {
   return error instanceof Error ? error : null;
@@ -212,16 +115,12 @@ export function DashboardShell({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // ETL Polling for new wallets
   const {
     state: etlState,
     startPolling,
     completeTransition,
   } = useEtlJobPolling();
-  const isEtlInProgress = etlState.isInProgress;
-  const activeEtlJobIdRef = useRef<string | null>(null);
 
-  // Portfolio data with ETL-aware queries
   const {
     unifiedData,
     sections,
@@ -230,23 +129,19 @@ export function DashboardShell({
     isLoading,
     error,
     refetch,
-  } = usePortfolioDataProgressive(urlUserId, isEtlInProgress);
+  } = usePortfolioDataProgressive(urlUserId, etlState.isInProgress);
 
-  useStartPollingFromInitialJobId(
+  useEtlJobSync({
     initialEtlJobId,
-    startPolling,
-    activeEtlJobIdRef
-  );
-  useTrackActiveEtlJobId(etlState.jobId, activeEtlJobIdRef);
-  useSyncOnEtlCompletion({
     etlState,
-    queryClient,
+    startPolling,
+    completeTransition,
     urlUserId,
     refetch,
-    activeEtlJobIdRef,
+    queryClient,
     router,
-    completeTransition,
   });
+
   const safeError = getSafeError(error);
 
   if (safeError && !unifiedData) {

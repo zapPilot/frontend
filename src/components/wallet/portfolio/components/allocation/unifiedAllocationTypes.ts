@@ -90,6 +90,17 @@ export interface BacktestConstituentsSource {
 }
 
 /**
+ * Explicit four-bucket asset allocation ratios.
+ * Values are normalized ratios (0-1).
+ */
+export interface AssetAllocationSource {
+  btc: number;
+  eth: number;
+  stable: number;
+  alt: number;
+}
+
+/**
  * Legacy AllocationConstituent format (for backward compatibility).
  */
 export interface LegacyAllocationConstituent {

@@ -3,6 +3,7 @@ export { UnifiedAllocationBar } from "./UnifiedAllocationBar";
 
 // Type exports
 export type {
+  AssetAllocationSource,
   BacktestConstituentsSource,
   LegacyAllocationConstituent,
   PortfolioAllocationSource,
@@ -16,6 +17,7 @@ export type {
 export {
   calculateTotalPercentage,
   getAllocationSummary,
+  mapAssetAllocationToUnified,
   mapBacktestToUnified,
   mapLegacyConstituentsToUnified,
   mapPortfolioToUnified,

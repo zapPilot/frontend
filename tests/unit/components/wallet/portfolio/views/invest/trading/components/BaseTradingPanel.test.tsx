@@ -22,13 +22,6 @@ vi.mock(
 );
 
 vi.mock(
-  "@/components/wallet/portfolio/views/invest/trading/components/ImpactVisual",
-  () => ({
-    ImpactVisual: () => <div data-testid="impact-visual" />,
-  })
-);
-
-vi.mock(
   "@/components/wallet/portfolio/views/invest/trading/components/ReviewModal",
   () => ({
     ReviewModal: ({ isOpen, title }: any) =>
@@ -42,11 +35,12 @@ describe("BaseTradingPanel", () => {
     subtitle: "Panel subtitle text",
     actionCardTitle: "Action Card Title",
     actionCardSubtitle: "Action card subtitle",
+    impactVisual: <div data-testid="impact-visual" />,
     children: <div data-testid="panel-children">Panel Content</div>,
     footer: <div data-testid="panel-footer">Footer Content</div>,
     isReviewOpen: false,
-    onReviewClose: vi.fn(),
-    onReviewConfirm: vi.fn(),
+    onCloseReview: vi.fn(),
+    onConfirmReview: vi.fn(),
   };
 
   it("renders title and subtitle text", () => {
@@ -70,10 +64,16 @@ describe("BaseTradingPanel", () => {
     expect(screen.queryByTestId("header-badge")).not.toBeInTheDocument();
   });
 
-  it("renders ImpactVisual inside ActionCard", () => {
+  it("renders impactVisual inside ActionCard when provided", () => {
     render(<BaseTradingPanel {...defaultProps} />);
 
     expect(screen.getByTestId("impact-visual")).toBeInTheDocument();
+  });
+
+  it("omits the impact visual slot when not provided", () => {
+    render(<BaseTradingPanel {...defaultProps} impactVisual={undefined} />);
+
+    expect(screen.queryByTestId("impact-visual")).not.toBeInTheDocument();
   });
 
   it("renders children inside ActionCard", () => {

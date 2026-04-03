@@ -1,6 +1,7 @@
-import type {
-  UnifiedCategory,
-  UnifiedSegment,
+import {
+  mapAssetAllocationToUnified,
+  type UnifiedCategory,
+  type UnifiedSegment,
 } from "@/components/wallet/portfolio/components/allocation";
 import { UNIFIED_COLORS } from "@/constants/assets";
 import type {
@@ -46,32 +47,6 @@ const BACKTEST_BUCKET_CONFIG: Record<
   },
 };
 
-const ASSET_ALLOCATION_CONFIG: Record<
-  keyof BacktestAssetAllocation,
-  { category: UnifiedCategory; label: string; color: string }
-> = {
-  btc: {
-    category: "btc",
-    label: "BTC",
-    color: UNIFIED_COLORS.BTC,
-  },
-  eth: {
-    category: "eth",
-    label: "ETH",
-    color: UNIFIED_COLORS.ETH,
-  },
-  stable: {
-    category: "stable",
-    label: "STABLE",
-    color: UNIFIED_COLORS.STABLE,
-  },
-  alt: {
-    category: "alt",
-    label: "ALT",
-    color: UNIFIED_COLORS.ALT,
-  },
-};
-
 const ALL_BUCKET_VALUES: readonly string[] = [
   ...BACKTEST_BUCKETS,
   "eth",
@@ -111,19 +86,7 @@ export function buildBacktestAllocationSegments(
   assetAllocation?: BacktestAssetAllocation | null
 ): UnifiedSegment[] {
   if (assetAllocation) {
-    const explicitSegments = (
-      Object.entries(ASSET_ALLOCATION_CONFIG) as [
-        keyof BacktestAssetAllocation,
-        (typeof ASSET_ALLOCATION_CONFIG)[keyof BacktestAssetAllocation],
-      ][]
-    )
-      .map(([key, config]) => ({
-        category: config.category,
-        label: config.label,
-        percentage: assetAllocation[key] * 100,
-        color: config.color,
-      }))
-      .filter(segment => segment.percentage > 0);
+    const explicitSegments = mapAssetAllocationToUnified(assetAllocation);
 
     if (explicitSegments.length > 0) {
       return explicitSegments;

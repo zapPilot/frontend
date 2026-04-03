@@ -39,10 +39,6 @@ export function formatXAxisDate(val: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-export function formatPriceLabel(val: number): string {
-  return `$${(val / 1000).toFixed(0)}k`;
-}
-
 export function formatRatioLabel(val: number): string {
   return Number(val).toFixed(4);
 }

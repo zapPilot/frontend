@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { ActionCard } from "./ActionCard";
-import { ImpactVisual } from "./ImpactVisual";
 import { ReviewModal } from "./ReviewModal";
 
 interface BaseTradingPanelProps {
@@ -18,6 +17,8 @@ interface BaseTradingPanelProps {
   actionCardSubtitle?: ReactNode;
   /** ActionCard header — icon element */
   actionCardIcon?: ReactNode;
+  /** Optional allocation impact visual shown above panel content */
+  impactVisual?: ReactNode;
 
   /** Panel-specific content rendered below ImpactVisual inside ActionCard */
   children: ReactNode;
@@ -43,6 +44,7 @@ export function BaseTradingPanel({
   actionCardTitle,
   actionCardSubtitle,
   actionCardIcon,
+  impactVisual,
   children,
   footer,
   isReviewOpen,
@@ -70,9 +72,11 @@ export function BaseTradingPanel({
           icon={actionCardIcon}
           footer={footer}
         >
-          <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-            <ImpactVisual />
-          </div>
+          {impactVisual ? (
+            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+              {impactVisual}
+            </div>
+          ) : null}
           {children}
         </ActionCard>
       </div>

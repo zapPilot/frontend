@@ -47,6 +47,7 @@ const mockEtlState = vi.fn();
 const mockStartPolling = vi.fn();
 const mockResetEtl = vi.fn();
 const mockCompleteTransition = vi.fn();
+const mockUseEtlJobSync = vi.fn();
 
 vi.mock("@/hooks/wallet", () => ({
   useEtlJobPolling: () => ({
@@ -55,6 +56,7 @@ vi.mock("@/hooks/wallet", () => ({
     reset: mockResetEtl,
     completeTransition: mockCompleteTransition,
   }),
+  useEtlJobSync: (...args: unknown[]) => mockUseEtlJobSync(...args),
 }));
 
 vi.mock("@/adapters/walletPortfolioDataAdapter", () => ({
@@ -462,7 +464,7 @@ describe("DashboardShell", () => {
       expect(screen.getByTestId("portfolio-presenter")).toBeInTheDocument();
     });
 
-    it("should call startPolling when initialEtlJobId is provided", () => {
+    it("should pass initialEtlJobId to useEtlJobSync", () => {
       mockEtlState.mockReturnValue({
         jobId: null,
         status: "idle",
@@ -476,10 +478,17 @@ describe("DashboardShell", () => {
         { wrapper: createWrapper() }
       );
 
-      expect(mockStartPolling).toHaveBeenCalledWith("new-etl-job");
+      expect(mockUseEtlJobSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialEtlJobId: "new-etl-job",
+          startPolling: mockStartPolling,
+          completeTransition: mockCompleteTransition,
+          urlUserId: "user-123",
+        })
+      );
     });
 
-    it("should not call startPolling when job is already set", () => {
+    it("should pass existing ETL state to useEtlJobSync", () => {
       mockEtlState.mockReturnValue({
         jobId: "existing-job",
         status: "processing",
@@ -493,9 +502,15 @@ describe("DashboardShell", () => {
         { wrapper: createWrapper() }
       );
 
-      // startPolling is called because of initial render behavior in test environment
-      // causing ref mismatch or reset. The real startPolling is idempotent so this is safe.
-      expect(mockStartPolling).toHaveBeenCalledWith("existing-job");
+      expect(mockUseEtlJobSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialEtlJobId: "existing-job",
+          etlState: expect.objectContaining({
+            jobId: "existing-job",
+            status: "processing",
+          }),
+        })
+      );
     });
 
     it("should pass completeTransition to handle ETL completion", () => {

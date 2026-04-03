@@ -29,7 +29,7 @@ export interface AllocationBlock {
   id: string;
   displayName: string;
   allocation: BacktestPortfolioAllocation;
-  assetAllocation?: BacktestAssetAllocation | null | undefined;
+  assetAllocation: BacktestAssetAllocation;
   index: number | undefined;
   spotAssetLabel?: SpotAssetSymbol;
 }
