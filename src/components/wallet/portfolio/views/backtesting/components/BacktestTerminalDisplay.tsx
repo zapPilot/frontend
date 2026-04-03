@@ -2,12 +2,11 @@
 
 import { useCallback, useMemo } from "react";
 
-import type {
-  BacktestResponse,
-  BacktestStrategyCatalogResponseV3,
-} from "@/types/backtesting";
+import type { BacktestResponse } from "@/types/backtesting";
+import type { StrategyConfigsResponse } from "@/types/strategy";
 
 import { FIXED_PACING_ENGINE_ID } from "../constants";
+import { buildCompareConfigForStrategyId } from "../hooks/backtestConfigurationBuilders";
 import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
   updateConfigStrategy,
@@ -42,8 +41,8 @@ export interface BacktestTerminalDisplayProps {
   editorValue: string;
   /** Update the JSON editor value */
   onEditorValueChange: (v: string) => void;
-  /** Strategy catalog for populating the dropdown */
-  catalog: BacktestStrategyCatalogResponseV3 | null;
+  /** Bootstrap payload containing strategies and public presets */
+  strategyConfigs: StrategyConfigsResponse | null;
   /** Parsed days value from editor */
   days: number;
   /** Selected strategy ID from editor */
@@ -66,7 +65,7 @@ export function BacktestTerminalDisplay({
   onRun,
   editorValue,
   onEditorValueChange,
-  catalog,
+  strategyConfigs,
   days,
   selectedStrategyId,
   strategyOptions,
@@ -79,15 +78,14 @@ export function BacktestTerminalDisplay({
 
   const handleStrategyChange = useCallback(
     (newStrategyId: string) => {
-      const entry = catalog?.strategies.find(
-        s => s.strategy_id === newStrategyId
+      const nextConfig = buildCompareConfigForStrategyId(
+        newStrategyId,
+        strategyConfigs?.presets ?? [],
+        strategyConfigs?.strategies ?? []
       );
-      const defaultParams = entry?.default_params;
-      onEditorValueChange(
-        updateConfigStrategy(editorValue, newStrategyId, defaultParams)
-      );
+      onEditorValueChange(updateConfigStrategy(editorValue, nextConfig));
     },
-    [catalog, editorValue, onEditorValueChange]
+    [strategyConfigs, editorValue, onEditorValueChange]
   );
 
   const primaryId = getPrimaryStrategyId(sortedStrategyIds);

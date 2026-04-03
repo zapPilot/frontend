@@ -45,8 +45,10 @@ export interface BacktestCompareParamsV3 {
 export interface BacktestCompareConfigV3 {
   /** Client-provided identifier; becomes the response strategies-map key. */
   config_id: string;
-  /** Backend-defined strategy id; extensible without frontend enum churn. */
-  strategy_id: string;
+  /** Stable saved preset reference for preset-backed compare requests. */
+  saved_config_id?: string;
+  /** Backend-defined strategy id for ad-hoc compare requests. */
+  strategy_id?: string;
   params?: BacktestCompareParamsV3;
 }
 

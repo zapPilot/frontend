@@ -11,6 +11,7 @@ import type {
   BacktestExecution,
   BacktestMarketPoint,
   BacktestSignal,
+  BacktestStrategyCatalogEntryV3,
   BacktestStrategyPortfolio,
 } from "./backtesting";
 
@@ -77,10 +78,11 @@ export interface BacktestDefaults {
 /**
  * Response from the /configs endpoint.
  *
- * Wraps presets and backtest defaults in a structured response envelope
- * for extensibility and backward compatibility.
+ * Wraps strategy families, public presets, and backtest defaults in a
+ * structured response envelope for extensibility and backward compatibility.
  */
 export interface StrategyConfigsResponse {
+  strategies: BacktestStrategyCatalogEntryV3[];
   presets: StrategyPreset[];
   backtest_defaults: BacktestDefaults;
 }

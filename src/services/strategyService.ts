@@ -22,13 +22,14 @@ export type {
 };
 
 // =========================================================================
-// CONFIG PRESETS ENDPOINT
+// STRATEGY BOOTSTRAP ENDPOINT
 // =========================================================================
 
 /**
- * Get strategy presets and backtest defaults.
+ * Get strategy families, public presets, and backtest defaults.
  *
- * Returns the response envelope containing presets and backtest_defaults.
+ * Returns the response envelope containing strategies, presets, and
+ * backtest_defaults.
  */
 export async function getStrategyConfigs(): Promise<StrategyConfigsResponse> {
   const endpoint = `/api/v3/strategy/configs`;

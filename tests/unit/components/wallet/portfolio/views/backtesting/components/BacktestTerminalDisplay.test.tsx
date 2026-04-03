@@ -2,15 +2,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BacktestTerminalDisplay } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTerminalDisplay";
-import type {
-  BacktestResponse,
-  BacktestStrategyCatalogResponseV3,
-} from "@/types/backtesting";
+import type { BacktestResponse } from "@/types/backtesting";
+import type { StrategyConfigsResponse } from "@/types/strategy";
 
 vi.mock("@/components/wallet/portfolio/views/backtesting/constants", () => ({
   DEFAULT_DAYS: 500,
+  DEFAULT_TOTAL_CAPITAL: 10000,
   DMA_GATED_FGI_STRATEGY_ID: "dma_gated_fgi",
   FIXED_PACING_ENGINE_ID: "fgi_exponential",
+  getDefaultConfigIdForStrategyId: (strategyId: string) => strategyId,
 }));
 
 vi.mock(
@@ -31,8 +31,8 @@ vi.mock(
     ),
     parseConfigStrategyId: vi.fn((_json: string, fallback: string) => fallback),
     updateConfigStrategy: vi.fn(
-      (_json: string, strategyId: string) =>
-        `{"configs":[{"strategy_id":"${strategyId}"}]}`
+      (_json: string, config: Record<string, unknown>) =>
+        JSON.stringify({ configs: [config] })
     ),
   })
 );
@@ -98,7 +98,7 @@ describe("BacktestTerminalDisplay", () => {
     onRun: mockOnRun,
     editorValue: '{"days":500}',
     onEditorValueChange: mockOnEditorValueChange,
-    catalog: null,
+    strategyConfigs: null,
     days: 500,
     selectedStrategyId: "dma_gated_fgi",
     strategyOptions: [],
@@ -123,8 +123,7 @@ describe("BacktestTerminalDisplay", () => {
     },
   };
 
-  const mockCatalog: BacktestStrategyCatalogResponseV3 = {
-    catalog_version: "2.0.0",
+  const mockStrategyConfigs: StrategyConfigsResponse = {
     strategies: [
       {
         strategy_id: "dma_gated_fgi",
@@ -143,6 +142,11 @@ describe("BacktestTerminalDisplay", () => {
         supports_daily_suggestion: false,
       },
     ],
+    presets: [],
+    backtest_defaults: {
+      days: 500,
+      total_capital: 10000,
+    },
   };
 
   it("renders command prompt controls", () => {
@@ -188,14 +192,14 @@ describe("BacktestTerminalDisplay", () => {
     expect(mockOnEditorValueChange).toHaveBeenCalledWith('{"days":365}');
   });
 
-  it("renders static strategy label when catalog is null", () => {
+  it("renders static strategy label when strategy configs are null", () => {
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
     expect(screen.queryByRole("button", { name: /dma_gated_fgi/i })).toBeNull();
     expect(screen.getByText("dma_gated_fgi")).toBeDefined();
   });
 
-  it("renders a dropdown when catalog has multiple strategies", () => {
+  it("renders a dropdown when strategy configs include multiple strategies", () => {
     const strategyOptions = [
       { value: "dma_gated_fgi", label: "DMA Gated FGI" },
       { value: "momentum_alpha", label: "Momentum Alpha" },
@@ -203,7 +207,7 @@ describe("BacktestTerminalDisplay", () => {
     render(
       <BacktestTerminalDisplay
         {...defaultProps}
-        catalog={mockCatalog}
+        strategyConfigs={mockStrategyConfigs}
         strategyOptions={strategyOptions}
       />
     );

@@ -29,6 +29,7 @@ function createMockResponse(
   overrides: Partial<StrategyConfigsResponse> = {}
 ): StrategyConfigsResponse {
   return {
+    strategies: [],
     presets: [
       createMockPreset({
         config_id: "dma_gated_fgi_default",

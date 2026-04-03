@@ -54,6 +54,7 @@ describe("useDefaultPresetId", () => {
 
   it("prefers the backend default flag before the curated rotation fallback", () => {
     mockUseStrategyConfigs({
+      strategies: [],
       presets: [
         createPreset({ config_id: "dma_gated_fgi_default" }),
         createPreset({
@@ -72,6 +73,7 @@ describe("useDefaultPresetId", () => {
 
   it("falls back to the curated rotation id when no preset is flagged as default", () => {
     mockUseStrategyConfigs({
+      strategies: [],
       presets: [
         createPreset({ config_id: "dca_classic", strategy_id: "dca_classic" }),
         createPreset({
@@ -89,6 +91,7 @@ describe("useDefaultPresetId", () => {
 
   it("falls back to the first eth_btc_rotation preset", () => {
     mockUseStrategyConfigs({
+      strategies: [],
       presets: [
         createPreset({ config_id: "dca_classic", strategy_id: "dca_classic" }),
         createPreset({
@@ -110,6 +113,7 @@ describe("useDefaultPresetId", () => {
 
   it("falls back to the first preset when there is no DMA strategy", () => {
     mockUseStrategyConfigs({
+      strategies: [],
       presets: [
         createPreset({
           config_id: "dca_classic",
@@ -127,6 +131,7 @@ describe("useDefaultPresetId", () => {
 
   it("passes enabled through to useStrategyConfigs", () => {
     mockUseStrategyConfigs({
+      strategies: [],
       presets: [],
       backtest_defaults: { days: 500, total_capital: 10000 },
     });

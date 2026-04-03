@@ -1,5 +1,5 @@
 /**
- * React Query hook for fetching curated strategy presets and backtest defaults.
+ * React Query hook for fetching the shared strategy bootstrap payload.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -12,10 +12,11 @@ export const strategyConfigKeys = {
 };
 
 /**
- * Fetch strategy configs (presets + backtest defaults).
+ * Fetch strategy families, public presets, and backtest defaults.
  *
  * @param enabled - Whether to enable the query (default: true)
- * @returns Query result with StrategyConfigsResponse containing presets and backtest_defaults
+ * @returns Query result with StrategyConfigsResponse containing strategies,
+ * presets, and backtest_defaults
  */
 export function useStrategyConfigs(enabled = true) {
   return useQuery<StrategyConfigsResponse, Error>({

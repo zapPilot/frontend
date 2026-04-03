@@ -212,6 +212,7 @@ describe("BacktestingView", () => {
       strategies: [],
     });
     vi.mocked(strategyService.getStrategyConfigs).mockResolvedValue({
+      strategies: [],
       presets: [],
       backtest_defaults: { days: 500, total_capital: 10000 },
     });

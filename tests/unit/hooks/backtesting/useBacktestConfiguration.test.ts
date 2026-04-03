@@ -3,15 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useBacktestConfiguration } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestConfiguration";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
-import { getBacktestingStrategiesV3 } from "@/services/backtestingService";
 import { getStrategyConfigs } from "@/services/strategyService";
 
 vi.mock("@/services/strategyService", () => ({
   getStrategyConfigs: vi.fn(),
-}));
-
-vi.mock("@/services/backtestingService", () => ({
-  getBacktestingStrategiesV3: vi.fn(),
 }));
 
 vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
@@ -33,18 +28,11 @@ describe("useBacktestConfiguration regressions", () => {
 
   it("waits for defaults before the initial compare run", async () => {
     let resolvePresets: ((value: any) => void) | undefined;
-    let resolveCatalog: ((value: any) => void) | undefined;
 
     vi.mocked(getStrategyConfigs).mockImplementation(
       () =>
         new Promise(resolve => {
           resolvePresets = resolve;
-        })
-    );
-    vi.mocked(getBacktestingStrategiesV3).mockImplementation(
-      () =>
-        new Promise(resolve => {
-          resolveCatalog = resolve;
         })
     );
 
@@ -53,6 +41,7 @@ describe("useBacktestConfiguration regressions", () => {
     expect(mockMutate).not.toHaveBeenCalled();
 
     resolvePresets?.({
+      strategies: [],
       presets: [
         {
           config_id: "eth_btc_rotation_default",
@@ -69,10 +58,6 @@ describe("useBacktestConfiguration regressions", () => {
         total_capital: 15000,
       },
     });
-    resolveCatalog?.({
-      catalog_version: "2.0.0",
-      strategies: [],
-    });
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledTimes(1);
@@ -86,6 +71,7 @@ describe("useBacktestConfiguration regressions", () => {
           setTimeout(
             () =>
               resolve({
+                strategies: [],
                 presets: [],
                 backtest_defaults: {
                   days: 500,
@@ -96,10 +82,6 @@ describe("useBacktestConfiguration regressions", () => {
           );
         })
     );
-    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue({
-      catalog_version: "2.0.0",
-      strategies: [],
-    });
 
     const { result } = renderHook(() => useBacktestConfiguration());
 

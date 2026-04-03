@@ -1,21 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
-import { getBacktestingStrategiesV3, getStrategyConfigs } from "@/services";
-import type {
-  BacktestRequest,
-  BacktestStrategyCatalogResponseV3,
-} from "@/types/backtesting";
+import { getStrategyConfigs } from "@/services";
+import type { BacktestRequest } from "@/types/backtesting";
 import type { StrategyConfigsResponse } from "@/types/strategy";
 
 import { DEFAULT_DAYS, ETH_BTC_ROTATION_STRATEGY_ID } from "../constants";
 import {
-  parseConfigStrategyId,
+  normalizePresetBackedConfigs,
+  parseConfigStrategyIdWithPresets,
   parseJsonField,
 } from "../utils/jsonConfigurationHelpers";
 import {
-  buildDefaultPayloadFromCatalog,
   buildDefaultPayloadFromPresets,
+  buildDefaultPayloadFromStrategies,
   FALLBACK_DEFAULTS,
 } from "./backtestConfigurationBuilders";
 import {
@@ -37,13 +35,11 @@ export function useBacktestConfiguration() {
     error,
   } = useBacktestMutation();
 
-  const [catalog, setCatalog] =
-    useState<BacktestStrategyCatalogResponseV3 | null>(null);
   const [strategyConfigs, setStrategyConfigs] =
     useState<StrategyConfigsResponse | null>(null);
   const [editorValue, setEditorValue] = useState<string>(() =>
     JSON.stringify(
-      buildDefaultPayloadFromCatalog(null, FALLBACK_DEFAULTS),
+      buildDefaultPayloadFromStrategies(null, FALLBACK_DEFAULTS),
       null,
       2
     )
@@ -54,44 +50,33 @@ export function useBacktestConfiguration() {
   const userEdited = useRef(false);
   const initialRunStarted = useRef(false);
 
-  // Fetch presets (primary) and catalog (fallback) in parallel on mount
+  // Fetch strategy bootstrap data once on mount.
   useEffect(() => {
     let cancelled = false;
 
     const fetchDefaults = async () => {
-      const [presetsResult, catalogResult] = await Promise.allSettled([
-        getStrategyConfigs(),
-        getBacktestingStrategiesV3(),
-      ]);
+      const [configsResult] = await Promise.allSettled([getStrategyConfigs()]);
       if (cancelled) return;
 
-      // Always store catalog when available (used for schema validation)
-      const catalogData =
-        catalogResult.status === "fulfilled" ? catalogResult.value : null;
-      if (catalogData) setCatalog(catalogData);
-
-      // Presets take priority for editor defaults
-      if (presetsResult.status === "fulfilled") {
-        const presets = presetsResult.value;
-        setStrategyConfigs(presets);
-        if (!userEdited.current && presets.presets.length > 0) {
+      if (configsResult.status === "fulfilled") {
+        const configs = configsResult.value;
+        setStrategyConfigs(configs);
+        if (!userEdited.current && configs.presets.length > 0) {
           const payload = buildDefaultPayloadFromPresets(
-            presets.presets,
-            presets.backtest_defaults
+            configs.presets,
+            configs.backtest_defaults
           );
           setEditorValue(JSON.stringify(payload, null, 2));
           setDefaultsReady(true);
           return;
         }
-      }
-
-      // Catalog as fallback only when presets unavailable and user hasn't edited
-      if (!userEdited.current && catalogData) {
-        const payload = buildDefaultPayloadFromCatalog(
-          catalogData,
-          FALLBACK_DEFAULTS
-        );
-        setEditorValue(JSON.stringify(payload, null, 2));
+        if (!userEdited.current) {
+          const payload = buildDefaultPayloadFromStrategies(
+            configs.strategies,
+            configs.backtest_defaults
+          );
+          setEditorValue(JSON.stringify(payload, null, 2));
+        }
       }
 
       setDefaultsReady(true);
@@ -119,10 +104,22 @@ export function useBacktestConfiguration() {
     ) => {
       const configs: BacktestRequest["configs"] = parsedData.configs.map(
         cfg => {
+          if (cfg.saved_config_id) {
+            return {
+              config_id: cfg.config_id,
+              saved_config_id: cfg.saved_config_id,
+            };
+          }
+          const strategyId = cfg.strategy_id;
+          if (!strategyId) {
+            throw new Error(
+              "Backtest compare config is missing strategy_id for ad-hoc request"
+            );
+          }
           const params = normalizeParams(cfg.params);
           return {
             config_id: cfg.config_id,
-            strategy_id: cfg.strategy_id,
+            strategy_id: strategyId,
             ...(params !== undefined && { params }),
           };
         }
@@ -165,13 +162,13 @@ export function useBacktestConfiguration() {
     }
     const catalogError = validateConfigsStrategyIdsAgainstCatalog(
       parsed.data.configs,
-      catalog
+      strategyConfigs?.strategies
     );
     if (catalogError) {
       return { ok: false as const, error: catalogError };
     }
     return { ok: true as const, data: parsed.data };
-  }, [parsedEditorPayload, catalog]);
+  }, [parsedEditorPayload, strategyConfigs?.strategies]);
 
   const handleRunBacktest = () => {
     const result = validatePayload();
@@ -208,12 +205,14 @@ export function useBacktestConfiguration() {
     !initialRunSettled && !backtestData && !error && !editorError;
 
   const resetConfiguration = () => {
-    // Prefer presets if available, otherwise fall back to catalog
     const defaults = strategyConfigs?.backtest_defaults ?? FALLBACK_DEFAULTS;
     const payload =
       strategyConfigs && strategyConfigs.presets.length > 0
         ? buildDefaultPayloadFromPresets(strategyConfigs.presets, defaults)
-        : buildDefaultPayloadFromCatalog(catalog, defaults);
+        : buildDefaultPayloadFromStrategies(
+            strategyConfigs?.strategies ?? null,
+            defaults
+          );
     userEdited.current = false;
     setEditorValue(JSON.stringify(payload, null, 2));
     setEditorError(null);
@@ -221,29 +220,32 @@ export function useBacktestConfiguration() {
 
   const updateEditorValue = (val: string) => {
     userEdited.current = true;
-    setEditorValue(val);
+    setEditorValue(
+      normalizePresetBackedConfigs(val, strategyConfigs?.presets ?? [])
+    );
   };
 
   // Compute display values from the editor JSON
   const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
-  const selectedStrategyId = parseConfigStrategyId(
+  const selectedStrategyId = parseConfigStrategyIdWithPresets(
     editorValue,
-    ETH_BTC_ROTATION_STRATEGY_ID
+    ETH_BTC_ROTATION_STRATEGY_ID,
+    strategyConfigs?.presets ?? []
   );
 
   const strategyOptions = useMemo(() => {
-    if (!catalog?.strategies?.length) {
+    if (!strategyConfigs?.strategies?.length) {
       return [{ value: selectedStrategyId, label: selectedStrategyId }];
     }
-    return catalog.strategies.map(s => ({
+    return strategyConfigs.strategies.map(s => ({
       value: s.strategy_id,
       label: s.display_name,
     }));
-  }, [catalog, selectedStrategyId]);
+  }, [strategyConfigs?.strategies, selectedStrategyId]);
 
   return {
     backtestData,
-    catalog,
+    strategyConfigs,
     days,
     editorError,
     editorValue,

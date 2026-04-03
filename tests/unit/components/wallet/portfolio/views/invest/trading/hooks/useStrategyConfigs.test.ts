@@ -22,6 +22,7 @@ vi.mock("@/services/strategyService", () => ({
 }));
 
 const mockConfigsResponse: StrategyConfigsResponse = {
+  strategies: [],
   presets: [
     {
       config_id: "dma_gated_fgi_default",

@@ -37,6 +37,16 @@ const mockCatalogRotationDefaultParams = {
 };
 
 const mockStrategyConfigs = {
+  strategies: [
+    {
+      strategy_id: "eth_btc_rotation" as const,
+      display_name: "ETH/BTC Rotation",
+      description: "Rotation strategy",
+      param_schema: {},
+      default_params: mockCatalogRotationDefaultParams,
+      supports_daily_suggestion: true,
+    },
+  ],
   presets: [
     {
       config_id: "eth_btc_rotation_default",
@@ -135,7 +145,6 @@ describe("useBacktestConfiguration", () => {
     vi.mocked(getStrategyConfigs).mockRejectedValue(
       new Error("Presets unavailable")
     );
-    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue(mockCatalog);
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
       wrapper: QueryClientWrapper,
@@ -145,7 +154,7 @@ describe("useBacktestConfiguration", () => {
       const parsed = JSON.parse(result.current.editorValue);
       expect(parsed.days).toBe(500);
       expect(parsed.configs[0].config_id).toBe("eth_btc_rotation_default");
-      expect(parsed.configs[0].params.pacing.k).toBe(3);
+      expect(parsed.configs[0].strategy_id).toBe("eth_btc_rotation");
     });
   });
 
@@ -230,10 +239,10 @@ describe("useBacktestConfiguration", () => {
 
   it("falls back to catalog when presets array is empty", async () => {
     vi.mocked(getStrategyConfigs).mockResolvedValue({
+      strategies: mockCatalog.strategies,
       presets: [],
       backtest_defaults: { days: 30, total_capital: 5000 },
     });
-    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue(mockCatalog);
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
       wrapper: QueryClientWrapper,
@@ -754,6 +763,7 @@ describe("useBacktestConfiguration", () => {
           setTimeout(
             () =>
               resolve({
+                strategies: mockCatalog.strategies,
                 presets: [],
                 backtest_defaults: { days: 90, total_capital: 10000 },
               }),
@@ -892,10 +902,10 @@ describe("useBacktestConfiguration", () => {
 
   it("resetConfiguration uses catalog when strategyConfigs has empty presets", async () => {
     vi.mocked(getStrategyConfigs).mockResolvedValue({
+      strategies: mockCatalog.strategies,
       presets: [],
       backtest_defaults: { days: 60, total_capital: 20000 },
     });
-    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue(mockCatalog);
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
       wrapper: QueryClientWrapper,
@@ -1089,7 +1099,7 @@ describe("useBacktestConfiguration", () => {
     });
 
     expect(result.current).toHaveProperty("backtestData");
-    expect(result.current).toHaveProperty("catalog");
+    expect(result.current).toHaveProperty("strategyConfigs");
     expect(result.current).toHaveProperty("editorError");
     expect(result.current).toHaveProperty("editorValue");
     expect(result.current).toHaveProperty("error");
@@ -1104,18 +1114,15 @@ describe("useBacktestConfiguration", () => {
 
 function makeStrategyCatalog(
   strategyIds: string[]
-): BacktestStrategyCatalogResponseV3 {
-  return {
-    catalog_version: "test",
-    strategies: strategyIds.map(strategy_id => ({
-      strategy_id,
-      display_name: strategy_id,
-      description: null,
-      param_schema: {},
-      default_params: {},
-      supports_daily_suggestion: true,
-    })),
-  };
+): BacktestStrategyCatalogResponseV3["strategies"] {
+  return strategyIds.map(strategy_id => ({
+    strategy_id,
+    display_name: strategy_id,
+    description: null,
+    param_schema: {},
+    default_params: {},
+    supports_daily_suggestion: true,
+  }));
 }
 
 describe("validateConfigsStrategyIdsAgainstCatalog", () => {
@@ -1132,7 +1139,7 @@ describe("validateConfigsStrategyIdsAgainstCatalog", () => {
     expect(
       validateConfigsStrategyIdsAgainstCatalog(
         [{ strategy_id: "dma_gated_fgi" }],
-        { catalog_version: "0", strategies: [] }
+        []
       )
     ).toBeNull();
   });
@@ -1178,7 +1185,6 @@ describe("useBacktestConfiguration catalog strategy_id refine", () => {
 
   it("rejects run when catalog lists strategies but payload uses an unknown strategy_id", async () => {
     vi.mocked(getStrategyConfigs).mockResolvedValue(mockStrategyConfigs);
-    vi.mocked(getBacktestingStrategiesV3).mockResolvedValue(mockCatalog);
 
     const { result } = renderHook(() => useBacktestConfiguration(), {
       wrapper: QueryClientWrapper,

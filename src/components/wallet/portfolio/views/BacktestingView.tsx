@@ -14,7 +14,7 @@ import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 export function BacktestingView(): ReactElement {
   const {
     backtestData,
-    catalog,
+    strategyConfigs,
     days,
     editorValue,
     editorError,
@@ -55,7 +55,7 @@ export function BacktestingView(): ReactElement {
         onRun={handleRunBacktest}
         editorValue={editorValue}
         onEditorValueChange={updateEditorValue}
-        catalog={catalog}
+        strategyConfigs={strategyConfigs}
         days={days}
         selectedStrategyId={selectedStrategyId}
         strategyOptions={strategyOptions}

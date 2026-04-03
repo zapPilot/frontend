@@ -62,8 +62,7 @@ describe("buildDefaultPayloadFromPresets", () => {
       configs: [
         {
           config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
-          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
-          params: { pacing: { k: 5, r_max: 1 } },
+          saved_config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
         },
       ],
     });
@@ -115,8 +114,7 @@ describe("buildDefaultPayloadFromPresets", () => {
     expect(result.configs).toHaveLength(1);
     expect(result.configs[0]).toEqual({
       config_id: "only_one",
-      strategy_id: "eth_btc_rotation",
-      params: { pacing: { k: 2 } },
+      saved_config_id: "only_one",
     });
   });
 
