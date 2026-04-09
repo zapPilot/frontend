@@ -1,12 +1,11 @@
-/**
- * Unit tests for DepositModal component
- */
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DepositModal } from "@/components/wallet/portfolio/modals/DepositModal";
+import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
+import * as modalDeps from "@/components/wallet/portfolio/modals/transactionModalDependencies";
 
-// Mock all the dependencies
 const mockUseWalletProvider = vi.fn(() => ({
   isConnected: true,
 }));
@@ -32,7 +31,6 @@ const mockTransactionData = {
   isLoading: false,
 };
 
-// Mock the 3 simplified hooks that TransactionModalBase uses
 vi.mock(
   "@/components/wallet/portfolio/modals/hooks/useTransactionForm",
   () => ({
@@ -48,13 +46,6 @@ vi.mock(
         return "";
       }),
     })),
-  })
-);
-
-vi.mock(
-  "@/components/wallet/portfolio/modals/hooks/useTransactionData",
-  () => ({
-    useTransactionData: vi.fn(() => mockTransactionData),
   })
 );
 
@@ -101,7 +92,7 @@ vi.mock("@/components/ui/modal", () => ({
 
 vi.mock("next/image", () => ({
   default: ({ alt, ...props }: { alt: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element
+    // eslint-disable-next-line @next/next/no-img-element -- intentional mock of next/image
     <img alt={alt} data-testid="chain-logo" {...props} />
   ),
 }));
@@ -115,12 +106,11 @@ const mockDropdownState = {
   closeDropdowns: vi.fn(),
 };
 
-const mockUseTransactionModalState = vi.fn(() => ({
-  isConnected: mockUseWalletProvider().isConnected,
+const mockUseTransactionModalState = {
+  isConnected: true,
   dropdownState: mockDropdownState,
-}));
+};
 
-// Mock the transaction modal dependencies
 vi.mock(
   "@/components/wallet/portfolio/modals/transactionModalDependencies",
   () => ({
@@ -129,14 +119,17 @@ vi.mock(
       isValid: true,
     })),
     resolveActionLabel: vi.fn().mockReturnValue("Review & Deposit"),
-    useTransactionModalState: () => mockUseTransactionModalState(),
+    useTransactionModalState: vi.fn(),
+    useTransactionData: vi.fn(),
     TransactionModalContent: ({
       modalState,
+      assetContent,
     }: {
       modalState: {
         selectedChain?: { name?: string };
         transactionData?: { selectedToken?: { symbol?: string } };
       };
+      assetContent?: React.ReactNode;
     }) => (
       <div data-testid="transaction-modal-content">
         <button data-testid="selector-network" data-open="false">
@@ -145,17 +138,21 @@ vi.mock(
         <button data-testid="selector-asset" data-open="false">
           {modalState.transactionData?.selectedToken?.symbol ?? "Asset"}
         </button>
+        {assetContent}
         <div data-testid="form-actions">Form Actions</div>
       </div>
     ),
     TokenOptionButton: ({
       symbol,
       balanceLabel,
+      onSelect,
     }: {
       symbol: string;
       balanceLabel: string;
+      isSelected?: boolean;
+      onSelect: () => void;
     }) => (
-      <div data-testid="token-option">
+      <div data-testid="token-option" onClick={onSelect}>
         {symbol} {balanceLabel}
       </div>
     ),
@@ -165,55 +162,110 @@ vi.mock(
   })
 );
 
+vi.mock(
+  "@/components/wallet/portfolio/modals/hooks/useTransactionData",
+  () => ({
+    useTransactionData: vi.fn(),
+  })
+);
+
+const queryClient = new QueryClient();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
+
 describe("DepositModal", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(modalDeps.useTransactionModalState).mockReturnValue(
+      mockUseTransactionModalState
+    );
+    vi.mocked(useTransactionData).mockReturnValue(mockTransactionData);
+  });
+
   it("should not render when isOpen is false", () => {
-    render(<DepositModal isOpen={false} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={false} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.queryByTestId("modal")).not.toBeInTheDocument();
   });
 
   it("should render when isOpen is true", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByTestId("modal")).toBeInTheDocument();
   });
 
   it("should render modal header with title", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByText("Deposit to Pilot")).toBeInTheDocument();
   });
 
   it("should render network and asset selectors", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByTestId("selector-network")).toBeInTheDocument();
     expect(screen.getByTestId("selector-asset")).toBeInTheDocument();
   });
 
   it("should display selected chain name", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByText(/Ethereum/)).toBeInTheDocument();
   });
 
   it("should display selected token symbol", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByText(/USDC/)).toBeInTheDocument();
   });
 
   it("should render form actions", () => {
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
 
     expect(screen.getByTestId("form-actions")).toBeInTheDocument();
   });
 
-  it("should accept defaultChainId prop", () => {
-    render(
-      <DepositModal isOpen={true} onClose={vi.fn()} defaultChainId={42161} />
-    );
+  it("should render token options when tokens are available", () => {
+    vi.mocked(useTransactionData).mockReturnValue({
+      ...mockTransactionData,
+      tokenQuery: {
+        data: [{ address: "0x1", symbol: "BTC", balance: "1.0" }],
+        isLoading: false,
+      },
+      balanceQuery: { data: { balance: "1.0" }, isLoading: false },
+    });
 
-    expect(screen.getByTestId("modal")).toBeInTheDocument();
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
+
+    expect(screen.getByTestId("token-option")).toBeInTheDocument();
+    expect(screen.getByText(/BTC 1.0 available/)).toBeInTheDocument();
+  });
+
+  it("should render empty assets message when no tokens are available", () => {
+    vi.mocked(useTransactionData).mockReturnValue({
+      ...mockTransactionData,
+      tokenQuery: { data: [], isLoading: false },
+    });
+
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
+
+    expect(screen.getByTestId("empty-assets")).toBeInTheDocument();
+  });
+
+  it("should call onSelect and close dropdown when token is clicked", () => {
+    vi.mocked(useTransactionData).mockReturnValue({
+      ...mockTransactionData,
+      tokenQuery: {
+        data: [{ address: "0x1", symbol: "BTC", balance: "1.0" }],
+        isLoading: false,
+      },
+    });
+
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />, { wrapper });
+
+    fireEvent.click(screen.getByTestId("token-option"));
+
+    expect(mockDropdownState.closeDropdowns).toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConfigManagerView } from "@/components/wallet/portfolio/views/invest/configManager";
+import { useStrategyAdminConfigs } from "@/hooks/queries/strategyAdmin";
 
 import { fireEvent, render, screen, waitFor } from "../../../test-utils";
 
@@ -56,15 +57,11 @@ const { mockConfigs } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/hooks/queries/strategyAdmin", () => ({
-  useStrategyAdminConfigs: () => ({
-    data: mockConfigs,
-    isLoading: false,
-    error: null,
-  }),
-  useStrategyAdminConfig: () => ({
+  useStrategyAdminConfigs: vi.fn(),
+  useStrategyAdminConfig: vi.fn(() => ({
     data: null,
     isLoading: false,
-  }),
+  })),
 }));
 
 vi.mock("@/hooks/mutations/useStrategyAdminMutations", () => ({
@@ -83,11 +80,18 @@ vi.mock("@/hooks/mutations/useStrategyAdminMutations", () => ({
 }));
 
 describe("ConfigManagerView", () => {
+  beforeEach(() => {
+    vi.mocked(useStrategyAdminConfigs).mockReturnValue({
+      data: mockConfigs,
+      isLoading: false,
+      error: null,
+    });
+  });
+
   it("renders the config list with all configs", () => {
     render(<ConfigManagerView />);
 
     expect(screen.getByText("Strategy Configurations")).toBeDefined();
-    // Both desktop table and mobile cards render, so use getAllByText
     expect(screen.getAllByText("DMA Default").length).toBeGreaterThan(0);
     expect(screen.getAllByText("DCA Classic").length).toBeGreaterThan(0);
   });
@@ -123,6 +127,73 @@ describe("ConfigManagerView", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Create Configuration")).toBeDefined();
+    });
+  });
+
+  it("shows loading state", () => {
+    vi.mocked(useStrategyAdminConfigs).mockReturnValue({
+      data: null,
+      isLoading: true,
+      error: null,
+    });
+
+    render(<ConfigManagerView />);
+    // Check if spinner exists (implicitly by checking if we don't see the list)
+    expect(screen.queryByText("Strategy Configurations")).toBeNull();
+  });
+
+  it("shows error state", () => {
+    vi.mocked(useStrategyAdminConfigs).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error("Failed to fetch configs"),
+    });
+
+    render(<ConfigManagerView />);
+    expect(screen.getByText(/Failed to load configurations/i)).toBeDefined();
+    expect(screen.getByText(/Failed to fetch configs/i)).toBeDefined();
+  });
+
+  it("navigates to edit editor when Edit is clicked", async () => {
+    render(<ConfigManagerView />);
+
+    // Find edit button for DMA Default. We use the button text if available or a role.
+    // In ConfigListView, it's likely an Edit button.
+    const editButtons = screen.getAllByRole("button", { name: /edit/i });
+    fireEvent.click(editButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Configuration")).toBeDefined();
+    });
+  });
+
+  it("navigates to duplicate editor when Duplicate is clicked", async () => {
+    render(<ConfigManagerView />);
+
+    const duplicateButtons = screen.getAllByRole("button", {
+      name: /duplicate/i,
+    });
+    fireEvent.click(duplicateButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Create Configuration")).toBeDefined();
+      // Should also show "Duplicating from..." or similar if implemented in ConfigEditorView
+    });
+  });
+
+  it("navigates back to list when Cancel is clicked in editor", async () => {
+    render(<ConfigManagerView />);
+
+    fireEvent.click(screen.getByText("Create New"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Create Configuration")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("Cancel"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Strategy Configurations")).toBeDefined();
     });
   });
 });
