@@ -1,11 +1,11 @@
 import type {
   BacktestAssetAllocation,
   BacktestPortfolioAllocation,
+  BacktestSpotAssetSymbol,
   BacktestStrategyPoint,
 } from "@/types/backtesting";
 
 import type { IndicatorKey } from "../components/backtestChartLegendData";
-import type { SpotAssetSymbol } from "./spotAssetDisplay";
 
 export interface TooltipItem {
   name: string;
@@ -31,7 +31,7 @@ export interface AllocationBlock {
   allocation: BacktestPortfolioAllocation;
   assetAllocation: BacktestAssetAllocation;
   index: number | undefined;
-  spotAssetLabel?: SpotAssetSymbol;
+  spotAssetLabel?: BacktestSpotAssetSymbol;
 }
 
 export interface DetailItem {

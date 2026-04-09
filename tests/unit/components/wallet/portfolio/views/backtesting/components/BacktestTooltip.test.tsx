@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BacktestTooltip } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTooltip";
-import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData";
+import { buildBacktestTooltipData } from "@/components/wallet/portfolio/views/backtesting/utils/backtestTooltipDataUtils";
 
 import { render, screen } from "../../../../../../../test-utils";
 
 vi.mock(
-  "@/components/wallet/portfolio/views/backtesting/utils/buildBacktestTooltipData",
+  "@/components/wallet/portfolio/views/backtesting/utils/backtestTooltipDataUtils",
   () => ({
     buildBacktestTooltipData: vi.fn(),
   })

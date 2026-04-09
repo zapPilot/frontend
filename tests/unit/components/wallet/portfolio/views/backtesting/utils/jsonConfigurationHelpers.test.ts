@@ -1,45 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  parseConfigStrategyId,
   parseJsonField,
-  patchBacktestConfig,
   updateConfigStrategy,
   updateJsonField,
 } from "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers";
-
-describe("patchBacktestConfig", () => {
-  it("returns null for nullish input", () => {
-    expect(patchBacktestConfig(null as any, "days", 365)).toBeNull();
-    expect(patchBacktestConfig(undefined as any, "days", 365)).toBeNull();
-  });
-
-  it("converts clean numeric strings to numbers", () => {
-    const result = patchBacktestConfig({}, "days", "365");
-    expect(JSON.parse(result!).days).toBe(365);
-  });
-
-  it("preserves non-clean numeric strings while typing", () => {
-    const result = patchBacktestConfig({}, "days", "10.");
-    expect(JSON.parse(result!).days).toBe("10.");
-  });
-
-  it("removes start_date and end_date when updating days", () => {
-    const result = patchBacktestConfig(
-      {
-        start_date: "2024-01-01",
-        end_date: "2024-12-31",
-      } as any,
-      "days",
-      365
-    );
-
-    const parsed = JSON.parse(result!);
-    expect(parsed.days).toBe(365);
-    expect(parsed.start_date).toBeUndefined();
-    expect(parsed.end_date).toBeUndefined();
-  });
-});
 
 describe("parseJsonField", () => {
   it("reads numeric top-level fields", () => {
@@ -60,34 +25,6 @@ describe("updateJsonField", () => {
 
   it("returns the original JSON when parsing fails", () => {
     expect(updateJsonField("bad json", "days", 365)).toBe("bad json");
-  });
-});
-
-describe("parseConfigStrategyId", () => {
-  it("reads strategy_id from the first config entry", () => {
-    const json = JSON.stringify({
-      configs: [{ config_id: "x", strategy_id: "dma_gated_fgi" }],
-    });
-    expect(parseConfigStrategyId(json, "fallback")).toBe("dma_gated_fgi");
-  });
-
-  it("returns fallback for invalid JSON", () => {
-    expect(parseConfigStrategyId("bad json", "fallback")).toBe("fallback");
-  });
-
-  it("returns fallback when configs is missing", () => {
-    expect(parseConfigStrategyId('{"days":500}', "fallback")).toBe("fallback");
-  });
-
-  it("returns fallback when configs is empty", () => {
-    expect(parseConfigStrategyId('{"configs":[]}', "fallback")).toBe(
-      "fallback"
-    );
-  });
-
-  it("returns fallback when strategy_id is not a string", () => {
-    const json = JSON.stringify({ configs: [{ strategy_id: 123 }] });
-    expect(parseConfigStrategyId(json, "fallback")).toBe("fallback");
   });
 });
 

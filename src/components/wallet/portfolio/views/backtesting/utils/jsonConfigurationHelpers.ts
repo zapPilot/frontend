@@ -3,9 +3,6 @@ import type { StrategyPreset } from "@/types/strategy";
 
 import { getDefaultConfigIdForStrategyId } from "../constants";
 
-type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
-type ValueType = string | number | boolean;
-
 function parseJsonObject(json: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(json);
@@ -47,35 +44,6 @@ function withParsedConfigs(
   }
 
   return onSuccess(result.parsed, result.configs);
-}
-
-export function patchBacktestConfig(
-  parsedJson: BacktestConfig,
-  field: string,
-  value: ValueType
-): string | null {
-  if (!parsedJson) return null;
-
-  // Preserve formatting for numbers while typing (e.g. "10.") by storing as string
-  // until it is a clean number again.
-  let valueToStore: string | number | boolean = value;
-
-  if (typeof value === "string" && value !== "") {
-    const num = Number(value);
-    if (!isNaN(num) && String(num) === value) {
-      valueToStore = num;
-    }
-  }
-
-  const updated = { ...parsedJson, [field]: valueToStore };
-
-  // Clean up date fields if switching to days mode
-  if (field === "days") {
-    delete updated.start_date;
-    delete updated.end_date;
-  }
-
-  return JSON.stringify(updated, null, 2);
 }
 
 /**
@@ -134,24 +102,6 @@ export function updateJsonField(
 
   parsed[key] = value;
   return JSON.stringify(parsed, null, 2);
-}
-
-/**
- * Read the `strategy_id` from the first config entry in the JSON editor value.
- * Returns `fallback` when the JSON is invalid or the path is missing.
- *
- * @param json - Raw JSON string from the editor
- * @param fallback - Default strategy id when parsing fails
- * @returns The strategy_id string or fallback
- *
- * @example
- * ```ts
- * parseConfigStrategyId('{"configs":[{"strategy_id":"dma_gated_fgi"}]}', "")
- * // => "dma_gated_fgi"
- * ```
- */
-export function parseConfigStrategyId(json: string, fallback: string): string {
-  return parseConfigStrategyIdWithPresets(json, fallback, []);
 }
 
 export function parseConfigStrategyIdWithPresets(

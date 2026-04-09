@@ -1,5 +1,6 @@
 import type {
   BacktestBucket,
+  BacktestSpotAssetSymbol,
   BacktestTimelinePoint,
 } from "@/types/backtesting";
 
@@ -8,7 +9,6 @@ import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import {
   getBacktestSpotAssetColor,
   resolveBacktestSpotAsset,
-  type SpotAssetSymbol,
 } from "./spotAssetDisplay";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
@@ -85,7 +85,7 @@ interface SignalAccumulator {
 type BacktestStrategy = NonNullable<
   BacktestTimelinePoint["strategies"][string]
 >;
-type SpotAssetTracker = Record<string, SpotAssetSymbol | null>;
+type SpotAssetTracker = Record<string, BacktestSpotAssetSymbol | null>;
 
 function classifyTransfer(
   from: BacktestBucket,

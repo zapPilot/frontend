@@ -9,13 +9,11 @@ import type {
   BacktestAssetAllocation,
   BacktestBucket,
   BacktestPortfolioAllocation,
+  BacktestSpotAssetSymbol,
   BacktestTransferMetadata,
 } from "@/types/backtesting";
 
-import {
-  getBacktestSpotAssetColor,
-  type SpotAssetSymbol,
-} from "./utils/spotAssetDisplay";
+import { getBacktestSpotAssetColor } from "./utils/spotAssetDisplay";
 
 interface BacktestBucketConfig {
   label: string;
@@ -82,7 +80,7 @@ export function hasBacktestAllocation(
 
 export function buildBacktestAllocationSegments(
   allocation: BacktestPortfolioAllocation,
-  spotAssetLabel?: SpotAssetSymbol,
+  spotAssetLabel?: BacktestSpotAssetSymbol,
   assetAllocation?: BacktestAssetAllocation | null
 ): UnifiedSegment[] {
   if (assetAllocation) {

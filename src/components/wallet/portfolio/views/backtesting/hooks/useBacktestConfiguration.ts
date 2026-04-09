@@ -24,9 +24,6 @@ import {
   validateConfigsStrategyIdsAgainstCatalog,
 } from "./backtestRequestValidation";
 
-// Re-export for backward-compatible imports in tests
-export { validateConfigsStrategyIdsAgainstCatalog } from "./backtestRequestValidation";
-
 export function useBacktestConfiguration() {
   const {
     mutate,

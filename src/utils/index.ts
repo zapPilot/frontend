@@ -51,7 +51,7 @@ export { copyTextToClipboard } from "./clipboard";
 // ERROR UTILITIES
 // ============================================================================
 
-export { extractErrorMessage } from "./errorUtils";
+export { extractErrorMessage } from "@/lib/errors";
 
 // ============================================================================
 // CHART UTILITIES

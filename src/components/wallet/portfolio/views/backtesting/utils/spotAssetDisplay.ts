@@ -4,9 +4,7 @@ import type {
   BacktestStrategyPoint,
 } from "@/types/backtesting";
 
-export type SpotAssetSymbol = BacktestSpotAssetSymbol;
-
-const BACKTEST_SPOT_ASSET_COLORS: Record<SpotAssetSymbol, string> = {
+const BACKTEST_SPOT_ASSET_COLORS: Record<BacktestSpotAssetSymbol, string> = {
   BTC: UNIFIED_COLORS.BTC,
   ETH: UNIFIED_COLORS.ETH,
 } as const;
@@ -21,7 +19,9 @@ const BACKTEST_SPOT_ASSET_COLORS: Record<SpotAssetSymbol, string> = {
  * getBacktestSpotAssetColor("BTC");
  * ```
  */
-export function getBacktestSpotAssetColor(asset: SpotAssetSymbol): string {
+export function getBacktestSpotAssetColor(
+  asset: BacktestSpotAssetSymbol
+): string {
   return BACKTEST_SPOT_ASSET_COLORS[asset];
 }
 
@@ -35,7 +35,9 @@ export function getBacktestSpotAssetColor(asset: SpotAssetSymbol): string {
  * normalizeBacktestSpotAsset(" eth ");
  * ```
  */
-function normalizeBacktestSpotAsset(value: unknown): SpotAssetSymbol | null {
+function normalizeBacktestSpotAsset(
+  value: unknown
+): BacktestSpotAssetSymbol | null {
   if (typeof value !== "string") {
     return null;
   }
@@ -69,7 +71,7 @@ type SpotAssetStrategyLike = Pick<
  */
 export function resolveBacktestSpotAsset(
   strategy: SpotAssetStrategyLike | null | undefined
-): SpotAssetSymbol | null {
+): BacktestSpotAssetSymbol | null {
   if (!strategy) {
     return null;
   }

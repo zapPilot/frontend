@@ -7,11 +7,9 @@ import {
   ETH_BTC_ROTATION_STRATEGY_ID,
 } from "@/components/wallet/portfolio/views/backtesting/constants";
 import {
-  buildDefaultPayloadFromCatalog,
   buildDefaultPayloadFromPresets,
   FALLBACK_DEFAULTS,
 } from "@/components/wallet/portfolio/views/backtesting/hooks/backtestConfigurationBuilders";
-import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
 import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 
 function createPreset(
@@ -178,75 +176,5 @@ describe("buildDefaultPayloadFromPresets", () => {
 
     expect(result.days).toBe(90);
     expect(result.total_capital).toBe(99999);
-  });
-});
-
-describe("buildDefaultPayloadFromCatalog", () => {
-  it("builds a default rotation payload from the catalog", () => {
-    const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "2.0.0",
-      strategies: [
-        {
-          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
-          display_name: "ETH/BTC Rotation",
-          description: "ETH/BTC rotation strategy",
-          param_schema: {},
-          default_params: {
-            signal: {
-              cross_cooldown_days: 30,
-            },
-            pacing: {
-              k: 5,
-              r_max: 1,
-            },
-          },
-          supports_daily_suggestion: true,
-        },
-      ],
-    };
-
-    const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
-
-    expect(result).toEqual({
-      days: 365,
-      total_capital: 50000,
-      configs: [
-        {
-          config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
-          strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
-          params: {
-            signal: {
-              cross_cooldown_days: 30,
-            },
-            pacing: {
-              k: 5,
-              r_max: 1,
-            },
-          },
-        },
-      ],
-    });
-  });
-
-  it("uses empty params when the rotation strategy is missing from the catalog", () => {
-    const catalog: BacktestStrategyCatalogResponseV3 = {
-      catalog_version: "2.0.0",
-      strategies: [],
-    };
-
-    const result = buildDefaultPayloadFromCatalog(catalog, TEST_DEFAULTS);
-
-    expect(result.configs[0]).toEqual({
-      config_id: ETH_BTC_ROTATION_DEFAULT_CONFIG_ID,
-      strategy_id: ETH_BTC_ROTATION_STRATEGY_ID,
-      params: {},
-    });
-  });
-
-  it("uses fallback defaults when no defaults are provided", () => {
-    const result = buildDefaultPayloadFromCatalog(null);
-
-    expect(result.days).toBe(DEFAULT_DAYS);
-    expect(result.total_capital).toBe(DEFAULT_TOTAL_CAPITAL);
   });
 });

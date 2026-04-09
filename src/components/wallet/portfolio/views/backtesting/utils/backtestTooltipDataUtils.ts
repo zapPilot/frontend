@@ -7,11 +7,11 @@ import type {
   StrategiesRecord,
 } from "./backtestTooltipDataTypes";
 import {
+  appendBtcToDmaRatio,
   buildAllocations,
   buildTooltipSections,
   getOrderedStrategyIds,
 } from "./backtestTooltipSections";
-import { appendBtcToDmaRatio } from "./backtestTooltipSignalFormatting";
 
 export type {
   AllocationBlock,

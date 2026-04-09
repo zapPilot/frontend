@@ -47,7 +47,7 @@ interface BaseCardProps extends BaseComponentProps {
 /**
  * BaseCard - Unified card component with variant support
  *
- * Consolidates styling patterns across GlassCard, EmptyStateCard, and ErrorStateCard.
+ * Consolidates styling patterns across GlassCard and EmptyStateCard.
  * Provides flexible configuration for padding, borders, shadows, and animations.
  *
  * @example

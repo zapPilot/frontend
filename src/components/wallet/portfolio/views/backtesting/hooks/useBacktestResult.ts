@@ -1,8 +1,9 @@
-"use client";
-
 import { useMemo } from "react";
 
-import type { BacktestResponse } from "@/types/backtesting";
+import type {
+  BacktestResponse,
+  BacktestSpotAssetSymbol,
+} from "@/types/backtesting";
 
 import {
   buildChartPoint,
@@ -11,7 +12,6 @@ import {
   filterToActiveStrategies,
   sortStrategyIds,
 } from "../utils/chartHelpers";
-import type { SpotAssetSymbol } from "../utils/spotAssetDisplay";
 
 export interface UseBacktestResultReturn {
   chartData: Record<string, unknown>[];
@@ -44,7 +44,7 @@ export function useBacktestResult(
       return [];
     }
 
-    const spotAssetTracker: Record<string, SpotAssetSymbol | null> = {};
+    const spotAssetTracker: Record<string, BacktestSpotAssetSymbol | null> = {};
     return response.timeline.map(point =>
       buildChartPoint(point, sortedStrategyIds, spotAssetTracker)
     );

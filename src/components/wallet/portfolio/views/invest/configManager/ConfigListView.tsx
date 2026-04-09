@@ -3,7 +3,7 @@
 import { Copy, Edit2, Lock, Plus, Star } from "lucide-react";
 import { type ReactElement, useCallback, useMemo, useState } from "react";
 
-import { useSetDefaultStrategyConfig } from "@/hooks/mutations/useStrategyAdminMutations";
+import { useSetDefaultStrategyConfig } from "@/hooks/mutations";
 import { useToast } from "@/providers/ToastProvider";
 import type { SavedStrategyConfig } from "@/types";
 

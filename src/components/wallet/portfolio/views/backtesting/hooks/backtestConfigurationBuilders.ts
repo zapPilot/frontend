@@ -2,7 +2,6 @@ import type {
   BacktestCompareConfigV3,
   BacktestRequest,
   BacktestStrategyCatalogEntryV3,
-  BacktestStrategyCatalogResponseV3,
 } from "@/types/backtesting";
 import type { BacktestDefaults, StrategyPreset } from "@/types/strategy";
 
@@ -117,14 +116,4 @@ export function buildDefaultPayloadFromStrategies(
       buildAdhocCompareConfig(ETH_BTC_ROTATION_STRATEGY_ID, defaultParams),
     ],
   };
-}
-
-export function buildDefaultPayloadFromCatalog(
-  catalog: BacktestStrategyCatalogResponseV3 | null,
-  defaults: BacktestDefaults = FALLBACK_DEFAULTS
-): BacktestRequest {
-  return buildDefaultPayloadFromStrategies(
-    catalog?.strategies ?? null,
-    defaults
-  );
 }

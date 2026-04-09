@@ -12,7 +12,7 @@ import {
 import {
   useCreateStrategyConfig,
   useUpdateStrategyConfig,
-} from "@/hooks/mutations/useStrategyAdminMutations";
+} from "@/hooks/mutations";
 import { useStrategyAdminConfig } from "@/hooks/queries/strategyAdmin";
 import { useToast } from "@/providers/ToastProvider";
 import type {

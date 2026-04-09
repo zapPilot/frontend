@@ -3,7 +3,7 @@
 import {
   type BacktestTooltipProps,
   buildBacktestTooltipData,
-} from "../utils/buildBacktestTooltipData";
+} from "../utils/backtestTooltipDataUtils";
 import { BacktestAllocationBar } from "./BacktestAllocationBar";
 
 export type { BacktestTooltipProps };
