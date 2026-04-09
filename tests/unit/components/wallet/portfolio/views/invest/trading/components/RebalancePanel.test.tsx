@@ -124,6 +124,24 @@ const mockSuggestionData = {
       target_spot_asset: "eth",
     },
   },
+  user_action: {
+    status: "action_required" as const,
+    required: true,
+    event: "rebalance" as const,
+    transfers: [
+      {
+        from_bucket: "stable" as const,
+        to_bucket: "spot" as const,
+        amount_usd: 500,
+      },
+      {
+        from_bucket: "spot" as const,
+        to_bucket: "stable" as const,
+        amount_usd: 200,
+      },
+    ],
+    blocked_reason: null,
+  },
   execution: {
     event: "rebalance",
     transfers: [
@@ -145,21 +163,19 @@ const mockSuggestionData = {
   },
 };
 
-const mockHoldSuggestion = {
+const mockBlockedSuggestion = {
   ...mockSuggestionData,
   decision: {
     ...mockSuggestionData.decision,
     action: "hold" as const,
     reason: "cooldown_hold",
-    target_asset_allocation: {
-      btc: 1,
-      eth: 0,
-      stable: 0,
-      alt: 0,
-    },
-    details: {
-      target_spot_asset: "btc",
-    },
+  },
+  user_action: {
+    status: "blocked" as const,
+    required: false,
+    event: null,
+    transfers: [],
+    blocked_reason: "cooldown_active",
   },
   execution: {
     ...mockSuggestionData.execution,
@@ -168,27 +184,23 @@ const mockHoldSuggestion = {
   },
 };
 
-// Suggestion where decision bucket should resolve to "stable"
-// (target_allocation.spot < portfolio.allocation.spot)
-const mockSellSuggestion = {
+const mockNoActionSuggestion = {
   ...mockSuggestionData,
   decision: {
     ...mockSuggestionData.decision,
-    action: "sell" as const,
-    reason: "overweight_spot",
-    target_allocation: {
-      spot: 0.3, // less than portfolio.allocation.spot (0.7) → stable bucket
-      stable: 0.7,
-    },
-    target_asset_allocation: {
-      btc: 0.3,
-      eth: 0,
-      stable: 0.7,
-      alt: 0,
-    },
+    action: "hold" as const,
+    reason: "already_aligned",
+  },
+  user_action: {
+    status: "no_action" as const,
+    required: false,
+    event: null,
+    transfers: [],
+    blocked_reason: null,
   },
   execution: {
     ...mockSuggestionData.execution,
+    event: null,
     transfers: [],
     blocked_reason: null,
   },
@@ -239,17 +251,18 @@ describe("RebalancePanel", () => {
     expect(screen.getByText("ETH -> STABLE")).toBeDefined();
   });
 
-  it("renders a hold state when no transfers are present", () => {
+  it("renders a blocked state without fake trades", () => {
     vi.mocked(useDailySuggestion).mockReturnValue({
-      data: mockHoldSuggestion,
+      data: mockBlockedSuggestion,
     } as ReturnType<typeof useDailySuggestion>);
 
     render(<RebalancePanel userId="0xabc" />);
 
-    expect(screen.getByText("Hold")).toBeDefined();
-    expect(screen.getByText("BTC")).toBeDefined();
+    expect(screen.getByText("Action blocked")).toBeDefined();
     expect(screen.getByText("cooldown_active")).toBeDefined();
-    expect(screen.getByText("$0.00")).toBeDefined();
+    const button = screen.getByText("Execution Unavailable");
+    expect(button).toBeDefined();
+    expect(button.hasAttribute("disabled")).toBe(true);
   });
 
   it("falls back to SPOT label when target_spot_asset is missing or invalid", () => {
@@ -271,25 +284,18 @@ describe("RebalancePanel", () => {
     expect(screen.getByText("STABLE -> SPOT")).toBeDefined();
   });
 
-  it("prefers target_asset_allocation when deriving a no-transfer bucket label", () => {
+  it("renders a no-action state with a disabled CTA", () => {
     vi.mocked(useDailySuggestion).mockReturnValue({
-      data: {
-        ...mockHoldSuggestion,
-        decision: {
-          ...mockHoldSuggestion.decision,
-          target_asset_allocation: {
-            btc: 0.1,
-            eth: 0.2,
-            stable: 0.3,
-            alt: 0.4,
-          },
-        },
-      },
+      data: mockNoActionSuggestion,
     } as ReturnType<typeof useDailySuggestion>);
 
     render(<RebalancePanel userId="0xabc" />);
 
-    expect(screen.getByText("ALT")).toBeDefined();
+    expect(screen.getByText("No trades needed")).toBeDefined();
+    expect(screen.getByText("already_aligned")).toBeDefined();
+    const button = screen.getByText("No Action Needed");
+    expect(button).toBeDefined();
+    expect(button.hasAttribute("disabled")).toBe(true);
   });
 
   it("opens and closes the review modal", () => {
@@ -316,17 +322,15 @@ describe("RebalancePanel", () => {
     expect(container.querySelectorAll(".rounded-full.w-2.h-2")).toHaveLength(2);
   });
 
-  it("infers stable bucket when target spot allocation is less than current spot", () => {
+  it("does not open the review modal when CTA is disabled", () => {
     vi.mocked(useDailySuggestion).mockReturnValue({
-      data: mockSellSuggestion,
+      data: mockNoActionSuggestion,
     } as ReturnType<typeof useDailySuggestion>);
 
     render(<RebalancePanel userId="0xabc" />);
 
-    // The inferred bucket should be "stable" because target spot (0.3) < portfolio spot (0.7)
-    expect(screen.getByText("STABLE")).toBeDefined();
-    // sell action maps to "Reduce" label
-    expect(screen.getByText("Reduce")).toBeDefined();
+    fireEvent.click(screen.getByText("No Action Needed"));
+    expect(screen.queryByTestId("review-modal")).toBeNull();
   });
 
   it("calls useDailySuggestion without configId when defaultPresetId is undefined", async () => {

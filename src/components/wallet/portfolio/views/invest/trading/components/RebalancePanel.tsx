@@ -4,10 +4,7 @@ import { CircleDollarSign } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/ui/classNames";
-import type {
-  BacktestAssetAllocation,
-  BacktestBucket,
-} from "@/types/backtesting";
+import type { BacktestBucket } from "@/types/backtesting";
 import type { DailySuggestionResponse } from "@/types/strategy";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -33,11 +30,20 @@ const ALT_BUCKET_LABEL = "ALT";
 type SpotAssetSymbol = "BTC" | "ETH";
 
 interface DerivedTradeAction {
-  action: "buy" | "sell" | "hold";
+  action: "buy" | "sell";
   bucket: BacktestBucket;
   bucketLabel: string;
   amount_usd: number;
   description: string;
+}
+
+interface StatusPanelContent {
+  actionCardTitle: string;
+  actionCardSubtitle: string;
+  bodyTitle: string;
+  bodyDescription: string;
+  ctaLabel: string;
+  ctaDisabled: boolean;
 }
 
 function formatRegimeLabel(value: string | null | undefined): string {
@@ -86,67 +92,65 @@ function getBucketLabel(
   return targetSpotAsset ?? SPOT_BUCKET_LABEL;
 }
 
-function inferDecisionBucket(data: DailySuggestionResponse): "spot" | "stable" {
-  return data.decision.target_allocation.spot >= data.portfolio.allocation.spot
-    ? "spot"
-    : "stable";
-}
-
-function getDominantAssetBucket(
-  allocation: BacktestAssetAllocation | null | undefined
-): BacktestBucket | null {
-  if (!allocation) {
-    return null;
-  }
-
-  const ranked = (
-    Object.entries(allocation) as [keyof BacktestAssetAllocation, number][]
-  ).sort((a, b) => b[1] - a[1]);
-
-  const [bucket, value] = ranked[0] ?? [];
-  if (!bucket || value == null || value <= 0) {
-    return null;
-  }
-
-  return bucket;
-}
-
 function buildTradeActions(
   data: DailySuggestionResponse
 ): DerivedTradeAction[] {
   const targetSpotAsset = getTargetSpotAsset(data);
+  return data.user_action.transfers.map(transfer => {
+    const action = transfer.to_bucket !== "stable" ? "buy" : "sell";
+    const actionBucket =
+      action === "buy" ? transfer.to_bucket : transfer.from_bucket;
 
-  if (data.execution.transfers.length > 0) {
-    return data.execution.transfers.map(transfer => {
-      const action = transfer.to_bucket !== "stable" ? "buy" : "sell";
-      const actionBucket =
-        action === "buy" ? transfer.to_bucket : transfer.from_bucket;
+    return {
+      action,
+      bucket: actionBucket,
+      bucketLabel: getBucketLabel(actionBucket, targetSpotAsset),
+      amount_usd: transfer.amount_usd,
+      description: `${getBucketLabel(transfer.from_bucket, targetSpotAsset)} -> ${getBucketLabel(
+        transfer.to_bucket,
+        targetSpotAsset
+      )}`,
+    };
+  });
+}
 
-      return {
-        action,
-        bucket: actionBucket,
-        bucketLabel: getBucketLabel(actionBucket, targetSpotAsset),
-        amount_usd: transfer.amount_usd,
-        description: `${getBucketLabel(transfer.from_bucket, targetSpotAsset)} -> ${getBucketLabel(
-          transfer.to_bucket,
-          targetSpotAsset
-        )}`,
-      };
-    });
+function getStatusPanelContent(
+  data: DailySuggestionResponse,
+  tradeActions: DerivedTradeAction[]
+): StatusPanelContent {
+  if (data.user_action.status === "action_required") {
+    const actionCount = tradeActions.length;
+    return {
+      actionCardTitle: `${actionCount} Action${actionCount === 1 ? "" : "s"}`,
+      actionCardSubtitle: "Suggested Moves",
+      bodyTitle: "",
+      bodyDescription: "",
+      ctaLabel: "Review & Execute All",
+      ctaDisabled: false,
+    };
   }
 
-  const decisionBucket =
-    getDominantAssetBucket(data.decision.target_asset_allocation) ??
-    inferDecisionBucket(data);
-  return [
-    {
-      action: data.decision.action,
-      bucket: decisionBucket,
-      bucketLabel: getBucketLabel(decisionBucket, targetSpotAsset),
-      amount_usd: 0,
-      description: data.execution.blocked_reason ?? data.decision.reason,
-    },
-  ];
+  if (data.user_action.status === "blocked") {
+    return {
+      actionCardTitle: "Action Blocked",
+      actionCardSubtitle: "Trading temporarily unavailable",
+      bodyTitle: "Action blocked",
+      bodyDescription:
+        data.user_action.blocked_reason ??
+        "Trading is temporarily unavailable.",
+      ctaLabel: "Execution Unavailable",
+      ctaDisabled: true,
+    };
+  }
+
+  return {
+    actionCardTitle: "0 Actions",
+    actionCardSubtitle: "No trades needed",
+    bodyTitle: "No trades needed",
+    bodyDescription: data.decision.reason,
+    ctaLabel: "No Action Needed",
+    ctaDisabled: true,
+  };
 }
 
 function RebalancePanelSkeleton() {
@@ -225,6 +229,7 @@ export function RebalancePanel({ userId }: { userId: string }) {
 
   const tradeActions = buildTradeActions(data);
   const regimeLabel = formatRegimeLabel(data.signal.regime);
+  const panelContent = getStatusPanelContent(data, tradeActions);
 
   return (
     <BaseTradingPanel
@@ -238,8 +243,8 @@ export function RebalancePanel({ userId }: { userId: string }) {
           Regime
         </>
       }
-      actionCardTitle={`${tradeActions.length} Actions`}
-      actionCardSubtitle="Suggested Moves"
+      actionCardTitle={panelContent.actionCardTitle}
+      actionCardSubtitle={panelContent.actionCardSubtitle}
       actionCardIcon={
         <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
       }
@@ -251,48 +256,72 @@ export function RebalancePanel({ userId }: { userId: string }) {
       }
       footer={
         <button
-          onClick={() => setIsReviewOpen(true)}
-          className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity shadow-lg shadow-gray-200 dark:shadow-none"
+          type="button"
+          disabled={panelContent.ctaDisabled}
+          onClick={() => {
+            if (!panelContent.ctaDisabled) {
+              setIsReviewOpen(true);
+            }
+          }}
+          className={cn(
+            "w-full py-4 rounded-xl font-medium transition-opacity",
+            panelContent.ctaDisabled
+              ? "bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+              : "bg-gray-900 dark:bg-white text-white dark:text-black hover:opacity-90 shadow-lg shadow-gray-200 dark:shadow-none"
+          )}
         >
-          Review & Execute All
+          {panelContent.ctaLabel}
         </button>
       }
       isReviewOpen={isReviewOpen}
       onCloseReview={() => setIsReviewOpen(false)}
       onConfirmReview={() => setIsReviewOpen(false)}
     >
-      <div className="space-y-4 pt-2">
-        {tradeActions.map((trade, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between group cursor-default p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors -mx-3"
-          >
-            <div className="flex items-center gap-4 min-w-0">
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full transition-all group-hover:scale-125 shadow-sm",
-                  ACTION_STYLES[trade.action] ?? "bg-gray-400"
-                )}
-              />
-              <div className="min-w-0">
-                <div className="text-lg font-light text-gray-600 dark:text-gray-300">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {ACTION_LABELS[trade.action] ?? "Hold"}
-                  </span>{" "}
-                  <span className="text-gray-400 mx-1">·</span>{" "}
-                  {trade.bucketLabel}
-                </div>
-                <div className="text-xs text-gray-500 truncate">
-                  {trade.description}
+      {data.user_action.status === "action_required" ? (
+        <div className="space-y-4 pt-2">
+          {tradeActions.map((trade, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between group cursor-default p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors -mx-3"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all group-hover:scale-125 shadow-sm",
+                    ACTION_STYLES[trade.action]
+                  )}
+                />
+                <div className="min-w-0">
+                  <div className="text-lg font-light text-gray-600 dark:text-gray-300">
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {ACTION_LABELS[trade.action]}
+                    </span>{" "}
+                    <span className="text-gray-400 mx-1">·</span>{" "}
+                    {trade.bucketLabel}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {trade.description}
+                  </div>
                 </div>
               </div>
+              <span className="font-mono text-gray-900 dark:text-white font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg text-sm">
+                {formatCurrency(trade.amount_usd)}
+              </span>
             </div>
-            <span className="font-mono text-gray-900 dark:text-white font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg text-sm">
-              {formatCurrency(trade.amount_usd)}
-            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="pt-2">
+          <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 space-y-2">
+            <p className="text-lg font-medium text-gray-900 dark:text-white">
+              {panelContent.bodyTitle}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {panelContent.bodyDescription}
+            </p>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </BaseTradingPanel>
   );
 }

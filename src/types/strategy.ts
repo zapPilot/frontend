@@ -13,6 +13,7 @@ import type {
   BacktestSignal,
   BacktestStrategyCatalogEntryV3,
   BacktestStrategyPortfolio,
+  BacktestTransferMetadata,
 } from "./backtesting";
 
 /**
@@ -33,6 +34,19 @@ export interface DailySuggestionDecision extends BacktestDecision {
   target_asset_allocation: BacktestAssetAllocation;
 }
 
+export type DailySuggestionUserActionStatus =
+  | "action_required"
+  | "blocked"
+  | "no_action";
+
+export interface DailySuggestionUserAction {
+  status: DailySuggestionUserActionStatus;
+  required: boolean;
+  event: "rebalance" | null;
+  transfers: BacktestTransferMetadata[];
+  blocked_reason: string | null;
+}
+
 /**
  * Daily strategy suggestion response.
  */
@@ -44,6 +58,7 @@ export interface DailySuggestionResponse {
   portfolio: DailySuggestionPortfolio;
   signal: BacktestSignal;
   decision: DailySuggestionDecision;
+  user_action: DailySuggestionUserAction;
   execution: BacktestExecution;
 }
 

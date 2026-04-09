@@ -126,6 +126,13 @@ describe("strategyService", () => {
         },
         immediate: false,
       },
+      user_action: {
+        status: "no_action",
+        required: false,
+        event: null,
+        transfers: [],
+        blocked_reason: null,
+      },
       execution: {
         event: null,
         transfers: [],

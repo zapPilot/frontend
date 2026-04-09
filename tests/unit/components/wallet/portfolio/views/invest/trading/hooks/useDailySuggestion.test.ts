@@ -75,6 +75,19 @@ const mockSuggestionResponse: DailySuggestionResponse = {
     },
     immediate: false,
   },
+  user_action: {
+    status: "action_required",
+    required: true,
+    event: "rebalance",
+    transfers: [
+      {
+        from_bucket: "stable",
+        to_bucket: "spot",
+        amount_usd: 1000,
+      },
+    ],
+    blocked_reason: null,
+  },
   execution: {
     event: "rebalance",
     transfers: [
