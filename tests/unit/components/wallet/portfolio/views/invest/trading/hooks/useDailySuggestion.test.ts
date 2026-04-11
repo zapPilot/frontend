@@ -19,66 +19,13 @@ const mockUserId = "user-123";
 const mockSuggestionResponse: DailySuggestionResponse = {
   as_of: "2024-01-15",
   config_id: "dma_gated_fgi_default",
+  config_display_name: "DMA Gated FGI Default",
   strategy_id: "dma_gated_fgi",
-  market: {
-    date: "2024-01-15",
-    token_price: { btc: 42000 },
-    sentiment: 25,
-    sentiment_label: "fear",
-  },
-  portfolio: {
-    spot_usd: 5000,
-    stable_usd: 5000,
-    total_value: 10000,
-    allocation: {
-      spot: 0.5,
-      stable: 0.5,
-    },
-    asset_allocation: {
-      btc: 0.3,
-      eth: 0.2,
-      stable: 0.5,
-      alt: 0,
-    },
-  },
-  signal: {
-    id: "dma_gated_fgi",
-    regime: "fear",
-    raw_value: 25,
-    confidence: 0.8,
-    details: {
-      dma: {
-        dma_200: 41000,
-        distance: 0.024,
-        zone: "above",
-        cross_event: null,
-        cooldown_active: false,
-        cooldown_remaining_days: 0,
-        cooldown_blocked_zone: null,
-        fgi_slope: -1,
-      },
-    },
-  },
-  decision: {
-    action: "buy",
-    reason: "fear_accumulate",
-    rule_group: "dma_fgi",
-    target_allocation: {
-      spot: 0.6,
-      stable: 0.4,
-    },
-    target_asset_allocation: {
-      btc: 0.6,
-      eth: 0,
-      stable: 0.4,
-      alt: 0,
-    },
-    immediate: false,
-  },
-  user_action: {
+  action: {
     status: "action_required",
     required: true,
-    event: "rebalance",
+    kind: "rebalance",
+    reason_code: "fear_accumulate",
     transfers: [
       {
         from_bucket: "stable",
@@ -86,21 +33,65 @@ const mockSuggestionResponse: DailySuggestionResponse = {
         amount_usd: 1000,
       },
     ],
-    blocked_reason: null,
   },
-  execution: {
-    event: "rebalance",
-    transfers: [
-      {
-        from_bucket: "stable",
-        to_bucket: "spot",
-        amount_usd: 1000,
+  context: {
+    market: {
+      date: "2024-01-15",
+      token_price: { btc: 42000 },
+      sentiment: 25,
+      sentiment_label: "fear",
+    },
+    portfolio: {
+      spot_usd: 5000,
+      stable_usd: 5000,
+      total_value: 10000,
+      allocation: {
+        spot: 0.5,
+        stable: 0.5,
       },
-    ],
-    blocked_reason: null,
-    step_count: 1,
-    steps_remaining: 0,
-    interval_days: 3,
+      asset_allocation: {
+        btc: 0.3,
+        eth: 0.2,
+        stable: 0.5,
+        alt: 0,
+      },
+    },
+    signal: {
+      id: "dma_gated_fgi",
+      regime: "fear",
+      raw_value: 25,
+      confidence: 0.8,
+      details: {
+        dma: {
+          dma_200: 41000,
+          distance: 0.024,
+          zone: "above",
+          cross_event: null,
+          cooldown_active: false,
+          cooldown_remaining_days: 0,
+          cooldown_blocked_zone: null,
+          fgi_slope: -1,
+        },
+      },
+    },
+    target: {
+      allocation: {
+        spot: 0.6,
+        stable: 0.4,
+      },
+      asset_allocation: {
+        btc: 0.6,
+        eth: 0,
+        stable: 0.4,
+        alt: 0,
+      },
+    },
+    strategy: {
+      stance: "buy",
+      reason_code: "fear_accumulate",
+      rule_group: "dma_fgi",
+      details: {},
+    },
   },
 };
 

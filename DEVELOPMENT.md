@@ -5,6 +5,9 @@
 This project includes a comprehensive development toolchain with automated code quality, formatting,
 and CI/CD pipelines.
 
+All commands below assume your current working directory is this `frontend/` project root. If you
+started from the larger `zapPilot` checkout, run `cd frontend` first.
+
 ## 📦 Tools Configured
 
 ### Code Quality & Formatting
@@ -32,13 +35,15 @@ and CI/CD pipelines.
 - **VS Code Settings** - Optimized workspace configuration
 - **Extension Recommendations** - Essential extensions for productivity
 - **PWA Configuration** - Progressive Web App with manifest and service worker
+- **Next Launcher** - `scripts/run-next.js` normalizes cwd before starting Next.js
 
 ## 🚀 Available Scripts
 
 ```bash
 # Development
-npm run dev              # Start development server with Turbopack
-npm run build           # Production build
+npm run dev             # Start the stable webpack dev server
+npm run dev:turbo       # Start the opt-in Turbopack dev server
+npm run build           # Production build via the normalized Next wrapper
 npm run start           # Start production server
 
 # Code Quality
@@ -65,7 +70,8 @@ etc.) now include both passes, so failures will surface whenever either tool det
 
 ### Local Development
 
-1. **Start development**: `npm run dev`
+1. **Start development**: `npm run dev` Use `npm run dev:turbo` only when you explicitly want
+   Turbopack.
 2. **Make changes** - VS Code will auto-format on save
 3. **Commit** - Pre-commit hooks automatically run:
    - Prettier formatting

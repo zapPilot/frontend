@@ -5,10 +5,10 @@ import { defineConfig } from 'vitest/config';
 const enforceCoverageThresholds = process.env['VITEST_ENFORCE_THRESHOLDS'] !== 'false';
 const coverageThresholds = {
   global: {
-    statements: 95,
-    branches: 95,
-    functions: 95,
-    lines: 95,
+    statements: 96,
+    branches: 96,
+    functions: 96,
+    lines: 96,
   },
 } as const;
 
@@ -18,13 +18,7 @@ export default defineConfig({
     // Resource controls: run one file at a time and recycle the fork between files
     // This reduces retained heap from long-lived JSDOM/module state across the suite
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-      },
-    },
     maxWorkers: 1,
-    minWorkers: 1,
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
@@ -63,7 +57,6 @@ export default defineConfig({
         'src/hooks/ui/useAsyncRetryButton.ts',
       ],
       reportOnFailure: true,
-      all: true,
       ...(enforceCoverageThresholds ? { thresholds: coverageThresholds } : {}),
     },
   },

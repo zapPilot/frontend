@@ -3,6 +3,9 @@
 Thank you for your interest in contributing to Zap Pilot! This document provides guidelines for
 contributing to the project.
 
+All commands below assume your current working directory is this `frontend/` project root. If you
+are working from the larger `zapPilot` checkout, run `cd frontend` first.
+
 ## Development Setup
 
 ### Prerequisites
@@ -33,6 +36,7 @@ contributing to the project.
    ```bash
    npm run dev
    ```
+   Use `npm run dev:turbo` only when you explicitly want Turbopack.
 
 ## Code Quality Standards
 

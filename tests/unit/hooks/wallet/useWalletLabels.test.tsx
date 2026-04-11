@@ -43,6 +43,37 @@ describe("useWalletLabels", () => {
     expect(mockSetWallets).not.toHaveBeenCalled();
   });
 
+  it("should do nothing when userId is empty (short-circuit || branch)", async () => {
+    // Exercises the `!userId` true branch of `!userId || !newLabel.trim()`
+    const { result } = renderHook(() =>
+      useWalletLabels({ ...defaultProps, userId: "" })
+    );
+
+    await result.current.handleEditLabel("wallet-1", "New Label");
+    expect(mockSetEditingWallet).toHaveBeenCalledWith(null);
+    expect(mockSetWallets).not.toHaveBeenCalled();
+  });
+
+  it("uses UPDATE_LABEL_FAILED_ERROR when response.error is undefined", async () => {
+    // Exercises the `response.error ?? UPDATE_LABEL_FAILED_ERROR` false branch
+    vi.spyOn(WalletService, "updateWalletLabel").mockResolvedValue({
+      success: false,
+      // no error field → response.error is undefined → fallback message used
+    });
+
+    const { result } = renderHook(() => useWalletLabels(defaultProps));
+    await result.current.handleEditLabel("wallet-1", "New Label");
+
+    expect(mockSetWalletOperationState).toHaveBeenCalledWith(
+      "editing",
+      "wallet-1",
+      expect.objectContaining({
+        isLoading: false,
+        error: "Failed to update wallet label",
+      })
+    );
+  });
+
   it("should do nothing if wallet not found", async () => {
     const { result } = renderHook(() => useWalletLabels(defaultProps));
 

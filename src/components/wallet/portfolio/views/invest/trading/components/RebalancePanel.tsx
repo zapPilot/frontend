@@ -28,6 +28,17 @@ const STABLE_BUCKET_LABEL = "STABLE";
 const ALT_BUCKET_LABEL = "ALT";
 
 type SpotAssetSymbol = "BTC" | "ETH";
+const REASON_LABELS: Record<string, string> = {
+  above_greed_sell: "Greed remains elevated, so the strategy stays defensive.",
+  already_aligned: "Portfolio is already aligned with the current target.",
+  below_extreme_fear_buy:
+    "Extreme fear remains in place, so the strategy stays risk-on.",
+  eth_btc_ratio_cooldown_active: "ETH/BTC rotation cooldown is still active.",
+  eth_btc_ratio_rebalance: "ETH/BTC rotation is out of balance.",
+  eth_outperforming_btc: "ETH is still outperforming BTC.",
+  interval_wait: "Minimum rebalance interval has not elapsed yet.",
+  trade_quota_min_interval_active: "Trade quota cooldown is still active.",
+};
 
 interface DerivedTradeAction {
   action: "buy" | "sell";
@@ -66,7 +77,7 @@ function normalizeSpotAsset(value: unknown): SpotAssetSymbol | null {
 function getTargetSpotAsset(
   data: DailySuggestionResponse
 ): SpotAssetSymbol | null {
-  return normalizeSpotAsset(data.decision.details?.target_spot_asset);
+  return normalizeSpotAsset(data.context.strategy.details?.target_spot_asset);
 }
 
 function getBucketLabel(
@@ -96,7 +107,7 @@ function buildTradeActions(
   data: DailySuggestionResponse
 ): DerivedTradeAction[] {
   const targetSpotAsset = getTargetSpotAsset(data);
-  return data.user_action.transfers.map(transfer => {
+  return data.action.transfers.map(transfer => {
     const action = transfer.to_bucket !== "stable" ? "buy" : "sell";
     const actionBucket =
       action === "buy" ? transfer.to_bucket : transfer.from_bucket;
@@ -114,11 +125,25 @@ function buildTradeActions(
   });
 }
 
+function humanizeReasonCode(reasonCode: string): string {
+  const mappedReason = REASON_LABELS[reasonCode];
+  if (mappedReason) {
+    return mappedReason;
+  }
+
+  const normalized = reasonCode.replaceAll(/[_-]+/g, " ").trim().toLowerCase();
+  if (!normalized) {
+    return "No additional context.";
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1) + ".";
+}
+
 function getStatusPanelContent(
   data: DailySuggestionResponse,
   tradeActions: DerivedTradeAction[]
 ): StatusPanelContent {
-  if (data.user_action.status === "action_required") {
+  if (data.action.status === "action_required") {
     const actionCount = tradeActions.length;
     return {
       actionCardTitle: `${actionCount} Action${actionCount === 1 ? "" : "s"}`,
@@ -130,14 +155,12 @@ function getStatusPanelContent(
     };
   }
 
-  if (data.user_action.status === "blocked") {
+  if (data.action.status === "blocked") {
     return {
       actionCardTitle: "Action Blocked",
       actionCardSubtitle: "Trading temporarily unavailable",
       bodyTitle: "Action blocked",
-      bodyDescription:
-        data.user_action.blocked_reason ??
-        "Trading is temporarily unavailable.",
+      bodyDescription: humanizeReasonCode(data.action.reason_code),
       ctaLabel: "Execution Unavailable",
       ctaDisabled: true,
     };
@@ -147,7 +170,7 @@ function getStatusPanelContent(
     actionCardTitle: "0 Actions",
     actionCardSubtitle: "No trades needed",
     bodyTitle: "No trades needed",
-    bodyDescription: data.decision.reason,
+    bodyDescription: humanizeReasonCode(data.action.reason_code),
     ctaLabel: "No Action Needed",
     ctaDisabled: true,
   };
@@ -228,7 +251,7 @@ export function RebalancePanel({ userId }: { userId: string }) {
   if (!data) return <RebalancePanelSkeleton />;
 
   const tradeActions = buildTradeActions(data);
-  const regimeLabel = formatRegimeLabel(data.signal.regime);
+  const regimeLabel = formatRegimeLabel(data.context.signal.regime);
   const panelContent = getStatusPanelContent(data, tradeActions);
 
   return (
@@ -250,8 +273,8 @@ export function RebalancePanel({ userId }: { userId: string }) {
       }
       impactVisual={
         <ImpactVisual
-          currentAllocation={data.portfolio.asset_allocation}
-          targetAllocation={data.decision.target_asset_allocation}
+          currentAllocation={data.context.portfolio.asset_allocation}
+          targetAllocation={data.context.target.asset_allocation}
         />
       }
       footer={
@@ -277,7 +300,7 @@ export function RebalancePanel({ userId }: { userId: string }) {
       onCloseReview={() => setIsReviewOpen(false)}
       onConfirmReview={() => setIsReviewOpen(false)}
     >
-      {data.user_action.status === "action_required" ? (
+      {data.action.status === "action_required" ? (
         <div className="space-y-4 pt-2">
           {tradeActions.map((trade, i) => (
             <div

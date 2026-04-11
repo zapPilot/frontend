@@ -14,7 +14,7 @@ const TEST_DIRECTORIES = [
 ];
 const TEST_FILE_PATTERN = /\.(test|spec)\.(js|ts|tsx)$/;
 const SUPPORTED_NODE_MAJOR = 20;
-const DEFAULT_BATCH_SIZE = 5;
+const DEFAULT_BATCH_SIZE = 3;
 const BATCH_SIZE = Number(
   process.env.VITEST_COVERAGE_BATCH_SIZE || String(DEFAULT_BATCH_SIZE)
 );
@@ -126,7 +126,6 @@ function runBatch(batchFiles, batchLabel) {
       "--coverage.reportsDirectory=coverage",
       "--coverage.reporter=json-summary",
       "--reporter=blob",
-      "--poolOptions.forks.singleFork",
       `--outputFile=${outputFile}`,
       ...batchFiles,
     ],

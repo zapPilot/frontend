@@ -2,8 +2,8 @@
  * LogViewer - Unit Tests
  *
  * Tests the LogViewer component rendering and functionality.
- * Note: The LogViewer component only renders in development mode or when
- * NEXT_PUBLIC_ENABLE_DEBUG_LOGGING is set.
+ * Note: In development, LogViewer renders when NEXT_PUBLIC_ENABLE_LOG_VIEWER=1.
+ * With NEXT_PUBLIC_ENABLE_DEBUG_LOGGING=true it also renders (e.g. production diagnostics).
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -30,8 +30,8 @@ vi.mock("@/utils/logger", () => ({
 describe("LogViewer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Force development mode to render the component
     vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_LOG_VIEWER", "1");
     vi.useFakeTimers();
   });
 

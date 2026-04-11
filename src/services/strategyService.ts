@@ -65,8 +65,8 @@ export async function getStrategyConfigs(): Promise<StrategyConfigsResponse> {
  * // Get suggestion for a specific preset
  * const suggestion = await getDailySuggestion('user-123', 'dma_gated_fgi_default');
  *
- * // Inspect the recommended action
- * console.log(suggestion.decision.action, suggestion.decision.target_allocation);
+ * // Inspect whether any user action is required
+ * console.log(suggestion.action.status, suggestion.context.target.allocation);
  * ```
  */
 export async function getDailySuggestion(

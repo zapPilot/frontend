@@ -218,4 +218,39 @@ describe("httpRequest", () => {
     expect(mockFetch).toHaveBeenCalledTimes(3);
     expect(mockDelay).toHaveBeenCalledTimes(2);
   });
+
+  it("re-throws APIError directly without wrapping in NetworkError", async () => {
+    const apiError = new APIError("Forbidden", 403, "FORBIDDEN");
+    mockFetch.mockRejectedValue(apiError);
+    mockIsAbortError.mockReturnValue(false);
+
+    await expect(
+      httpRequest("https://api.example.com/data", { retries: 0 })
+    ).rejects.toThrow(APIError);
+    await expect(
+      httpRequest("https://api.example.com/data", { retries: 0 })
+    ).rejects.toThrow("Forbidden");
+  });
+
+  it("throws TimeoutError when isAbortError returns true", async () => {
+    const { TimeoutError } = await import("@/lib/http/errors");
+    const abortError = new DOMException("aborted", "AbortError");
+    mockFetch.mockRejectedValue(abortError);
+    mockIsAbortError.mockReturnValue(true);
+
+    await expect(
+      httpRequest("https://api.example.com/data", { retries: 0 })
+    ).rejects.toThrow(TimeoutError);
+  });
+
+  it("throws NetworkError with fallback message when retries is negative (loop never runs)", async () => {
+    // Exercises the `lastError ? lastError.message : "Network request failed"` false branch.
+    // With retries: -1, the for-loop condition (0 <= -1) is false from the start,
+    // so the catch block never runs and lastError stays undefined.
+    await expect(
+      httpRequest("https://api.example.com/data", { retries: -1 })
+    ).rejects.toThrow("Network request failed");
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

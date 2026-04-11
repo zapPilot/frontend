@@ -210,6 +210,25 @@ describe("buildHeaderSection", () => {
     const lines = buildHeaderSection(metadata);
     expect(lines[4]).toBe("Time Period: 3M (90 days)");
   });
+
+  it("falls back to timePeriod.label when key is not in the period map", () => {
+    const metadata: ExportMetadata = {
+      ...mockMetadata,
+      timePeriod: { key: "CUSTOM", days: 60, label: "Custom Period" },
+    };
+    const lines = buildHeaderSection(metadata);
+    expect(lines[4]).toBe("Time Period: Custom Period");
+  });
+
+  it("shows specific wallet address when walletFilter is set", () => {
+    // Exercises the `walletFilter ? \`Specific Wallet (${...})\` : "All Wallets..."` true branch (line 71).
+    const metadata: ExportMetadata = {
+      ...mockMetadata,
+      walletFilter: "0x1234567890abcdef1234567890abcdef12345678",
+    };
+    const lines = buildHeaderSection(metadata);
+    expect(lines[3]).toBe("Wallet Filter: Specific Wallet (0x1234...5678)");
+  });
 });
 
 describe("buildMetricsSection", () => {
@@ -317,6 +336,20 @@ describe("buildMonthlyPnLSection", () => {
 
     expect(lines[3]).toBe("Feb,2024,-3.2");
     expect(lines[8]).toBe("Jul,2024,-8.4");
+  });
+
+  it("falls back to empty string when item.year is undefined", () => {
+    // Exercises the `item.year?.toString() ?? ""` right branch (line 152).
+    const metadata = {
+      ...mockMetadata,
+      data: {
+        ...mockMetadata.data,
+        monthlyPnL: [{ month: "Jan", year: undefined, value: 5.0 }],
+      },
+    };
+    const lines = buildMonthlyPnLSection(metadata as any);
+    // Year column should be empty string fallback
+    expect(lines[2]).toBe("Jan,,+5.0");
   });
 });
 

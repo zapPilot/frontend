@@ -13,13 +13,16 @@ import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
 import { ToastProvider } from "@/providers/ToastProvider";
 import { WalletProvider } from "@/providers/WalletProvider";
 
-const LogViewer =
-  process.env.NODE_ENV === "development"
-    ? dynamic(async () => {
-        const mod = await import("@/components/debug/LogViewer");
-        return mod.LogViewer;
-      })
-    : () => null;
+const shouldLoadLogViewer =
+  process.env.NODE_ENV === "development" &&
+  process.env["NEXT_PUBLIC_ENABLE_LOG_VIEWER"] === "1";
+
+const LogViewer = shouldLoadLogViewer
+  ? dynamic(async () => {
+      const mod = await import("@/components/debug/LogViewer");
+      return mod.LogViewer;
+    })
+  : () => null;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

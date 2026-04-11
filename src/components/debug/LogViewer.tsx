@@ -9,8 +9,8 @@ import { type LogEntry, logger, LogLevel } from "@/utils/logger";
 /**
  * Development Log Viewer Component
  *
- * Provides a UI for viewing logs in development mode.
- * Only renders in development or when debug logging is enabled.
+ * Renders when `NEXT_PUBLIC_ENABLE_LOG_VIEWER=1` in development, or when
+ * `NEXT_PUBLIC_ENABLE_DEBUG_LOGGING=true` (e.g. production diagnostics).
  */
 export function LogViewer() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -18,7 +18,8 @@ export function LogViewer() {
   const [filterLevel, setFilterLevel] = useState<LogLevel>(LogLevel.DEBUG);
 
   const shouldShow =
-    process.env.NODE_ENV === "development" ||
+    (process.env.NODE_ENV === "development" &&
+      process.env["NEXT_PUBLIC_ENABLE_LOG_VIEWER"] === "1") ||
     process.env["NEXT_PUBLIC_ENABLE_DEBUG_LOGGING"] === "true";
 
   useEffect(() => {
