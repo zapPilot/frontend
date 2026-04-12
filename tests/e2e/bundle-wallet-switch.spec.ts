@@ -150,7 +150,7 @@ test.describe("Bundle Wallet Switching - E2E", () => {
       await page.goto(`/bundle?userId=${BUNDLE_USER_ID}`);
 
       // Find and click wallet connect button
-      // This will need actual ThirdWeb wallet interaction
+      // This will need actual wagmi wallet interaction
       const connectButton = page.locator('button:has-text("Connect")').first();
 
       if (await connectButton.isVisible()) {

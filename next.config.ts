@@ -42,6 +42,16 @@ const nextConfig: NextConfig = {
    * @see https://nextjs.org/docs/app/api-reference/next-config-js/webpack
    */
   webpack: (config, { dev, isServer }) => {
+    // Stub optional peer deps of @wagmi/connectors that are not installed
+    config.resolve = {
+      ...config.resolve,
+      alias: {
+        ...config.resolve?.alias,
+        "@base-org/account": false,
+        "@metamask/connect-evm": false,
+      },
+    };
+
     // Only apply watch optimizations in development mode
     // Skip on server builds to avoid conflicts
     if (dev && !isServer) {

@@ -5,18 +5,8 @@
  * Import from this file to access chain data in any format needed.
  */
 
-import { toThirdWebChains } from "./adapters";
-import { SUPPORTED_CHAINS } from "./definitions";
-
 // Canonical chain definitions
 export { SUPPORTED_CHAINS } from "./definitions";
 
 // Adapter functions
-export { toThirdWebChains } from "./adapters";
-
-/**
- * Get all supported chains in ThirdWeb format
- */
-export function getThirdWebChains(): ReturnType<typeof toThirdWebChains> {
-  return toThirdWebChains(SUPPORTED_CHAINS);
-}
+export { getMainnetChains } from "./adapters";

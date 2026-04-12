@@ -22,7 +22,7 @@ intent-based execution and real-time analytics.
 
 - **Framework**: Next.js 15 with App Router and Turbopack
 - **Frontend**: React 19, TypeScript 5, Tailwind CSS v4
-- **Web3**: ThirdWeb SDK v5 for wallet connectivity and transactions
+- **Web3**: wagmi + viem for wallet connectivity
 - **State Management**: React Query, React Context
 - **Animations**: Framer Motion with GPU-accelerated transitions
 - **Icons**: Lucide React
@@ -146,6 +146,7 @@ src/components/
 ```bash
 pnpm run dev          # Start the stable webpack dev server
 pnpm run dev:turbo    # Start the opt-in Turbopack dev server
+pnpm run clean:next   # Clear .next before switching bundlers or re-benchmarking RAM
 pnpm run build        # Production build via the normalized Next wrapper
 pnpm run start        # Serve production build
 ```
@@ -153,6 +154,8 @@ pnpm run start        # Serve production build
 Frontend Next.js commands run through `scripts/run-next.js`, which normalizes the project root
 before spawning Next. Root-triggered commands such as `npm --prefix frontend run dev` therefore use
 the frontend app root instead of the parent `zapPilot` checkout.
+The wrapper also warns when the local Node runtime is not the repo baseline (`.nvmrc` / Node 20),
+since memory comparisons on newer majors are noisy.
 
 ### Code Quality
 
@@ -182,10 +185,6 @@ lower the batch size further if a local machine is still memory constrained.
 ### Required Environment Variables
 
 ```env
-# Web3 Configuration
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_client_id
-NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
-
 # API Endpoints
 NEXT_PUBLIC_API_BASE_URL=https://api.example.com
 
@@ -221,7 +220,9 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
    pnpm run dev
    ```
 
-   Use `pnpm run dev:turbo` only when you explicitly want Turbopack.
+   Use `pnpm run dev:turbo` only when you explicitly want Turbopack. Run
+   `pnpm run clean:next` before switching between webpack and Turbopack, and
+   before taking fresh dev-memory measurements.
 
 4. **Access Application**:
    - Web: http://localhost:3000

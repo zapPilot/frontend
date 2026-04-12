@@ -5,7 +5,7 @@ import { WalletMenu } from "@/components/wallet/portfolio/components/navigation/
 import { WALLET_LABELS } from "@/constants/wallet";
 
 // Mock providers and hooks
-const mockConnect = vi.fn();
+const mockConnectAsync = vi.fn();
 const mockDisconnect = vi.fn();
 
 // Create mutable mock state for different test scenarios
@@ -31,12 +31,12 @@ async function flushMenuAction(action: () => void): Promise<void> {
   });
 }
 
-vi.mock("thirdweb/react", () => ({
-  useConnectModal: () => ({
-    connect: mockConnect,
-    isConnecting: false,
+vi.mock("wagmi", () => ({
+  useConnect: () => ({
+    connectAsync: mockConnectAsync,
+    connectors: [{ id: "injected", name: "MetaMask" }],
+    isPending: false,
   }),
-  ConnectButton: () => <button>Connect Thirdweb</button>,
 }));
 
 vi.mock("@/providers/WalletProvider", () => ({
@@ -102,7 +102,7 @@ describe("WalletMenu Component", () => {
       render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);
       const button = screen.getByTestId("unified-wallet-menu-button");
       fireEvent.click(button);
-      expect(mockConnect).toHaveBeenCalled();
+      expect(mockConnectAsync).toHaveBeenCalled();
     });
 
     it("matches snapshot - disconnected state", () => {

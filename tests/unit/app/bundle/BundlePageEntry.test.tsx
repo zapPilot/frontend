@@ -17,6 +17,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/bundle",
 }));
 
+vi.mock("../../../../src/app/bundle/BundleProviders", () => ({
+  BundleProviders: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock BundlePageClient - captures all props for inspection
 vi.mock("../../../../src/app/bundle/BundlePageClient", () => ({
   BundlePageClient: vi.fn(props => (

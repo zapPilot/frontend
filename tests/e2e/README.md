@@ -336,8 +336,8 @@ Many tests rely on `data-testid` attributes for reliable element selection. See
 
 ### 1. Wallet Connection in Tests
 
-**Issue:** E2E tests cannot easily simulate wallet connection (ThirdWeb modal) **Workaround:** Tests
-use demo route `/layout-demo/v22` which doesn't require wallet
+**Issue:** E2E tests cannot easily simulate wallet connection (wagmi injected connector)
+**Workaround:** Tests use demo route `/layout-demo/v22` which doesn't require wallet
 
 ### 2. Feature Flag Environment Variables
 

@@ -2,27 +2,9 @@
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
-import { GlobalErrorHandler } from "@/components/errors/GlobalErrorHandler";
-import { UserProvider } from "@/contexts/UserContext";
-import { QueryProvider } from "@/providers/QueryProvider";
-import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
-import { ToastProvider } from "@/providers/ToastProvider";
-import { WalletProvider } from "@/providers/WalletProvider";
-
-const shouldLoadLogViewer =
-  process.env.NODE_ENV === "development" &&
-  process.env["NEXT_PUBLIC_ENABLE_LOG_VIEWER"] === "1";
-
-const LogViewer = shouldLoadLogViewer
-  ? dynamic(async () => {
-      const mod = await import("@/components/debug/LogViewer");
-      return mod.LogViewer;
-    })
-  : () => null;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,21 +83,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
       >
-        <ErrorBoundary>
-          <QueryProvider>
-            <SimpleWeb3Provider>
-              <WalletProvider>
-                <UserProvider>
-                  <ErrorBoundary resetKeys={["user-context"]}>
-                    <GlobalErrorHandler />
-                    <ToastProvider>{children}</ToastProvider>
-                    <LogViewer />
-                  </ErrorBoundary>
-                </UserProvider>
-              </WalletProvider>
-            </SimpleWeb3Provider>
-          </QueryProvider>
-        </ErrorBoundary>
+        <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>
   );

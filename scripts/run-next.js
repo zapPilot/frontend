@@ -6,6 +6,8 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 const launchCwd = process.cwd();
 const [, , subcommand, ...forwardArgs] = process.argv;
+const expectedNodeMajor = 20;
+const currentNodeMajor = Number.parseInt(process.versions.node.split(".")[0], 10);
 
 if (!subcommand) {
   console.error(
@@ -28,6 +30,12 @@ try {
 }
 
 process.chdir(projectRoot);
+
+if (currentNodeMajor !== expectedNodeMajor) {
+  console.warn(
+    `[next-runner] Warning: detected Node ${process.versions.node}. Dev memory baselines are only validated on Node ${expectedNodeMajor}; run \`nvm use\` before comparing RAM usage.`
+  );
+}
 
 const bundler = forwardArgs.includes("--webpack")
   ? "webpack"

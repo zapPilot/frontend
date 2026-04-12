@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
@@ -7,9 +8,13 @@ import { QuickSwitchFAB } from "@/components/bundle";
 import { EmailReminderBanner } from "@/components/layout/banners/EmailReminderBanner";
 import { SwitchPromptBanner } from "@/components/layout/banners/SwitchPromptBanner";
 import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
-import { WalletManager } from "@/components/WalletManager";
 import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/bundle/useBundlePage";
+
+const LazyWalletManager = dynamic(async () => {
+  const mod = await import("@/components/WalletManager");
+  return mod.WalletManager;
+});
 
 interface BundlePageClientProps {
   userId: string;
@@ -104,7 +109,7 @@ export function BundlePageClient({
           {vm.overlays.showQuickSwitch && (
             <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
           )}
-          <WalletManager
+          <LazyWalletManager
             isOpen={vm.overlays.isWalletManagerOpen}
             onClose={vm.overlays.closeWalletManager}
             onEmailSubscribed={vm.overlays.onEmailSubscribed}

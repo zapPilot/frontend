@@ -126,7 +126,7 @@ vi.mock("framer-motion", async () => {
 });
 
 // Mock child components to simplify testing
-vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
+vi.mock("@/components/wallet/portfolio/analytics", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics View</div>,
 }));
 
@@ -168,7 +168,7 @@ vi.mock("@/components/wallet/portfolio/components/WalletMenu", () => ({
   WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
 }));
 
-vi.mock("@/components/WalletManager/WalletManager", () => ({
+vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({ isOpen }: any) =>
     isOpen ? <div data-testid="wallet-manager">Wallet Manager</div> : null,
 }));

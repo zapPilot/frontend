@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 
 import { logger } from "@/utils";
 
+import { BundleProviders } from "./BundleProviders";
 import { BundlePageClient } from "./BundlePageClient";
 
 export function BundlePageEntry(): ReactElement {
@@ -28,11 +29,13 @@ export function BundlePageEntry(): ReactElement {
   }
 
   return (
-    <BundlePageClient
-      userId={userId}
-      {...(walletId && { walletId })}
-      {...(etlJobId && { etlJobId })}
-      {...(isNewUser && { isNewUser: true })}
-    />
+    <BundleProviders>
+      <BundlePageClient
+        userId={userId}
+        {...(walletId && { walletId })}
+        {...(etlJobId && { etlJobId })}
+        {...(isNewUser && { isNewUser: true })}
+      />
+    </BundleProviders>
   );
 }

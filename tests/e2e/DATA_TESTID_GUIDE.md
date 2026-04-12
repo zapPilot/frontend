@@ -42,7 +42,7 @@ wallet, multiple wallets).
 
 **States:**
 
-- **Disconnected**: Button shows "Connect Wallet", opens ThirdWeb modal on click
+- **Disconnected**: Button shows "Connect Wallet", triggers wagmi injected connector on click
 - **Single Wallet**: Dropdown shows address, balance, menu items (View Bundle, Manage Wallets,
   Settings, Disconnect)
 - **Multiple Wallets**: Dropdown shows wallet list with active indicator, switch buttons, and

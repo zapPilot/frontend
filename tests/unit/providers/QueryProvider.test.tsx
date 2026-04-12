@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { render, screen } from "../../test-utils";
+import { render, screen, waitFor } from "../../test-utils";
 
 vi.mock("@/lib/state/queryClient", () => {
   const { QueryClient } = require("@tanstack/react-query");
@@ -119,6 +119,8 @@ describe("QueryProvider", () => {
       </QueryProvider>
     );
 
-    expect(screen.getByTestId("devtools")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("devtools")).toBeInTheDocument();
+    });
   });
 });

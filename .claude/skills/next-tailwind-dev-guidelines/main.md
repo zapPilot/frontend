@@ -209,6 +209,6 @@ This main file provides an overview. For detailed guidance on specific topics:
 - **Styling**: `@styling.md` - Tailwind utilities, design tokens, animations
 - **Performance**: `@performance.md` - Optimization techniques, lazy loading
 - **Testing**: `@testing.md` - Vitest, Playwright, testing patterns
-- **Web3 Integration**: `@web3-integration.md` - ThirdWeb SDK, wallet connectivity
+- **Web3 Integration**: `@web3-integration.md` - wagmi + viem, wallet connectivity
 
 Use `@filename.md` to include the resource file in your context when needed.
