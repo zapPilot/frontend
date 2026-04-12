@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 

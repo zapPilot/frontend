@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

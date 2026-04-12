@@ -1,5 +1,3 @@
-"use client";
-
 import { RISK_DISPLAY_CONFIG, RiskLevel } from "@/constants/riskThresholds";
 import type { RiskMetrics } from "@/services";
 

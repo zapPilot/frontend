@@ -281,7 +281,7 @@ describe("Logger", () => {
 
     it("should configure for production", () => {
       vi.stubEnv("NODE_ENV", "production");
-      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "false");
+      vi.stubEnv("VITE_ENABLE_DEBUG_LOGGING", "false");
 
       const prodLogger = new LoggerClass();
       const config = prodLogger.getConfig();
@@ -292,7 +292,7 @@ describe("Logger", () => {
 
     it("should enable debug in production if flag set", () => {
       vi.stubEnv("NODE_ENV", "production");
-      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "true");
+      vi.stubEnv("VITE_ENABLE_DEBUG_LOGGING", "true");
 
       const debugProdLogger = new LoggerClass();
       const config = debugProdLogger.getConfig();

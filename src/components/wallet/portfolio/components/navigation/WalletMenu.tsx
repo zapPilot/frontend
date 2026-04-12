@@ -1,5 +1,3 @@
-"use client";
-
 import { AnimatePresence } from "framer-motion";
 import { type ReactElement, useRef, useState } from "react";
 import { useConnect } from "wagmi";

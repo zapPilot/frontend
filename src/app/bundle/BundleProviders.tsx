@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
@@ -14,7 +12,7 @@ import { WalletProvider } from "@/providers/WalletProvider";
 
 const shouldLoadLogViewer =
   isRuntimeMode("development") &&
-  getRuntimeEnv("NEXT_PUBLIC_ENABLE_LOG_VIEWER") === "1";
+  getRuntimeEnv("VITE_ENABLE_LOG_VIEWER") === "1";
 
 const LogViewer = shouldLoadLogViewer
   ? lazyImport(

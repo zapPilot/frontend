@@ -5,7 +5,6 @@
  * Follows Container/Presentational pattern
  */
 
-"use client";
 
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 

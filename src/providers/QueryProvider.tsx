@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 
@@ -15,7 +13,7 @@ interface QueryProviderProps {
 
 const enableDevtools =
   isRuntimeMode("development") &&
-  getRuntimeEnv("NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS") === "1";
+  getRuntimeEnv("VITE_ENABLE_RQ_DEVTOOLS") === "1";
 
 function QueryDevtoolsLoader() {
   const [Devtools, setDevtools] = useState<ReactQueryDevtoolsComponent | null>(

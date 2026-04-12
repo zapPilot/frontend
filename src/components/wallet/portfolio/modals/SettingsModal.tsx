@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircle, CheckCircle2, Loader2, Send, Unlink } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 

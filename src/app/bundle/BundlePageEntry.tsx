@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactElement } from "react";
 
 import { isRuntimeMode } from "@/lib/env/runtimeEnv";

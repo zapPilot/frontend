@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowRight, Layers, LineChart, Zap } from "lucide-react";
 import { type ReactNode, useState } from "react";
 

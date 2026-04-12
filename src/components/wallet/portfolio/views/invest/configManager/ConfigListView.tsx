@@ -1,5 +1,3 @@
-"use client";
-
 import { Copy, Edit2, Lock, Plus, Star } from "lucide-react";
 import { type ReactElement, useCallback, useMemo, useState } from "react";
 

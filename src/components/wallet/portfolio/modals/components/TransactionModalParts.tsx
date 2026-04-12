@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowRight, Check } from "lucide-react";
 import type { ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";

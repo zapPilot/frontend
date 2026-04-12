@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
@@ -10,8 +8,8 @@ import { type LogEntry, logger, LogLevel } from "@/utils/logger";
 /**
  * Development Log Viewer Component
  *
- * Renders when `NEXT_PUBLIC_ENABLE_LOG_VIEWER=1` in development, or when
- * `NEXT_PUBLIC_ENABLE_DEBUG_LOGGING=true` (e.g. production diagnostics).
+ * Renders when `VITE_ENABLE_LOG_VIEWER=1` in development, or when
+ * `VITE_ENABLE_DEBUG_LOGGING=true` (e.g. production diagnostics).
  */
 export function LogViewer() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -20,8 +18,8 @@ export function LogViewer() {
 
   const shouldShow =
     (isRuntimeMode("development") &&
-      getRuntimeEnv("NEXT_PUBLIC_ENABLE_LOG_VIEWER") === "1") ||
-    getRuntimeEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING") === "true";
+      getRuntimeEnv("VITE_ENABLE_LOG_VIEWER") === "1") ||
+    getRuntimeEnv("VITE_ENABLE_DEBUG_LOGGING") === "true";
 
   useEffect(() => {
     if (!shouldShow) return;

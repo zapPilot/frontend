@@ -20,50 +20,31 @@ function readProcessEnv(key: string): EnvValue {
   return process.env[key];
 }
 
-function normalizePublicEnvKey(key: string): string[] {
-  if (key.startsWith("VITE_")) {
-    return [key];
-  }
-
-  if (key.startsWith("NEXT_PUBLIC_")) {
-    return [`VITE_${key.slice("NEXT_PUBLIC_".length)}`, key];
-  }
-
-  return [key];
-}
-
-function readFirstDefined(keys: string[]): string | undefined {
-  for (const key of keys) {
-    const importMetaValue = readImportMetaEnv(key);
-    if (typeof importMetaValue === "string") {
-      return importMetaValue;
-    }
-
-    const processValue = readProcessEnv(key);
-    if (typeof processValue === "string") {
-      return processValue;
-    }
-  }
-
-  return undefined;
-}
-
 /**
- * Read a runtime environment variable with Vite-first public env compatibility.
+ * Read a runtime environment variable.
  *
- * Public keys automatically fall back from `VITE_*` to `NEXT_PUBLIC_*` during
- * the migration so existing local env files keep working.
+ * Checks `import.meta.env` first (Vite client), then `process.env` (Node/test).
  *
- * @param key - Environment variable name to read.
- * @returns The first defined string value, if present.
+ * @param key - Environment variable name to read (use the `VITE_` prefix).
+ * @returns The string value, if present.
  *
  * @example
  * ```ts
- * const apiUrl = getRuntimeEnv("NEXT_PUBLIC_API_URL");
+ * const apiUrl = getRuntimeEnv("VITE_API_URL");
  * ```
  */
 export function getRuntimeEnv(key: string): string | undefined {
-  return readFirstDefined(normalizePublicEnvKey(key));
+  const importMetaValue = readImportMetaEnv(key);
+  if (typeof importMetaValue === "string") {
+    return importMetaValue;
+  }
+
+  const processValue = readProcessEnv(key);
+  if (typeof processValue === "string") {
+    return processValue;
+  }
+
+  return undefined;
 }
 
 /**

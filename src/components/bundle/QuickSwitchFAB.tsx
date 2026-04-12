@@ -1,5 +1,3 @@
-"use client";
-
 import { Home } from "lucide-react";
 
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";

@@ -1,5 +1,3 @@
-"use client";
-
 import { AnimatePresence } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, type ReactElement, useCallback } from "react";

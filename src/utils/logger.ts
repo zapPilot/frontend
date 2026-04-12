@@ -36,9 +36,9 @@ export class Logger {
     const isProduction = isRuntimeMode("production");
     const isDevelopment = isRuntimeMode("development");
     const enableDebugInProd =
-      getRuntimeEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING") === "true";
+      getRuntimeEnv("VITE_ENABLE_DEBUG_LOGGING") === "true";
     const enableDevLogging =
-      getRuntimeEnv("NEXT_PUBLIC_ENABLE_DEV_LOGGING") !== "false";
+      getRuntimeEnv("VITE_ENABLE_DEV_LOGGING") !== "false";
 
     this.config = {
       level:

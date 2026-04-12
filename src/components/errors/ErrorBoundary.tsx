@@ -1,5 +1,3 @@
-"use client";
-
 import { Component, ErrorInfo, ReactNode } from "react";
 
 import { isRuntimeMode } from "@/lib/env/runtimeEnv";

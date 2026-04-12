@@ -1,5 +1,3 @@
-"use client";
-
 import { useAccount, useConnect } from "wagmi";
 
 import { WALLET_LABELS } from "@/constants/wallet";

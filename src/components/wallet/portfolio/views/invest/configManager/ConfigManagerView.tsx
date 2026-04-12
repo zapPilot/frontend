@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactElement, useReducer } from "react";
 
 import { Spinner } from "@/components/ui";

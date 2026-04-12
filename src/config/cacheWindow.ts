@@ -2,12 +2,12 @@ import { getRuntimeEnv } from "@/lib/env/runtimeEnv";
 import { toSeconds } from "@/lib/utils/env";
 
 const DEFAULT_MAX_AGE_SECONDS = toSeconds(
-  getRuntimeEnv("NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS"),
+  getRuntimeEnv("VITE_CACHE_MAX_AGE_SECONDS"),
   60 * 60
 );
 
 const DEFAULT_STALE_WHILE_REVALIDATE_SECONDS = toSeconds(
-  getRuntimeEnv("NEXT_PUBLIC_CACHE_STALE_WHILE_REVALIDATE_SECONDS"),
+  getRuntimeEnv("VITE_CACHE_STALE_WHILE_REVALIDATE_SECONDS"),
   23 * 60 * 60
 );
 

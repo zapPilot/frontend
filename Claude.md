@@ -88,16 +88,15 @@ export function useMyData(id: string) {
 Required in `.env.local`:
 
 ```bash
-NEXT_PUBLIC_API_URL=                # Account API endpoint
-NEXT_PUBLIC_ANALYTICS_ENGINE_URL=   # Analytics API endpoint
-NEXT_PUBLIC_INTENT_ENGINE_URL=      # Transaction execution API
+VITE_API_URL=                # Account API endpoint
+VITE_ANALYTICS_ENGINE_URL=   # Analytics API endpoint
+VITE_INTENT_ENGINE_URL=      # Transaction execution API
 ```
 
 # Development Workflow
 
 ```bash
-pnpm run dev              # Start stable webpack dev server
-pnpm run clean:next       # Clear .next before switching bundlers or benchmarking memory
+pnpm run dev              # Start Vite dev server
 pnpm run lint:fix         # Auto-fix linting issues
 pnpm run format           # Format all files
 ```
@@ -114,9 +113,7 @@ pnpm run format           # Format all files
 - **Memory**: Use `cross-env NODE_OPTIONS=--max-old-space-size=3072` for dev/build
 - **Node Runtime**: Coverage/test automation is validated on Node 20 (`.nvmrc` + CI baseline); newer
   majors are best-effort
-- **Bundler Switching**: Run `pnpm run clean:next` before switching between webpack and Turbopack,
-  and before comparing dev-memory baselines
-- **Static Export**: `output: 'export'` in next.config.ts - no server-side features
+- **Env Prefix**: All client-side env vars must use the `VITE_` prefix in `.env.local`
 - **CSP Headers**: Strict Content-Security-Policy - test new external domains in dev first
 - **Wallet Provider**: Access via `useWalletProvider()` hook, not direct Thirdweb hooks
 - **Bundle URLs**: `/bundle?userId=<address>` - handle owner vs visitor mode
@@ -149,7 +146,7 @@ pnpm run format           # Format all files
 
 # Files to Never Modify
 
-- `.next/` - Build output, auto-generated
+- `dist/` - Build output, auto-generated
 - `coverage/` - Test coverage reports
 - `playwright-report/` - E2E test results
 - `tsconfig.tsbuildinfo` - TypeScript cache
