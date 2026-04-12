@@ -303,7 +303,7 @@ export function resetEtlMocks(
 /**
  * Creates a mock router with common navigation methods.
  *
- * Useful for testing components that use Next.js navigation.
+ * Useful for testing components that use the app router adapter.
  *
  * @returns Object with mocked router functions
  *

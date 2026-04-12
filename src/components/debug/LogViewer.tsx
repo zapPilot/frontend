@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { Z_INDEX } from "@/constants/design-system";
+import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
 import { type LogEntry, logger, LogLevel } from "@/utils/logger";
 
 /**
@@ -18,9 +19,9 @@ export function LogViewer() {
   const [filterLevel, setFilterLevel] = useState<LogLevel>(LogLevel.DEBUG);
 
   const shouldShow =
-    (process.env.NODE_ENV === "development" &&
-      process.env["NEXT_PUBLIC_ENABLE_LOG_VIEWER"] === "1") ||
-    process.env["NEXT_PUBLIC_ENABLE_DEBUG_LOGGING"] === "true";
+    (isRuntimeMode("development") &&
+      getRuntimeEnv("NEXT_PUBLIC_ENABLE_LOG_VIEWER") === "1") ||
+    getRuntimeEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING") === "true";
 
   useEffect(() => {
     if (!shouldShow) return;

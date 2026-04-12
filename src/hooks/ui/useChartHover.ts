@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 
+import { isRuntimeMode } from "@/lib/env/runtimeEnv";
 import type { ChartHoverState } from "@/types/ui/chartHover";
 import { logger } from "@/utils";
 import { clamp } from "@/utils/mathUtils";
@@ -188,7 +189,7 @@ export function useChartHover<T>(
           screenY: y * scaleY,
         });
 
-        if (process.env.NODE_ENV === "test") {
+        if (isRuntimeMode("test")) {
           logger.debug("hover update", { chartType, x, y }, "ChartHover");
         }
       };

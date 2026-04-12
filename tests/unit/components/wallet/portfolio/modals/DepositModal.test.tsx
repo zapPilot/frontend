@@ -90,12 +90,15 @@ vi.mock("@/components/ui/modal", () => ({
   ),
 }));
 
-vi.mock("next/image", () => ({
-  default: ({ alt, ...props }: { alt: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- intentional mock of next/image
-    <img alt={alt} data-testid="chain-logo" {...props} />
-  ),
-}));
+vi.mock("@/components/ui", async () => {
+  const actual = await vi.importActual<any>("@/components/ui");
+  return {
+    ...actual,
+    AppImage: ({ alt, ...props }: { alt: string }) => (
+      <img alt={alt} data-testid="chain-logo" {...props} />
+    ),
+  };
+});
 
 const mockDropdownState = {
   dropdownRef: { current: null },

@@ -1,4 +1,5 @@
 // Core UI components - only exports that are actively imported through this index
+export { AppImage } from "./AppImage";
 export { BaseCard } from "./BaseCard";
 export { GradientButton } from "./GradientButton";
 

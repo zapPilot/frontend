@@ -1,7 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
@@ -10,11 +8,13 @@ import { SwitchPromptBanner } from "@/components/layout/banners/SwitchPromptBann
 import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
 import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/bundle/useBundlePage";
+import { lazyImport } from "@/lib/lazy/lazyImport";
+import { useAppPathname, useAppRouter, useAppSearchParams } from "@/lib/routing";
 
-const LazyWalletManager = dynamic(async () => {
-  const mod = await import("@/components/WalletManager");
-  return mod.WalletManager;
-});
+const LazyWalletManager = lazyImport(
+  async () => import("@/components/WalletManager"),
+  mod => mod.WalletManager
+);
 
 interface BundlePageClientProps {
   userId: string;
@@ -29,9 +29,9 @@ export function BundlePageClient({
   etlJobId,
   isNewUser,
 }: BundlePageClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useAppRouter();
+  const pathname = useAppPathname();
+  const searchParams = useAppSearchParams();
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
 

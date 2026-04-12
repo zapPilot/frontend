@@ -1,9 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactElement, type ReactNode, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { type ReactElement, type ReactNode, useRef, useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
@@ -13,10 +11,12 @@ import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/useP
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import type { EtlJobPollingState } from "@/hooks/wallet";
+import { lazyImport } from "@/lib/lazy/lazyImport";
 import {
   buildPortfolioRouteSearchParams,
   readPortfolioRouteState,
 } from "@/lib/portfolio/portfolioRouteState";
+import { useAppPathname, useAppRouter, useAppSearchParams } from "@/lib/routing";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services";
 import type {
@@ -48,29 +48,27 @@ function PortfolioTabLoadingState(): ReactElement {
   );
 }
 
-const LazyAnalyticsView = dynamic(async () => {
-  const mod = await import("@/components/wallet/portfolio/analytics");
-  return mod.AnalyticsView;
-}, {
-  loading: () => <PortfolioTabLoadingState />,
-});
+const LazyAnalyticsView = lazyImport(
+  async () => import("@/components/wallet/portfolio/analytics"),
+  mod => mod.AnalyticsView,
+  { fallback: <PortfolioTabLoadingState /> }
+);
 
-const LazyInvestView = dynamic(async () => {
-  const mod = await import("@/components/wallet/portfolio/views/invest/InvestView");
-  return mod.InvestView;
-}, {
-  loading: () => <PortfolioTabLoadingState />,
-});
+const LazyInvestView = lazyImport(
+  async () => import("@/components/wallet/portfolio/views/invest/InvestView"),
+  mod => mod.InvestView,
+  { fallback: <PortfolioTabLoadingState /> }
+);
 
-const LazyPortfolioModals = dynamic(async () => {
-  const mod = await import("@/components/wallet/portfolio/modals");
-  return mod.PortfolioModals;
-});
+const LazyPortfolioModals = lazyImport(
+  async () => import("@/components/wallet/portfolio/modals"),
+  mod => mod.PortfolioModals
+);
 
-const LazyWalletManager = dynamic(async () => {
-  const mod = await import("@/components/WalletManager");
-  return mod.WalletManager;
-});
+const LazyWalletManager = lazyImport(
+  async () => import("@/components/WalletManager"),
+  mod => mod.WalletManager
+);
 
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
@@ -146,9 +144,9 @@ export function WalletPortfolioPresenter({
   headerBanners,
   footerOverlays,
 }: WalletPortfolioPresenterProps): ReactElement {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useAppRouter();
+  const pathname = useAppPathname();
+  const searchParams = useAppSearchParams();
   const { showToast } = useToast();
   const currentRegime = getRegimeById(data.currentRegime);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -224,7 +222,7 @@ export function WalletPortfolioPresenter({
         currentSearchParams: searchParams,
       });
 
-      // Navigate with Next.js router
+      // Navigate through the app router adapter
       router.push(bundleUrl);
     } catch (error) {
       if (isValidationSearchError(error)) {

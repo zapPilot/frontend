@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { type JSX } from "react";
 
 import { INVEST_SUB_TABS } from "@/components/wallet/portfolio/components/navigation";
+import { lazyImport } from "@/lib/lazy/lazyImport";
 import type { InvestSubTab, MarketSection } from "@/types";
 
 interface InvestViewProps {
@@ -33,33 +33,29 @@ function InvestContentLoadingState(): JSX.Element {
   );
 }
 
-const LazyTradingView = dynamic(async () => {
-  const mod = await import("./trading/TradingView");
-  return mod.TradingView;
-}, {
-  loading: () => <InvestContentLoadingState />,
-});
+const LazyTradingView = lazyImport(
+  async () => import("./trading/TradingView"),
+  mod => mod.TradingView,
+  { fallback: <InvestContentLoadingState /> }
+);
 
-const LazyBacktestingView = dynamic(async () => {
-  const mod = await import("../BacktestingView");
-  return mod.BacktestingView;
-}, {
-  loading: () => <InvestContentLoadingState />,
-});
+const LazyBacktestingView = lazyImport(
+  async () => import("../BacktestingView"),
+  mod => mod.BacktestingView,
+  { fallback: <InvestContentLoadingState /> }
+);
 
-const LazyMarketDashboardView = dynamic(async () => {
-  const mod = await import("./market/MarketDashboardView");
-  return mod.MarketDashboardView;
-}, {
-  loading: () => <InvestContentLoadingState />,
-});
+const LazyMarketDashboardView = lazyImport(
+  async () => import("./market/MarketDashboardView"),
+  mod => mod.MarketDashboardView,
+  { fallback: <InvestContentLoadingState /> }
+);
 
-const LazyConfigManagerView = dynamic(async () => {
-  const mod = await import("./configManager");
-  return mod.ConfigManagerView;
-}, {
-  loading: () => <InvestContentLoadingState />,
-});
+const LazyConfigManagerView = lazyImport(
+  async () => import("./configManager"),
+  mod => mod.ConfigManagerView,
+  { fallback: <InvestContentLoadingState /> }
+);
 
 function getSubTabClassName(isActive: boolean): string {
   const state = isActive ? "text-white" : "text-gray-500 hover:text-gray-300";

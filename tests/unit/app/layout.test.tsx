@@ -3,12 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import RootLayout from "@/app/layout";
 
-// Mock fonts
-vi.mock("next/font/google", () => ({
-  Geist: () => ({ variable: "--font-geist-sans" }),
-  Geist_Mono: () => ({ variable: "--font-geist-mono" }),
-}));
-
 vi.mock("@/components/errors/ErrorBoundary", () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="error-boundary">{children}</div>

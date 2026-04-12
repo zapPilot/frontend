@@ -3,19 +3,21 @@
  * API endpoints and default HTTP settings
  */
 
+import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
+
 // API endpoints configuration
 export const API_ENDPOINTS = {
-  analyticsEngine: process.env["NEXT_PUBLIC_ANALYTICS_ENGINE_URL"] || "",
-  intentEngine: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "",
-  backendApi: process.env["NEXT_PUBLIC_API_URL"] || "",
-  accountApi: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "",
+  analyticsEngine: getRuntimeEnv("NEXT_PUBLIC_ANALYTICS_ENGINE_URL") || "",
+  intentEngine: getRuntimeEnv("NEXT_PUBLIC_INTENT_ENGINE_URL") || "",
+  backendApi: getRuntimeEnv("NEXT_PUBLIC_API_URL") || "",
+  accountApi: getRuntimeEnv("NEXT_PUBLIC_ACCOUNT_API_URL") || "",
   debank: "https://pro-openapi.debank.com/v1",
 } as const;
 
 // Default configuration
 // Updated for analytics endpoints: longer timeout, fewer retries to reduce cancelled request spam
 const DEFAULT_TIMEOUT_MS =
-  process.env.NODE_ENV === "production" ? 30000 : 15000;
+  isRuntimeMode("production") ? 30000 : 15000;
 
 export const HTTP_CONFIG = {
   timeout: DEFAULT_TIMEOUT_MS, // Shorter in dev/test to avoid hanging requests

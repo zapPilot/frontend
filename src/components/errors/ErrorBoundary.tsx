@@ -2,6 +2,7 @@
 
 import { Component, ErrorInfo, ReactNode } from "react";
 
+import { isRuntimeMode } from "@/lib/env/runtimeEnv";
 import { logger } from "@/utils";
 
 import { BaseCard } from "../ui/BaseCard";
@@ -124,7 +125,7 @@ export class ErrorBoundary extends Component<Props, State> {
   private reportError() {
     // In a real app, you would send this to an error tracking service
     // like Sentry, Bugsnag, LogRocket, etc.
-    if (process.env.NODE_ENV === "production") {
+    if (isRuntimeMode("production")) {
       // Example error reporting
       // Sentry.captureException(error, {
       //   contexts: {
@@ -198,7 +199,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </p>
 
                 {/* Error Details (Development only) */}
-                {process.env.NODE_ENV === "development" && error && (
+                {isRuntimeMode("development") && error && (
                   <details className="text-left">
                     <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
                       Error Details

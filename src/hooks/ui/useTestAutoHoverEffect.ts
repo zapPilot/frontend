@@ -7,6 +7,7 @@
 
 import { type MutableRefObject, useEffect, useRef } from "react";
 
+import { isRuntimeMode } from "@/lib/env/runtimeEnv";
 import type { ChartHoverState } from "@/types/ui/chartHover";
 import { clampMin } from "@/utils/mathUtils";
 
@@ -75,7 +76,7 @@ export function useTestAutoHoverEffect<T>(
 
   useEffect(() => {
     if (
-      process.env.NODE_ENV === "test" &&
+      isRuntimeMode("test") &&
       testAutoPopulate &&
       enabled &&
       hoveredPoint == null &&
@@ -119,7 +120,7 @@ export function useTestAutoHoverEffect<T>(
   ]);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== "test" || !testAutoPopulate) return;
+    if (!isRuntimeMode("test") || !testAutoPopulate) return;
 
     if (hoveredPoint != null && isAutoHoverActiveRef.current) {
       if (testAutoHideTimerRef.current != null)

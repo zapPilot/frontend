@@ -36,6 +36,7 @@ let mockUser = {
 
 vi.mock("../../../src/contexts/UserContext", () => ({
   useUser: () => mockUser,
+  UserProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Spy on router.replace
@@ -44,10 +45,10 @@ const hoisted = vi.hoisted(() => ({
   pathname: "/",
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: hoisted.replaceSpy }),
-  useSearchParams: () => new URLSearchParams(""),
-  usePathname: () => hoisted.pathname,
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: () => ({ replace: hoisted.replaceSpy }),
+  useAppSearchParams: () => new URLSearchParams(""),
+  useAppPathname: () => hoisted.pathname,
 }));
 
 describe("DashboardApp redirect to bundle", () => {

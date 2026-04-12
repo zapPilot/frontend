@@ -11,15 +11,14 @@ import { describe, expect, it, vi } from "vitest";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 
-// Mock Next.js navigation
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({
+// Mock routing adapter
+vi.mock("@/lib/routing", () => ({
+  useAppSearchParams: () => new URLSearchParams(),
+  useAppRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
-    prefetch: vi.fn(),
   }),
-  usePathname: () => "/bundle",
+  useAppPathname: () => "/bundle",
 }));
 
 // Mock all child components

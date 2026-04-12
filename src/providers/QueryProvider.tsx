@@ -3,6 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 
+import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
 import { queryClient } from "@/lib/state/queryClient";
 
 type ReactQueryDevtoolsComponent =
@@ -13,8 +14,8 @@ interface QueryProviderProps {
 }
 
 const enableDevtools =
-  process.env.NODE_ENV === "development" &&
-  process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"] === "1";
+  isRuntimeMode("development") &&
+  getRuntimeEnv("NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS") === "1";
 
 function QueryDevtoolsLoader() {
   const [Devtools, setDevtools] = useState<ReactQueryDevtoolsComponent | null>(
@@ -28,11 +29,14 @@ function QueryDevtoolsLoader() {
 
     let isMounted = true;
 
-    void import("@tanstack/react-query-devtools").then(mod => {
+    async function loadDevtools(): Promise<void> {
+      const mod = await import("@tanstack/react-query-devtools");
       if (isMounted) {
         setDevtools(() => mod.ReactQueryDevtools);
       }
-    });
+    }
+
+    void loadDevtools();
 
     return () => {
       isMounted = false;

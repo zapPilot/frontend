@@ -31,9 +31,13 @@ vi.mock("lucide-react", () => {
   };
 });
 
-vi.mock("next/image", () => ({
-  default: (props: any) => <div data-testid="next-image" {...props} />,
-}));
+vi.mock("@/components/ui", async () => {
+  const actual = await vi.importActual<any>("@/components/ui");
+  return {
+    ...actual,
+    AppImage: (props: any) => <div data-testid="app-image" {...props} />,
+  };
+});
 
 vi.mock("@/lib/ui/classNames", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),

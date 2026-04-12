@@ -4,7 +4,7 @@ import path from "node:path";
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup, configure } from "@testing-library/react";
 // Import React for the dynamic component mock
-import React from "react";
+import React, { type JSX } from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { chartMatchers } from "./utils/chartTypeGuards";
@@ -210,13 +210,14 @@ const dynamicOverrides: DynamicOverride[] = [];
   dynamicOverrides.length = 0;
 };
 
-// Mock Next.js dynamic imports to return the actual component in tests
+// Mock app lazy imports to return the actual component in tests
 // This allows individual component mocks to take precedence
-vi.mock("next/dynamic", () => {
+vi.mock("@/lib/lazy/lazyImport", () => {
   return {
-    default: (
+    lazyImport: (
       importFunc: () => Promise<any>,
-      _options?: { loading?: () => JSX.Element }
+      _selectExport?: (module: any) => React.ComponentType<any>,
+      _options?: { fallback?: JSX.Element }
     ) => {
       // Return a component that immediately resolves the import
       const DynamicComponent = (props: any) => {

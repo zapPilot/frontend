@@ -11,7 +11,7 @@
  *
  * @example
  * ```ts
- * const maxAge = toSeconds(process.env.NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS, 3600);
+ * const maxAge = toSeconds("3600", 3600);
  * ```
  */
 export function toSeconds(value: string | undefined, fallback: number): number {

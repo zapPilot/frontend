@@ -2,9 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Check } from "lucide-react";
-import Image from "next/image";
 import type { ReactNode, RefObject } from "react";
 
+import { AppImage } from "@/components/ui";
 import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { cn } from "@/lib/ui/classNames";
 import type { ChainData } from "@/types/domain/transaction";
@@ -90,7 +90,7 @@ function ChainSelector({
       <SelectorTrigger
         onClick={onToggle}
         icon={
-          <Image
+          <AppImage
             src={getChainLogo(selectedChain?.chainId)}
             width={32}
             height={32}
@@ -117,7 +117,7 @@ function ChainSelector({
                 chainId === chain.chainId && "bg-gray-800"
               )}
             >
-              <Image
+              <AppImage
                 src={getChainLogo(chain.chainId)}
                 width={24}
                 height={24}

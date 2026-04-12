@@ -151,13 +151,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests.
    * When a dev server is already running on port 3000 (local dev), we skip
-   * starting a new one to avoid .next/dev/lock conflicts. On CI, we always
-   * start a fresh server on the fallback port. */
+   * starting a second server on the same port. On CI, we always start a fresh
+   * Vite server on the fallback port. */
   ...(devServerRunning
     ? {}
     : {
         webServer: {
-          command: `npm run dev -- --hostname 127.0.0.1 --port ${FALLBACK_PORT}`,
+          command: `npm run dev -- --host 127.0.0.1 --port ${FALLBACK_PORT}`,
           url: PLAYWRIGHT_BASE_URL,
           reuseExistingServer: false,
         },

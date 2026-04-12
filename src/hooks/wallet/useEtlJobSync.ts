@@ -1,8 +1,8 @@
 import { type QueryClient } from "@tanstack/react-query";
-import { type AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useEffect, useRef } from "react";
 
 import { queryKeys } from "@/hooks/queries";
+import type { AppRouterLike } from "@/lib/routing";
 
 import type { EtlJobPollingState } from "./useEtlJobPolling";
 
@@ -14,7 +14,7 @@ interface UseEtlJobSyncParams {
   urlUserId: string;
   refetch: () => Promise<unknown>;
   queryClient: QueryClient;
-  router: AppRouterInstance;
+  router: AppRouterLike;
 }
 
 function shouldClearEtlUrlParams(completingJobId: string): boolean {
@@ -23,7 +23,7 @@ function shouldClearEtlUrlParams(completingJobId: string): boolean {
   return urlJobId === completingJobId || url.searchParams.has("isNewUser");
 }
 
-function clearEtlUrlParams(router: AppRouterInstance): void {
+function clearEtlUrlParams(router: AppRouterLike): void {
   const url = new URL(window.location.href);
   url.searchParams.delete("etlJobId");
   url.searchParams.delete("isNewUser");
