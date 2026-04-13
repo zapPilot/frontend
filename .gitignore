@@ -76,3 +76,4 @@ jscpd-report.json
 deadcode-analysis.json
 *.txt
 .sisyphus/
+*.lcov

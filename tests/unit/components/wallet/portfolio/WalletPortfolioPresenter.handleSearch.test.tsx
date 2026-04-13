@@ -177,6 +177,21 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
       });
     });
 
+    it("returns early for whitespace-only input without calling connectWallet", async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const searchInput = screen.getByTestId("search-input");
+      // "   " is truthy so the onChange mock calls onSearch("   ")
+      // handleSearch trims it to "" and returns early without calling connectWallet
+      await user.type(searchInput, "   ");
+
+      await waitFor(() => {
+        expect(mockConnectWallet).not.toHaveBeenCalled();
+      });
+      expect(mockRouter.push).not.toHaveBeenCalled();
+    });
+
     it("trims whitespace from wallet address input", async () => {
       const user = userEvent.setup();
       mockConnectWallet.mockResolvedValue(NEW_USER_RESPONSE);
@@ -446,6 +461,23 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
   });
 
   describe("Error Handling - Connection Errors", () => {
+    it("treats non-Error thrown values as connection errors (not validation toast)", async () => {
+      const user = userEvent.setup();
+      // Throw a plain string, not an Error instance — isValidationSearchError returns false
+      mockConnectWallet.mockRejectedValue("unexpected string rejection");
+
+      renderComponent();
+
+      const searchInput = screen.getByTestId("search-input");
+      await user.type(searchInput, TEST_WALLET_ADDRESSES.VALID_NEW);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("initial-loading-state")).toBeInTheDocument();
+      });
+
+      expect(mockToast.showToast).not.toHaveBeenCalled();
+    });
+
     it("shows loading fallback for non-validation errors", async () => {
       const user = userEvent.setup();
 

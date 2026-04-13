@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
@@ -130,13 +131,30 @@ vi.mock("@/components/wallet/portfolio/views/invest/InvestView", () => ({
   InvestView: ({
     activeSubTab,
     activeMarketSection,
+    onSubTabChange,
+    onMarketSectionChange,
   }: {
     activeSubTab?: string;
     activeMarketSection?: string;
+    onSubTabChange?: (tab: string) => void;
+    onMarketSectionChange?: (section: string) => void;
   }) => (
     <div data-testid="invest-view">
       Invest View {activeSubTab ?? "trading"}{" "}
       {activeMarketSection ?? "overview"}
+      {/* Trigger buttons expose internal callbacks for sub-navigation tests */}
+      <button
+        data-testid="invest-switch-market"
+        onClick={() => onSubTabChange?.("market")}
+      >
+        Switch to Market
+      </button>
+      <button
+        data-testid="invest-switch-rs"
+        onClick={() => onMarketSectionChange?.("relative-strength")}
+      >
+        Switch to RS
+      </button>
     </div>
   ),
 }));
@@ -164,9 +182,19 @@ vi.mock("@/components/wallet/portfolio/components/WalletMenu", () => ({
   WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
 }));
 
+// NOTE: WalletManager lazy loading is handled by the global lazyImport mock in
+// tests/setup.ts, which intercepts the import path and renders wallet-manager-modal
+// directly. This module-level mock is unused for the lazy path but kept for
+// any direct (non-lazy) import scenarios.
 vi.mock("@/components/WalletManager", () => ({
-  WalletManager: ({ isOpen }: any) =>
-    isOpen ? <div data-testid="wallet-manager">Wallet Manager</div> : null,
+  WalletManager: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="wallet-manager-modal" role="dialog">
+        <button data-testid="close-wallet-manager" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock("@/components/Footer/Footer", () => ({
@@ -174,11 +202,12 @@ vi.mock("@/components/Footer/Footer", () => ({
 }));
 
 vi.mock("@/components/wallet/portfolio/components/navigation", () => ({
-  WalletNavigation: ({ setActiveTab }: any) => (
+  WalletNavigation: ({ setActiveTab, onOpenWalletManager }: any) => (
     <nav data-testid="wallet-navigation">
       <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
       <button onClick={() => setActiveTab("analytics")}>Analytics</button>
       <button onClick={() => setActiveTab("invest")}>Invest</button>
+      <button onClick={onOpenWalletManager}>Open Manager</button>
       <input data-testid="mock-search-input" placeholder="Search wallet..." />
     </nav>
   ),
@@ -1001,5 +1030,171 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
      * - Error handling (validation, connection, wallet conflicts)
      * - URL construction and parameter encoding
      */
+  });
+
+  describe("Wallet Manager Interaction", () => {
+    // The global lazyImport mock in tests/setup.ts handles WalletManager directly.
+    // When isOpen=false it returns null; when isOpen=true it renders wallet-manager-modal
+    // with a close-wallet-manager button. The component-level mock above is not used.
+
+    it("opens WalletManager when onOpenWalletManager is triggered", async () => {
+      const user = userEvent.setup();
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      expect(
+        screen.queryByTestId("wallet-manager-modal")
+      ).not.toBeInTheDocument();
+
+      const nav = screen.getByTestId("wallet-navigation");
+      await user.click(
+        within(nav).getByRole("button", { name: /open manager/i })
+      );
+
+      expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
+    });
+
+    it("closes WalletManager when onClose is triggered", async () => {
+      const user = userEvent.setup();
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      // Open
+      const nav = screen.getByTestId("wallet-navigation");
+      await user.click(
+        within(nav).getByRole("button", { name: /open manager/i })
+      );
+      expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
+
+      // Close via the button rendered by the setup.ts WalletManager handler
+      await user.click(screen.getByTestId("close-wallet-manager"));
+      expect(
+        screen.queryByTestId("wallet-manager-modal")
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Invest Tab Sub-navigation", () => {
+    // The global lazyImport mock in setup.ts renders InvestView as a plain div.
+    // We use the __registerDynamicOverride plugin to inject callback trigger
+    // buttons for these tests only, then clear the override after each test.
+
+    beforeEach(() => {
+      (globalThis as any).__registerDynamicOverride(
+        "wallet/portfolio/views/invest/InvestView",
+        (props: any) =>
+          React.createElement(
+            "div",
+            { "data-testid": "invest-view" },
+            `Invest View ${props?.activeSubTab ?? "trading"} ${props?.activeMarketSection ?? "overview"}`,
+            React.createElement(
+              "button",
+              {
+                "data-testid": "invest-switch-market",
+                onClick: () => props?.onSubTabChange?.("market"),
+              },
+              "Switch to Market"
+            ),
+            React.createElement(
+              "button",
+              {
+                "data-testid": "invest-switch-rs",
+                onClick: () =>
+                  props?.onMarketSectionChange?.("relative-strength"),
+              },
+              "Switch to RS"
+            )
+          )
+      );
+    });
+
+    afterEach(() => {
+      (globalThis as any).__clearDynamicOverrides();
+    });
+
+    it("handleInvestSubTabChange updates URL with new invest sub-tab", async () => {
+      const user = userEvent.setup();
+      currentSearchParams = new URLSearchParams("tab=invest");
+
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      await user.click(screen.getByTestId("invest-switch-market"));
+
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/bundle?tab=invest&invest=market&market=overview",
+        { scroll: false }
+      );
+    });
+
+    it("handleMarketSectionChange updates URL with new market section", async () => {
+      const user = userEvent.setup();
+      currentSearchParams = new URLSearchParams("tab=invest");
+
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      await user.click(screen.getByTestId("invest-switch-rs"));
+
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/bundle?tab=invest&invest=market&market=relative-strength",
+        { scroll: false }
+      );
+    });
+  });
+
+  describe("Footer Overlays", () => {
+    it("renders footerOverlays when provided", () => {
+      const footerOverlays = <div data-testid="footer-overlay">Overlay</div>;
+
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+          footerOverlays={footerOverlays}
+        />
+      );
+
+      expect(screen.getByTestId("footer-overlay")).toBeInTheDocument();
+    });
+  });
+
+  describe("Analytics tab without userId", () => {
+    it("renders null for analytics content when no userId provided", () => {
+      currentSearchParams = new URLSearchParams("tab=analytics");
+
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+          // No userId prop — analytics: userId ? <LazyAnalyticsView /> : null
+        />
+      );
+
+      expect(screen.queryByTestId("analytics-content")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("analytics-view")).not.toBeInTheDocument();
+    });
   });
 });

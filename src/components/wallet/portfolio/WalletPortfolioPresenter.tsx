@@ -51,23 +51,27 @@ function PortfolioTabLoadingState(): ReactElement {
 }
 
 const LazyAnalyticsView = lazyImport(
+  // v8 ignore next -- dynamic import; loader is not invoked in unit tests
   async () => import("@/components/wallet/portfolio/analytics"),
   mod => mod.AnalyticsView,
   { fallback: <PortfolioTabLoadingState /> }
 );
 
 const LazyInvestView = lazyImport(
+  // v8 ignore next -- dynamic import; loader is not invoked in unit tests
   async () => import("@/components/wallet/portfolio/views/invest/InvestView"),
   mod => mod.InvestView,
   { fallback: <PortfolioTabLoadingState /> }
 );
 
 const LazyPortfolioModals = lazyImport(
+  // v8 ignore next -- dynamic import; loader is not invoked in unit tests
   async () => import("@/components/wallet/portfolio/modals"),
   mod => mod.PortfolioModals
 );
 
 const LazyWalletManager = lazyImport(
+  // v8 ignore next -- dynamic import; loader is not invoked in unit tests
   async () => import("@/components/WalletManager"),
   mod => mod.WalletManager
 );
@@ -132,6 +136,7 @@ function buildPathWithSearchParams(
 ): string {
   const queryString = nextSearchParams.toString();
 
+  // v8 ignore next -- queryString is always non-empty when called via syncRouteState
   return queryString ? `${pathname}?${queryString}` : pathname;
 }
 
