@@ -1,6 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import { type ReactElement, useRef, useState } from "react";
-import { useConnect } from "wagmi";
+import { useConnect, useConnectors } from "wagmi";
 
 import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import { useWalletProvider } from "@/providers/WalletProvider";
@@ -30,7 +30,8 @@ export function WalletMenu({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { connectAsync, connectors, isPending: isConnecting } = useConnect();
+  const connectors = useConnectors();
+  const { mutateAsync: connectAsync, isPending: isConnecting } = useConnect();
 
   const closeMenu = (): void => {
     setIsMenuOpen(false);

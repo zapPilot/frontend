@@ -1,4 +1,4 @@
-import { useAccount, useConnect } from "wagmi";
+import { useConnect, useConnection, useConnectors } from "wagmi";
 
 import { WALLET_LABELS } from "@/constants/wallet";
 
@@ -13,8 +13,9 @@ function shortenAddress(address: string): string {
 export function ConnectWalletButton({
   className = "",
 }: ConnectWalletButtonProps) {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
+  const { address, isConnected } = useConnection();
+  const connectors = useConnectors();
+  const { mutate: connect, isPending } = useConnect();
 
   const handleConnect = () => {
     const connector = connectors[0];

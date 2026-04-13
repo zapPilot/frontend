@@ -153,9 +153,9 @@ pnpm run start        # Serve production build
 
 Frontend Next.js commands run through `scripts/run-next.js`, which normalizes the project root
 before spawning Next. Root-triggered commands such as `npm --prefix frontend run dev` therefore use
-the frontend app root instead of the parent `zapPilot` checkout.
-The wrapper also warns when the local Node runtime is not the repo baseline (`.nvmrc` / Node 20),
-since memory comparisons on newer majors are noisy.
+the frontend app root instead of the parent `zapPilot` checkout. The wrapper also warns when the
+local Node runtime is not the repo baseline (`.nvmrc` / Node 20), since memory comparisons on newer
+majors are noisy.
 
 ### Code Quality
 
@@ -220,9 +220,8 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
    pnpm run dev
    ```
 
-   Use `pnpm run dev:turbo` only when you explicitly want Turbopack. Run
-   `pnpm run clean:next` before switching between webpack and Turbopack, and
-   before taking fresh dev-memory measurements.
+   Use `pnpm run dev:turbo` only when you explicitly want Turbopack. Run `pnpm run clean:next`
+   before switching between webpack and Turbopack, and before taking fresh dev-memory measurements.
 
 4. **Access Application**:
    - Web: http://localhost:3000

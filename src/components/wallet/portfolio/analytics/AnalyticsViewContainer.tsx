@@ -5,7 +5,6 @@
  * Follows Container/Presentational pattern
  */
 
-
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";

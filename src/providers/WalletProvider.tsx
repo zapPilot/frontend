@@ -9,9 +9,10 @@ import {
 } from "react";
 import { formatUnits } from "viem";
 import {
-  useAccount,
   useBalance,
   useConnect,
+  useConnection,
+  useConnectors,
   useDisconnect,
   useSignMessage,
   useSwitchChain,
@@ -43,15 +44,14 @@ export function WalletProvider({
     isConnected,
     isConnecting: accountIsConnecting,
     chain,
-  } = useAccount();
-  const {
-    connectAsync,
-    connectors,
-    isPending: connectIsPending,
-  } = useConnect();
-  const { disconnectAsync, isPending: disconnectIsPending } = useDisconnect();
-  const { switchChainAsync } = useSwitchChain();
-  const { signMessageAsync } = useSignMessage();
+  } = useConnection();
+  const connectors = useConnectors();
+  const { mutateAsync: connectAsync, isPending: connectIsPending } =
+    useConnect();
+  const { mutateAsync: disconnectAsync, isPending: disconnectIsPending } =
+    useDisconnect();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
+  const { mutateAsync: signMessageAsync } = useSignMessage();
   const balance = useBalance({
     address,
     chainId: chain?.id,

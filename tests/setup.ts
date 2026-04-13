@@ -241,7 +241,9 @@ vi.mock("@/lib/lazy/lazyImport", () => {
             );
           }
 
-          if (importString.includes("wallet/portfolio/views/invest/InvestView")) {
+          if (
+            importString.includes("wallet/portfolio/views/invest/InvestView")
+          ) {
             return React.createElement(
               "div",
               { "data-testid": "invest-view" },
@@ -344,7 +346,11 @@ vi.mock("@/lib/lazy/lazyImport", () => {
                     "data-testid": "wallet-manager-header",
                   },
                   [
-                    React.createElement("h2", { key: "title" }, "Wallet Manager"),
+                    React.createElement(
+                      "h2",
+                      { key: "title" },
+                      "Wallet Manager"
+                    ),
                     React.createElement(
                       "button",
                       {

@@ -7,7 +7,11 @@ import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
 import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/bundle/useBundlePage";
 import { lazyImport } from "@/lib/lazy/lazyImport";
-import { useAppPathname, useAppRouter, useAppSearchParams } from "@/lib/routing";
+import {
+  useAppPathname,
+  useAppRouter,
+  useAppSearchParams,
+} from "@/lib/routing";
 
 const LazyWalletManager = lazyImport(
   async () => import("@/components/WalletManager"),

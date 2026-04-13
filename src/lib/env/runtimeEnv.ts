@@ -59,7 +59,7 @@ export function getRuntimeEnv(key: string): string | undefined {
  * }
  * ```
  */
-export function getRuntimeMode(): string {
+function getRuntimeMode(): string {
   const processMode = readProcessEnv("NODE_ENV");
   if (typeof processMode === "string" && processMode.length > 0) {
     return processMode;
@@ -84,6 +84,8 @@ export function getRuntimeMode(): string {
  * const isProd = isRuntimeMode("production");
  * ```
  */
-export function isRuntimeMode(mode: "development" | "production" | "test"): boolean {
+export function isRuntimeMode(
+  mode: "development" | "production" | "test"
+): boolean {
   return getRuntimeMode() === MODE_ALIASES[mode];
 }

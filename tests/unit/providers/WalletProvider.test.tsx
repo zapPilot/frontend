@@ -14,6 +14,7 @@ import { useWalletProvider, WalletProvider } from "@/providers/WalletProvider";
 
 // Mock wagmi hooks
 const mockUseAccount = vi.fn();
+const mockUseConnectors = vi.fn();
 const mockUseBalance = vi.fn();
 const mockConnectAsync = vi.fn();
 const mockDisconnectAsync = vi.fn();
@@ -21,22 +22,25 @@ const mockSwitchChainAsync = vi.fn();
 const mockSignMessageAsync = vi.fn();
 
 vi.mock("wagmi", () => ({
-  useAccount: () => mockUseAccount(),
+  // wagmi v2: useAccount was renamed to useConnection
+  useConnection: () => mockUseAccount(),
+  // wagmi v2: connectors are enumerated via a dedicated hook
+  useConnectors: () => mockUseConnectors(),
   useBalance: () => mockUseBalance(),
+  // wagmi v2: mutation hooks use TanStack Mutation shape { mutateAsync, isPending }
   useConnect: () => ({
-    connectAsync: mockConnectAsync,
-    connectors: [{ id: "injected", name: "MetaMask" }],
+    mutateAsync: mockConnectAsync,
     isPending: false,
   }),
   useDisconnect: () => ({
-    disconnectAsync: mockDisconnectAsync,
+    mutateAsync: mockDisconnectAsync,
     isPending: false,
   }),
   useSwitchChain: () => ({
-    switchChainAsync: mockSwitchChainAsync,
+    mutateAsync: mockSwitchChainAsync,
   }),
   useSignMessage: () => ({
-    signMessageAsync: mockSignMessageAsync,
+    mutateAsync: mockSignMessageAsync,
   }),
 }));
 
@@ -95,6 +99,7 @@ describe("WalletProvider", () => {
       isConnecting: false,
       chain: undefined,
     });
+    mockUseConnectors.mockReturnValue([{ id: "injected", name: "MetaMask" }]);
     mockUseBalance.mockReturnValue({ data: undefined, isLoading: false });
     mockConnectAsync.mockResolvedValue(undefined);
     mockDisconnectAsync.mockResolvedValue(undefined);

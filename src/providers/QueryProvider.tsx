@@ -5,7 +5,7 @@ import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
 import { queryClient } from "@/lib/state/queryClient";
 
 type ReactQueryDevtoolsComponent =
-  typeof import("@tanstack/react-query-devtools")["ReactQueryDevtools"];
+  (typeof import("@tanstack/react-query-devtools"))["ReactQueryDevtools"];
 
 interface QueryProviderProps {
   children: ReactNode;

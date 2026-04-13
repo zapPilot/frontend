@@ -11,7 +11,9 @@
     "playwright.config.ts",
     "vitest.config.ts",
     "eslint.config.mjs",
-    "postcss.config.mjs"
+    "postcss.config.mjs",
+    "src/config/chains/definitions.ts",
+    "src/shims/emptyModule.ts"
   ],
 
   "ignoreDependencies": [
@@ -20,7 +22,8 @@
     "eslint-plugin-jsx-a11y",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
-    "pino-pretty"
+    "pino-pretty",
+    "postcss"
   ],
 
   "ignoreIssues": {

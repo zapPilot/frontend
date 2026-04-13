@@ -1,7 +1,9 @@
 import type { ImgHTMLAttributes, ReactElement } from "react";
 
-export interface AppImageProps
-  extends Omit<ImgHTMLAttributes<HTMLImageElement>, "alt" | "src"> {
+export interface AppImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  "alt" | "src"
+> {
   alt: string;
   src: string;
 }
@@ -24,5 +26,7 @@ export function AppImage({
   src,
   ...props
 }: AppImageProps): ReactElement {
-  return <img alt={alt} decoding={decoding} loading={loading} src={src} {...props} />;
+  return (
+    <img alt={alt} decoding={decoding} loading={loading} src={src} {...props} />
+  );
 }

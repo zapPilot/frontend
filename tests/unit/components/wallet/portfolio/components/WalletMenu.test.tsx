@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletMenu } from "@/components/wallet/portfolio/components/navigation/WalletMenu";
 import { WALLET_LABELS } from "@/constants/wallet";
@@ -33,10 +33,10 @@ async function flushMenuAction(action: () => void): Promise<void> {
 
 vi.mock("wagmi", () => ({
   useConnect: () => ({
-    connectAsync: mockConnectAsync,
-    connectors: [{ id: "injected", name: "MetaMask" }],
+    mutateAsync: mockConnectAsync,
     isPending: false,
   }),
+  useConnectors: () => [{ id: "injected", name: "MetaMask" }],
 }));
 
 vi.mock("@/providers/WalletProvider", () => ({

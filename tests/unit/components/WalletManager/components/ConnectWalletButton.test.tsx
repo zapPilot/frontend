@@ -12,12 +12,14 @@ import { WALLET_LABELS } from "@/constants/wallet";
 
 // Mock wagmi hooks
 const mockConnect = vi.fn();
-const mockUseAccount = vi.fn();
+const mockUseConnection = vi.fn();
 const mockUseConnect = vi.fn();
+const mockUseConnectors = vi.fn();
 
 vi.mock("wagmi", () => ({
-  useAccount: () => mockUseAccount(),
+  useConnection: () => mockUseConnection(),
   useConnect: () => mockUseConnect(),
+  useConnectors: () => mockUseConnectors(),
 }));
 
 describe("ConnectWalletButton", () => {
@@ -25,13 +27,13 @@ describe("ConnectWalletButton", () => {
     vi.clearAllMocks();
 
     // Default: disconnected state
-    mockUseAccount.mockReturnValue({
+    mockUseConnection.mockReturnValue({
       address: undefined,
       isConnected: false,
     });
+    mockUseConnectors.mockReturnValue([{ id: "injected", name: "MetaMask" }]);
     mockUseConnect.mockReturnValue({
-      connect: mockConnect,
-      connectors: [{ id: "injected", name: "MetaMask" }],
+      mutate: mockConnect,
       isPending: false,
     });
   });
@@ -58,8 +60,7 @@ describe("ConnectWalletButton", () => {
 
   it("shows 'Connecting...' when connection is pending", () => {
     mockUseConnect.mockReturnValue({
-      connect: mockConnect,
-      connectors: [{ id: "injected", name: "MetaMask" }],
+      mutate: mockConnect,
       isPending: true,
     });
 
@@ -74,7 +75,7 @@ describe("ConnectWalletButton", () => {
   });
 
   it("shows shortened address when connected", () => {
-    mockUseAccount.mockReturnValue({
+    mockUseConnection.mockReturnValue({
       address: "0x1234567890abcdef1234567890abcdef12345678",
       isConnected: true,
     });
@@ -93,9 +94,9 @@ describe("ConnectWalletButton", () => {
   });
 
   it("does not call connect when no connectors available", () => {
+    mockUseConnectors.mockReturnValue([]);
     mockUseConnect.mockReturnValue({
-      connect: mockConnect,
-      connectors: [],
+      mutate: mockConnect,
       isPending: false,
     });
 

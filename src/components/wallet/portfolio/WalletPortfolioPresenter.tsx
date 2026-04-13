@@ -14,7 +14,11 @@ import {
   buildPortfolioRouteSearchParams,
   readPortfolioRouteState,
 } from "@/lib/portfolio/portfolioRouteState";
-import { useAppPathname, useAppRouter, useAppSearchParams } from "@/lib/routing";
+import {
+  useAppPathname,
+  useAppRouter,
+  useAppSearchParams,
+} from "@/lib/routing";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services";
 import type {
