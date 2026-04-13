@@ -832,6 +832,26 @@ describe("buildBacktestTooltipData", () => {
       });
       expect(result?.sections.details).toHaveLength(0);
     });
+
+    it("skips buy-gate detail when buy_gate.block_reason is null (non-string)", () => {
+      // Exercises the `typeof blockReason === "string"` false branch in getBuyGateBlockReason:
+      // plugin exists and is an object, but block_reason is null → returns null → no buy-gate detail
+      const strategies = {
+        my_strat: makeStrategyPoint({
+          signal: { id: "dma_gated_fgi" },
+          decision: { action: "hold", reason: "waiting" },
+          blocked_reason: null,
+          buy_gate: { block_reason: null },
+        }),
+      };
+      const result = buildBacktestTooltipData({
+        payload: minimalPayload(makeMarket(), strategies),
+        sortedStrategyIds: ["my_strat"],
+      });
+      const names = (result?.sections.details ?? []).map(d => d.name);
+      expect(names).not.toContain("my strat buy gate");
+      expect(names).toContain("my strat decision");
+    });
   });
 
   // ------------------------------------------------------------------

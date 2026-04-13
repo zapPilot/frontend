@@ -150,6 +150,24 @@ describe("Analytics Transformers", () => {
       expect(result.points[0].date).toBeDefined();
     });
 
+    it("uses d.date as fallback when toDateKey cannot parse an invalid date string", () => {
+      // Exercises the `dateKey ?? d.date` middle branch:
+      // toDateKey("bad-date") returns null → dateKey is null → falls to d.date
+      const dashboard = {
+        trends: {
+          daily_values: [
+            { date: "bad-date", total_value_usd: 5000 },
+            { date: "2024-01-02", total_value_usd: 10000 },
+          ],
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = transformToPerformanceChart(dashboard);
+
+      expect(result.points).toHaveLength(2);
+      expect(result.points[0].date).toBe("bad-date");
+    });
+
     it("should handle all zero values gracefully", () => {
       const dashboard = {
         trends: {
@@ -538,6 +556,28 @@ describe("Analytics Transformers", () => {
       const result = calculateKeyMetrics(dashboard);
 
       expect(result.sharpe.value).toBe("1.50");
+    });
+
+    it("treats undefined rolling_sharpe_ratio as 0 via ?? fallback", () => {
+      // Exercises the `selector(d) ?? 0` right branch (line 183).
+      // When rolling_sharpe_ratio is undefined, selector returns undefined,
+      // and ?? 0 replaces it. 0 is finite so it's included in the average.
+      const dashboard = {
+        trends: { daily_values: [] },
+        rolling_analytics: {
+          sharpe: {
+            rolling_sharpe_data: [
+              { date: "2024-01-01", rolling_sharpe_ratio: undefined },
+              { date: "2024-01-02", rolling_sharpe_ratio: 2.0 },
+            ],
+          },
+        },
+      } as unknown as UnifiedDashboardResponse;
+
+      const result = calculateKeyMetrics(dashboard);
+
+      // Average of [0, 2.0] = 1.0
+      expect(result.sharpe.value).toBe("1.00");
     });
 
     it("should calculate Win Rate from daily PnL percentages", () => {

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 interface IconBadgeProps {
@@ -32,7 +30,6 @@ export function IconBadge({ src, alt, size = "md", fallback }: IconBadgeProps) {
   return (
     <div className={`relative ${sizeClasses}`}>
       {imageStatus !== "error" && (
-        /* eslint-disable-next-line @next/next/no-img-element */
         <img
           src={src}
           alt={alt}

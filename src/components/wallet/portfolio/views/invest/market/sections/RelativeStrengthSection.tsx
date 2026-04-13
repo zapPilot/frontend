@@ -1,5 +1,3 @@
-"use client";
-
 import { type JSX, useMemo, useState } from "react";
 import {
   CartesianGrid,

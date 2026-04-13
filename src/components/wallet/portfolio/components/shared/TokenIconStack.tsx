@@ -1,5 +1,3 @@
-"use client";
-
 import { IconBadge } from "./IconBadge";
 
 interface TokenIconStackProps {

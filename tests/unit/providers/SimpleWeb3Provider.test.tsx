@@ -1,7 +1,7 @@
 /**
  * SimpleWeb3Provider Unit Tests
  *
- * Tests for the ThirdWeb provider wrapper
+ * Tests for the wagmi WagmiProvider wrapper
  */
 
 import { render, screen } from "@testing-library/react";
@@ -10,20 +10,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
 
-// Mock thirdweb/react
-vi.mock("thirdweb/react", () => ({
-  ThirdwebProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="thirdweb-provider">{children}</div>
+// Mock wagmi
+vi.mock("wagmi", () => ({
+  WagmiProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="wagmi-provider">{children}</div>
   ),
-  AutoConnect: () => <div data-testid="auto-connect" />,
 }));
 
-vi.mock("@/config/wallets", () => ({
-  DEFAULT_WALLETS: [],
-}));
-
-vi.mock("@/utils/thirdweb", () => ({
-  THIRDWEB_CLIENT: {},
+vi.mock("@/config/wagmi", () => ({
+  wagmiConfig: {},
 }));
 
 describe("SimpleWeb3Provider", () => {
@@ -38,23 +33,13 @@ describe("SimpleWeb3Provider", () => {
     expect(screen.getByText("Web3 Content")).toBeInTheDocument();
   });
 
-  it("should wrap children with ThirdwebProvider", () => {
+  it("should wrap children with WagmiProvider", () => {
     render(
       <SimpleWeb3Provider>
         <span>Content</span>
       </SimpleWeb3Provider>
     );
 
-    expect(screen.getByTestId("thirdweb-provider")).toBeInTheDocument();
-  });
-
-  it("should include AutoConnect component", () => {
-    render(
-      <SimpleWeb3Provider>
-        <span>Content</span>
-      </SimpleWeb3Provider>
-    );
-
-    expect(screen.getByTestId("auto-connect")).toBeInTheDocument();
+    expect(screen.getByTestId("wagmi-provider")).toBeInTheDocument();
   });
 });

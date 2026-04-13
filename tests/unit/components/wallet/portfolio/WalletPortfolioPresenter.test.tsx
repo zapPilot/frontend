@@ -94,18 +94,14 @@ const pushMock = vi.fn();
 const replaceMock = vi.fn();
 let currentSearchParams = new URLSearchParams();
 
-// Mock Next.js router
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
+// Mock routing adapter
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: () => ({
     push: pushMock,
     replace: replaceMock,
-    back: vi.fn(),
-    forward: vi.fn(),
-    refresh: vi.fn(),
-    prefetch: vi.fn(),
   }),
-  useSearchParams: () => currentSearchParams,
-  usePathname: () => "/bundle",
+  useAppSearchParams: () => currentSearchParams,
+  useAppPathname: () => "/bundle",
 }));
 
 // Mock useToast hook
@@ -126,7 +122,7 @@ vi.mock("framer-motion", async () => {
 });
 
 // Mock child components to simplify testing
-vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
+vi.mock("@/components/wallet/portfolio/analytics", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics View</div>,
 }));
 
@@ -168,7 +164,7 @@ vi.mock("@/components/wallet/portfolio/components/WalletMenu", () => ({
   WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
 }));
 
-vi.mock("@/components/WalletManager/WalletManager", () => ({
+vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({ isOpen }: any) =>
     isOpen ? <div data-testid="wallet-manager">Wallet Manager</div> : null,
 }));

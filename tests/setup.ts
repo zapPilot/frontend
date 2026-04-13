@@ -4,7 +4,7 @@ import path from "node:path";
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup, configure } from "@testing-library/react";
 // Import React for the dynamic component mock
-import React from "react";
+import React, { type JSX } from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { chartMatchers } from "./utils/chartTypeGuards";
@@ -210,98 +210,169 @@ const dynamicOverrides: DynamicOverride[] = [];
   dynamicOverrides.length = 0;
 };
 
-// Mock Next.js dynamic imports to return the actual component in tests
+// Mock app lazy imports to return the actual component in tests
 // This allows individual component mocks to take precedence
-vi.mock("next/dynamic", () => {
+vi.mock("@/lib/lazy/lazyImport", () => {
   return {
-    default: (
+    lazyImport: (
       importFunc: () => Promise<any>,
-      _options?: { loading?: () => JSX.Element }
+      _selectExport?: (module: any) => React.ComponentType<any>,
+      _options?: { fallback?: JSX.Element }
     ) => {
       // Return a component that immediately resolves the import
       const DynamicComponent = (props: any) => {
         try {
+          const importString = importFunc.toString();
+
+          const override = dynamicOverrides.find(({ matcher }) =>
+            typeof matcher === "string"
+              ? importString.includes(matcher)
+              : matcher.test(importString)
+          );
+          if (override) {
+            return override.renderer(props);
+          }
+
+          if (importString.includes("wallet/portfolio/analytics")) {
+            return React.createElement(
+              "div",
+              { "data-testid": "analytics-view" },
+              "Analytics View"
+            );
+          }
+
+          if (
+            importString.includes("wallet/portfolio/views/invest/InvestView")
+          ) {
+            return React.createElement(
+              "div",
+              { "data-testid": "invest-view" },
+              `Invest View ${props?.activeSubTab ?? "trading"} ${
+                props?.activeMarketSection ?? "overview"
+              }`
+            );
+          }
+
+          if (importString.includes("trading/TradingView")) {
+            return React.createElement(
+              "div",
+              { "data-testid": "trading-view" },
+              props?.userId ?? "no-user"
+            );
+          }
+
+          if (importString.includes("BacktestingView")) {
+            return React.createElement("div", {
+              "data-testid": "backtesting-view",
+            });
+          }
+
+          if (importString.includes("market/MarketDashboardView")) {
+            return React.createElement(
+              "div",
+              { "data-testid": "market-dashboard-view" },
+              [
+                React.createElement(
+                  "span",
+                  { key: "active-section" },
+                  props?.activeSection ?? "overview"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    key: "switch-section",
+                    type: "button",
+                    onClick: () =>
+                      props?.onSectionChange?.("relative-strength"),
+                  },
+                  "Select Relative Strength"
+                ),
+              ]
+            );
+          }
+
+          if (importString.includes("configManager")) {
+            return React.createElement("div", {
+              "data-testid": "config-manager-view",
+            });
+          }
+
+          if (importString.includes("wallet/portfolio/modals")) {
+            return React.createElement(
+              "div",
+              { "data-testid": "portfolio-modals" },
+              "Portfolio Modals Container"
+            );
+          }
+
+          if (importString.includes("WalletManager")) {
+            if (!props?.isOpen) {
+              return null;
+            }
+
+            const emailSubscribeControls = props?.onEmailSubscribed
+              ? [
+                  React.createElement(
+                    "button",
+                    {
+                      key: "confirm-email",
+                      type: "button",
+                      "data-testid": "confirm-email-subscribe",
+                      onClick: () => props.onEmailSubscribed?.(),
+                    },
+                    "Confirm Subscribe"
+                  ),
+                  React.createElement(
+                    "button",
+                    {
+                      key: "subscribe-from-manager",
+                      type: "button",
+                      "data-testid": "subscribe-from-wallet-manager",
+                      onClick: () => props.onEmailSubscribed?.(),
+                    },
+                    "Subscribe"
+                  ),
+                ]
+              : [];
+
+            return React.createElement(
+              "div",
+              { "data-testid": "wallet-manager-modal", role: "dialog" },
+              [
+                React.createElement(
+                  "div",
+                  {
+                    key: "header",
+                    "data-testid": "wallet-manager-header",
+                  },
+                  [
+                    React.createElement(
+                      "h2",
+                      { key: "title" },
+                      "Wallet Manager"
+                    ),
+                    React.createElement(
+                      "button",
+                      {
+                        key: "close",
+                        type: "button",
+                        "data-testid": "close-wallet-manager",
+                        onClick: () => props?.onClose?.(),
+                      },
+                      "Close"
+                    ),
+                  ]
+                ),
+                ...emailSubscribeControls,
+              ]
+            );
+          }
+
           // Try to resolve the import immediately for tests
           const modulePromise = importFunc();
 
           // If it's a Promise, we can't resolve it synchronously, so return a mock
           if (modulePromise && typeof modulePromise.then === "function") {
-            // Determine what component is being imported based on the import function
-            const importString = importFunc.toString();
-
-            const override = dynamicOverrides.find(({ matcher }) =>
-              typeof matcher === "string"
-                ? importString.includes(matcher)
-                : matcher.test(importString)
-            );
-            if (override) {
-              return override.renderer(props);
-            }
-
-            // Special-case WalletManager so tests can interact with its props synchronously
-            if (importString.includes("WalletManager")) {
-              if (!props?.isOpen) {
-                return null;
-              }
-
-              const emailSubscribeControls = props?.onEmailSubscribed
-                ? [
-                    React.createElement(
-                      "button",
-                      {
-                        key: "confirm-email",
-                        type: "button",
-                        "data-testid": "confirm-email-subscribe",
-                        onClick: () => props.onEmailSubscribed?.(),
-                      },
-                      "Confirm Subscribe"
-                    ),
-                    React.createElement(
-                      "button",
-                      {
-                        key: "subscribe-from-manager",
-                        type: "button",
-                        "data-testid": "subscribe-from-wallet-manager",
-                        onClick: () => props.onEmailSubscribed?.(),
-                      },
-                      "Subscribe"
-                    ),
-                  ]
-                : [];
-
-              return React.createElement(
-                "div",
-                { "data-testid": "wallet-manager-modal", role: "dialog" },
-                [
-                  React.createElement(
-                    "div",
-                    {
-                      key: "header",
-                      "data-testid": "wallet-manager-header",
-                    },
-                    [
-                      React.createElement(
-                        "h2",
-                        { key: "title" },
-                        "Wallet Manager"
-                      ),
-                      React.createElement(
-                        "button",
-                        {
-                          key: "close",
-                          type: "button",
-                          "data-testid": "close-wallet-manager",
-                          onClick: () => props?.onClose?.(),
-                        },
-                        "Close"
-                      ),
-                    ]
-                  ),
-                  ...emailSubscribeControls,
-                ]
-              );
-            }
-
             // In test environment, return a generic placeholder for other components
             return React.createElement(
               "div",

@@ -1,16 +1,16 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { act } from "@testing-library/react";
-import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { EtlJobPollingState } from "@/hooks/wallet/useEtlJobPolling";
 import { useEtlJobSync } from "@/hooks/wallet/useEtlJobSync";
+import type { AppRouterLike } from "@/lib/routing";
 
 import { renderHook } from "../../../test-utils";
 
 describe("useEtlJobSync", () => {
   let mockQueryClient: QueryClient;
-  let mockRouter: AppRouterInstance;
+  let mockRouter: AppRouterLike;
   let mockStartPolling: vi.Mock;
   let mockCompleteTransition: vi.Mock;
   let mockRefetch: vi.Mock;
@@ -27,7 +27,8 @@ describe("useEtlJobSync", () => {
 
     mockRouter = {
       replace: vi.fn(),
-    } as unknown as AppRouterInstance;
+      push: vi.fn(),
+    };
 
     mockStartPolling = vi.fn();
     mockCompleteTransition = vi.fn();

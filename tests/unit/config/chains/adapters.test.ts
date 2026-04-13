@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { getMainnetChains, toThirdWebChains } from "@/config/chains/adapters";
+import { getMainnetChains } from "@/config/chains/adapters";
 import type { BaseChainConfig } from "@/config/chains/types";
 
 const mockChainWithExplorer: BaseChainConfig = {
@@ -61,59 +61,6 @@ const mockUnsupportedChain: BaseChainConfig = {
 };
 
 describe("adapters", () => {
-  describe("toThirdWebChains", () => {
-    it("should convert chain configs to ThirdWeb format", () => {
-      const result = toThirdWebChains([mockChainWithExplorer]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        id: 42161,
-        name: "Arbitrum One",
-        rpc: "https://arb1.arbitrum.io/rpc",
-        nativeCurrency: {
-          name: "Ether",
-          symbol: "ETH",
-          decimals: 18,
-        },
-      });
-    });
-
-    it("should include block explorers when available", () => {
-      const result = toThirdWebChains([mockChainWithExplorer]);
-
-      expect(result[0].blockExplorers).toBeDefined();
-      expect(result[0].blockExplorers).toHaveLength(1);
-      expect(result[0].blockExplorers?.[0]).toMatchObject({
-        name: "Arbiscan",
-        url: "https://arbiscan.io",
-      });
-    });
-
-    it("should handle chains without block explorers", () => {
-      const result = toThirdWebChains([mockChainWithoutExplorer]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].blockExplorers).toBeUndefined();
-    });
-
-    it("should convert multiple chains", () => {
-      const result = toThirdWebChains([
-        mockChainWithExplorer,
-        mockChainWithoutExplorer,
-      ]);
-
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe(42161);
-      expect(result[1].id).toBe(1337);
-    });
-
-    it("should return empty array for empty input", () => {
-      const result = toThirdWebChains([]);
-
-      expect(result).toEqual([]);
-    });
-  });
-
   describe("getMainnetChains", () => {
     it("should filter to only supported chains", () => {
       const result = getMainnetChains([

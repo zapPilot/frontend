@@ -1,10 +1,8 @@
-"use client";
-
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { useAppRouter } from "@/lib/routing";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import {
   type BundleUser,
@@ -89,7 +87,7 @@ export function useBundlePage(
   userId: string,
   walletId?: string
 ): UseBundlePageResult {
-  const router = useRouter();
+  const router = useAppRouter();
   const fallbackQueryClient = useMemo(() => new QueryClient(), []);
   const queryClient = useSafeQueryClient(fallbackQueryClient);
   const { userInfo, isConnected, connectedWallet, loading } = useUser();

@@ -5,7 +5,7 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
-      "description": "Development guidelines for Next.js 15, React 19, Tailwind CSS v4, Radix UI, and ThirdWeb SDK",
+      "description": "Development guidelines for Next.js 16, React 19, Tailwind CSS v4, and wagmi + viem",
       "fileTriggers": {
         "pathPatterns": [
           "src/**/*.{ts,tsx}",
@@ -29,7 +29,7 @@
           "react query",
           "tanstack query",
           "web3",
-          "thirdweb",
+          "wagmi",
           "wallet",
           "route",
           "routing",

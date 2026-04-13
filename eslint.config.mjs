@@ -1,7 +1,9 @@
-import { FlatCompat } from "@eslint/eslintrc";
 import importPlugin from "eslint-plugin-import";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import noSecrets from "eslint-plugin-no-secrets";
 import promisePlugin from "eslint-plugin-promise";
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
@@ -13,27 +15,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const eslintProjectConfig = join(__dirname, "tsconfig.eslint.json");
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
 const eslintConfig = [
   {
     ignores: [
       ".jscpd/**/*",
       "jscpd-report/**/*",
       "**/*.md",
-      ".next/**/*",
       "coverage/**/*",
       "out/**/*",
+      "dist/**/*",
       "playwright-report/**/*",
       "test-results/**/*",
       ".claude/**/*",
       "**/__snapshots__/**",
     ],
   },
-  // Base Next.js configs
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
 
   // TypeScript strict and stylistic configs
   ...tseslint.configs.strict,
@@ -65,8 +61,16 @@ const eslintConfig = [
   // Custom rules and plugins
   {
     plugins: {
+      react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
+      "jsx-a11y": jsxA11y,
       'simple-import-sort': simpleImportSort,
       'no-secrets': noSecrets,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
     },
     languageOptions: {
       parserOptions: {
@@ -143,7 +147,7 @@ const eslintConfig = [
       // ========================================
       // React Specific Rules
       // ========================================
-      "react/react-in-jsx-scope": "off",                        // Not needed in Next.js
+      "react/react-in-jsx-scope": "off",                        // Not needed in modern React
       "react/prop-types": "off",                                // Using TypeScript
       "react/display-name": "error",
       "react/jsx-key": "error",
@@ -194,11 +198,11 @@ const eslintConfig = [
       'import/newline-after-import': 'error',             // Blank line after imports
       'import/no-anonymous-default-export': 'warn',       // Named exports preferred
 
-      // Circular dependency detection (disabled due to resolver complexity with Next.js)
-      'import/no-cycle': 'off',                           // Disabled: complex setup needed for Next.js path aliases
+      // Circular dependency detection remains noisy with project-wide aliases
+      'import/no-cycle': 'off',
 
-      // Unused exports detection (disabled for Next.js App Router)
-      'import/no-unused-modules': 'off',                  // Conflicts with Next.js conventions
+      // Disabled because route entrypoints and barrel exports confuse static usage checks
+      'import/no-unused-modules': 'off',
     }
   },
 
@@ -335,14 +339,12 @@ const eslintConfig = [
   },
   {
     ignores: [
-      ".next/**",
       "out/**",
       "build/**",
       "dist/**",
       "coverage/**",
       "public/**",
-      "node_modules/**",
-      "next-env.d.ts"
+      "node_modules/**"
     ]
   }
 ];

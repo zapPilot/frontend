@@ -1,15 +1,22 @@
-"use client";
-
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
 import { EmailReminderBanner } from "@/components/layout/banners/EmailReminderBanner";
 import { SwitchPromptBanner } from "@/components/layout/banners/SwitchPromptBanner";
 import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
-import { WalletManager } from "@/components/WalletManager";
 import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/bundle/useBundlePage";
+import { lazyImport } from "@/lib/lazy/lazyImport";
+import {
+  useAppPathname,
+  useAppRouter,
+  useAppSearchParams,
+} from "@/lib/routing";
+
+const LazyWalletManager = lazyImport(
+  async () => import("@/components/WalletManager"),
+  mod => mod.WalletManager
+);
 
 interface BundlePageClientProps {
   userId: string;
@@ -24,9 +31,9 @@ export function BundlePageClient({
   etlJobId,
   isNewUser,
 }: BundlePageClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useAppRouter();
+  const pathname = useAppPathname();
+  const searchParams = useAppSearchParams();
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
 
@@ -104,7 +111,7 @@ export function BundlePageClient({
           {vm.overlays.showQuickSwitch && (
             <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
           )}
-          <WalletManager
+          <LazyWalletManager
             isOpen={vm.overlays.isWalletManagerOpen}
             onClose={vm.overlays.closeWalletManager}
             onEmailSubscribed={vm.overlays.onEmailSubscribed}

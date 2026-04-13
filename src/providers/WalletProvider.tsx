@@ -1,5 +1,3 @@
-"use client";
-
 import {
   createContext,
   type ReactElement,
@@ -9,24 +7,20 @@ import {
   useMemo,
   useState,
 } from "react";
+import { formatUnits } from "viem";
 import {
-  useActiveAccount,
-  useActiveWallet,
-  useActiveWalletChain,
+  useBalance,
   useConnect,
-  useConnectedWallets,
+  useConnection,
+  useConnectors,
   useDisconnect,
-  useSetActiveWallet,
-  useSwitchActiveWalletChain,
-  useWalletBalance,
-} from "thirdweb/react";
+  useSignMessage,
+  useSwitchChain,
+} from "wagmi";
 
 import {
   buildWalletAccount,
   buildWalletChain,
-  buildWalletList,
-  createChainSwitchTarget,
-  getWalletAddress,
   handleWalletOperationError,
   type SimplifiedChain,
   type SimplifiedWalletAccount,
@@ -34,7 +28,6 @@ import {
 } from "@/providers/walletProviderUtils";
 import type { WalletProviderInterface } from "@/types";
 import { walletLogger } from "@/utils";
-import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 type WalletContextValue = WalletProviderInterface;
 
@@ -46,81 +39,75 @@ interface WalletProviderProps {
 export function WalletProvider({
   children,
 }: WalletProviderProps): ReactElement {
-  const account = useActiveAccount();
-  const wallet = useActiveWallet();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const chain = useActiveWalletChain();
-  const switchChain = useSwitchActiveWalletChain();
-  const balance = useWalletBalance({
+  const {
+    address,
+    isConnected,
+    isConnecting: accountIsConnecting,
     chain,
-    address: account?.address,
-    client: THIRDWEB_CLIENT,
+  } = useConnection();
+  const connectors = useConnectors();
+  const { mutateAsync: connectAsync, isPending: connectIsPending } =
+    useConnect();
+  const { mutateAsync: disconnectAsync, isPending: disconnectIsPending } =
+    useDisconnect();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
+  const { mutateAsync: signMessageAsync } = useSignMessage();
+  const balance = useBalance({
+    address,
+    chainId: chain?.id,
   });
-  const connectedWallets = useConnectedWallets();
-  const setActiveWallet = useSetActiveWallet();
   const [error, setError] = useState<WalletError | null>(null);
 
   const walletList = useMemo(() => {
-    return buildWalletList(connectedWallets, account?.address);
-  }, [connectedWallets, account?.address]);
+    if (!address) return [];
+    return [{ address, isActive: true }];
+  }, [address]);
 
   const handleSwitchActiveWallet = useCallback(
-    async (address: string): Promise<void> => {
-      const targetWallet = connectedWallets.find(
-        walletItem => getWalletAddress(walletItem) === address
-      );
-
-      if (!targetWallet) {
-        const errorMessage = `Wallet ${address} not found`;
-        setError({ message: errorMessage, code: "WALLET_NOT_FOUND" });
-        throw new Error(errorMessage);
-      }
-
-      try {
-        setError(null);
-        await setActiveWallet(targetWallet);
-        walletLogger.info("Switched active wallet to", address);
-      } catch (err) {
-        handleWalletOperationError(
-          setError,
-          err,
-          "Failed to switch active wallet",
-          "SWITCH_WALLET_ERROR",
-          "Failed to switch active wallet:"
-        );
-      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (_address: string): Promise<void> => {
+      // wagmi uses a single-account model; multi-wallet switching is not applicable
+      walletLogger.info("switchActiveWallet is a no-op in wagmi mode");
     },
-    [connectedWallets, setActiveWallet]
+    []
+  );
+
+  const formattedBalance: string | undefined = useMemo(
+    () =>
+      balance.data
+        ? formatUnits(balance.data.value, balance.data.decimals)
+        : undefined,
+    [balance.data]
   );
 
   const walletAccount = useMemo((): SimplifiedWalletAccount | null => {
-    return buildWalletAccount(account?.address, balance.data?.displayValue);
-  }, [account?.address, balance.data?.displayValue]);
+    return buildWalletAccount(address, formattedBalance);
+  }, [address, formattedBalance]);
 
   const walletChain = useMemo((): SimplifiedChain | null => {
     return buildWalletChain(chain);
   }, [chain]);
 
-  const isConnected = Boolean(account?.address);
-  const isConnecting = Boolean(!account?.address && wallet);
-  const isDisconnecting = Boolean(account?.address && !wallet);
+  const isConnectingState = accountIsConnecting || connectIsPending;
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   const handleConnect = useCallback(async () => {
-    if (!connect) return;
+    const connector = connectors[0];
+    if (!connector) {
+      setError({
+        message:
+          "No wallet detected. Please install MetaMask or another wallet extension.",
+        code: "NO_WALLET",
+      });
+      return;
+    }
 
     try {
       setError(null);
-      const availableWallet = connectedWallets[0];
-      if (!availableWallet) {
-        throw new Error("No wallet available");
-      }
-
-      await connect(availableWallet);
+      await connectAsync({ connector });
     } catch (err) {
       handleWalletOperationError(
         setError,
@@ -130,14 +117,12 @@ export function WalletProvider({
         "Failed to connect wallet:"
       );
     }
-  }, [connect, connectedWallets]);
+  }, [connectAsync, connectors]);
 
   const handleDisconnect = useCallback(async () => {
-    if (!disconnect || !wallet) return;
-
     try {
       setError(null);
-      await Promise.resolve(disconnect(wallet));
+      await disconnectAsync();
     } catch (err) {
       handleWalletOperationError(
         setError,
@@ -147,39 +132,36 @@ export function WalletProvider({
         "Failed to disconnect wallet:"
       );
     }
-  }, [disconnect, wallet]);
+  }, [disconnectAsync]);
 
   const handleSwitchChain = useCallback(
     async (chainId: number): Promise<void> => {
-      if (!switchChain) return;
+      if (!switchChainAsync) return;
 
       try {
-        await switchChain(createChainSwitchTarget(chainId));
+        await switchChainAsync({ chainId });
       } catch (err) {
         walletLogger.error("Failed to switch chain:", err);
         throw err;
       }
     },
-    [switchChain]
+    [switchChainAsync]
   );
 
   const signMessage = useCallback(
     async (message: string): Promise<string> => {
-      if (!account) {
+      if (!address) {
         throw new Error("No account connected");
       }
 
       try {
-        const signature = await Promise.resolve(
-          account.signMessage({ message })
-        );
-        return signature;
+        return await signMessageAsync({ message });
       } catch (err) {
         walletLogger.error("Failed to sign message:", err);
         throw err;
       }
     },
-    [account]
+    [address, signMessageAsync]
   );
 
   const contextValue = useMemo<WalletContextValue>(
@@ -189,8 +171,8 @@ export function WalletProvider({
       switchChain: handleSwitchChain,
       connect: handleConnect,
       disconnect: handleDisconnect,
-      isConnecting,
-      isDisconnecting,
+      isConnecting: isConnectingState,
+      isDisconnecting: disconnectIsPending,
       isConnected,
       error,
       clearError,
@@ -205,8 +187,8 @@ export function WalletProvider({
       handleSwitchChain,
       handleConnect,
       handleDisconnect,
-      isConnecting,
-      isDisconnecting,
+      isConnectingState,
+      disconnectIsPending,
       isConnected,
       error,
       clearError,

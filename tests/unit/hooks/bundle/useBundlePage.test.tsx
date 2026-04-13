@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { useRouter } from "next/navigation";
 import { describe, expect, it, vi } from "vitest";
 
 import { useUser } from "@/contexts/UserContext";
@@ -11,14 +10,16 @@ import {
   computeShowQuickSwitch,
   useBundlePage,
 } from "@/hooks/bundle/useBundlePage";
+import { useAppRouter } from "@/lib/routing";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { getBundleUser, isOwnBundle } from "@/services/bundleService";
 import { logger } from "@/utils/logger";
 
 // Mock dependencies
-vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(),
-  usePathname: vi.fn(() => "/bundle"),
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: vi.fn(),
+  useAppPathname: vi.fn(() => "/bundle"),
+  useAppSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
 vi.mock("@/contexts/UserContext", () => ({
@@ -49,7 +50,7 @@ describe("useBundlePage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue(mockRouter as any);
+    vi.mocked(useAppRouter).mockReturnValue(mockRouter as any);
     window.history.pushState({}, "", "/bundle");
 
     // Default UserContext

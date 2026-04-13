@@ -1,5 +1,3 @@
-"use client";
-
 import { type RefObject, useCallback, useRef, useState } from "react";
 
 import { useClickOutside } from "@/hooks/ui/useClickOutside";

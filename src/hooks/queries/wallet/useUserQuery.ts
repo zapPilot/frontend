@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useActiveAccount } from "thirdweb/react";
+import { useAccount } from "wagmi";
 
 import { queryKeys } from "@/lib/state/queryClient";
 import type { UserProfileResponse } from "@/schemas/api/accountSchemas";
@@ -109,8 +109,8 @@ export function useUserByWallet(walletAddress: string | null) {
 
 // Hook to access current user data (combines wallet connection + user query)
 export function useCurrentUser() {
-  const activeAccount = useActiveAccount();
-  const connectedWallet = activeAccount?.address || null;
+  const { address } = useAccount();
+  const connectedWallet = address ?? null;
 
   const userQuery = useUserByWallet(connectedWallet);
 

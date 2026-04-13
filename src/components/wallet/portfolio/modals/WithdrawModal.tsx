@@ -1,5 +1,3 @@
-"use client";
-
 import { Coins, Layers } from "lucide-react";
 import type { ReactNode } from "react";
 

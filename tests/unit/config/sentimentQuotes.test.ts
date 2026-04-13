@@ -113,6 +113,22 @@ describe("sentimentQuotes", () => {
 
       Math.random = originalRandom;
     });
+
+    it("falls back to DEFAULT_QUOTE when Math.random returns 1 (out-of-bounds index)", () => {
+      // Exercises the `quotes[index] ?? { DEFAULT_QUOTE... }` false branch:
+      // Math.floor(1.0 * 2) = 2, quotes[2] is undefined → uses DEFAULT_QUOTE fallback
+      const originalRandom = Math.random;
+      Math.random = () => 1;
+
+      const result = getQuoteForSentiment(10);
+      expect(result.sentiment).toBe("Extreme Fear");
+      // The fallback returns DEFAULT_QUOTE content
+      expect(result.quote).toBe(
+        "Stay balanced when the crowd swings too far in either direction."
+      );
+
+      Math.random = originalRandom;
+    });
   });
 
   describe("selectQuote edge cases", () => {

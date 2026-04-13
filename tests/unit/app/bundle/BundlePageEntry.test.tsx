@@ -9,12 +9,16 @@ const { mockUseSearchParams } = vi.hoisted(() => ({
   mockUseSearchParams: vi.fn(),
 }));
 
-// Mock Next.js navigation
+// Mock routing adapter
 const mockGet = vi.fn();
 
-vi.mock("next/navigation", () => ({
-  useSearchParams: mockUseSearchParams,
-  usePathname: () => "/bundle",
+vi.mock("@/lib/routing", () => ({
+  useAppSearchParams: mockUseSearchParams,
+  useAppPathname: () => "/bundle",
+}));
+
+vi.mock("../../../../src/app/bundle/BundleProviders", () => ({
+  BundleProviders: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock BundlePageClient - captures all props for inspection
@@ -157,7 +161,7 @@ describe("BundlePageEntry", () => {
     });
   });
 
-  describe("Integration with Next.js Router", () => {
+  describe("Integration with app router", () => {
     it("calls useSearchParams hook", () => {
       mockGet.mockReturnValue("test-user");
 

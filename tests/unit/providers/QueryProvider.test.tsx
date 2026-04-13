@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { render, screen } from "../../test-utils";
+import { render, screen, waitFor } from "../../test-utils";
 
 vi.mock("@/lib/state/queryClient", () => {
   const { QueryClient } = require("@tanstack/react-query");
@@ -13,7 +13,7 @@ vi.mock("@tanstack/react-query-devtools", () => ({
 }));
 
 const originalNodeEnv = process.env.NODE_ENV;
-const originalDevtoolsFlag = process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"];
+const originalDevtoolsFlag = process.env["VITE_ENABLE_RQ_DEVTOOLS"];
 
 const loadQueryProvider = async (
   nodeEnv = "test",
@@ -23,9 +23,9 @@ const loadQueryProvider = async (
   process.env.NODE_ENV = nodeEnv;
 
   if (devtoolsFlag === undefined) {
-    delete process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"];
+    delete process.env["VITE_ENABLE_RQ_DEVTOOLS"];
   } else {
-    process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"] = devtoolsFlag;
+    process.env["VITE_ENABLE_RQ_DEVTOOLS"] = devtoolsFlag;
   }
 
   return import("@/providers/QueryProvider");
@@ -46,11 +46,11 @@ describe("QueryProvider", () => {
     }
 
     if (originalDevtoolsFlag === undefined) {
-      delete process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"];
+      delete process.env["VITE_ENABLE_RQ_DEVTOOLS"];
       return;
     }
 
-    process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"] = originalDevtoolsFlag;
+    process.env["VITE_ENABLE_RQ_DEVTOOLS"] = originalDevtoolsFlag;
   });
 
   it("renders children", async () => {
@@ -119,6 +119,8 @@ describe("QueryProvider", () => {
       </QueryProvider>
     );
 
-    expect(screen.getByTestId("devtools")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("devtools")).toBeInTheDocument();
+    });
   });
 });

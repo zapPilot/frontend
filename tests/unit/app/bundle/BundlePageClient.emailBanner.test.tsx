@@ -52,12 +52,11 @@ vi.mock("@/components/WalletManager", () => ({
 }));
 
 // Router mock
-vi.mock("next/navigation", async () => {
-  const actual = await vi.importActual<any>("next/navigation");
+vi.mock("@/lib/routing", () => {
   return {
-    ...actual,
-    useRouter: () => ({ replace: vi.fn() }),
-    usePathname: () => "/bundle",
+    useAppRouter: () => ({ replace: vi.fn() }),
+    useAppPathname: () => "/bundle",
+    useAppSearchParams: () => new URLSearchParams(window.location.search),
   };
 });
 

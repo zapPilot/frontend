@@ -12,13 +12,13 @@ const mockReplace = vi.fn();
 const mockPush = vi.fn();
 let mockSearchParams: URLSearchParams | null = null;
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: () => ({
     replace: mockReplace,
     push: mockPush,
   }),
-  useSearchParams: () => mockSearchParams,
-  usePathname: () => "/bundle",
+  useAppSearchParams: () => mockSearchParams ?? new URLSearchParams(),
+  useAppPathname: () => "/bundle",
 }));
 
 // Mock UserContext with controllable state
@@ -35,6 +35,7 @@ vi.mock("@/contexts/UserContext", () => ({
     connectedWallet: mockConnectedWallet,
     refetch: vi.fn(),
   }),
+  UserProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock SwitchPromptBanner

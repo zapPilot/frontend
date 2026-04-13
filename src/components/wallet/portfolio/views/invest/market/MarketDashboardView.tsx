@@ -1,5 +1,3 @@
-"use client";
-
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 
 import { LoadingState } from "@/components/ui";

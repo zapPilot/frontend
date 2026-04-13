@@ -221,6 +221,22 @@ describe("exportAnalyticsToCSV", () => {
     expect(result.error).toBeUndefined();
   });
 
+  it("includes walletFilter in metadata when walletFilter is provided", async () => {
+    // Exercises the `walletFilter !== undefined && { walletFilter }` true branch
+    const walletAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
+    await exportAnalyticsToCSV(
+      "0x1234567890abcdef1234567890abcdef12345678",
+      validAnalyticsData,
+      { key: "1Y", days: 365, label: "1 Year" },
+      walletAddress
+    );
+
+    // generateAnalyticsCSV should have been called with metadata including walletFilter
+    expect(generateCSVSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ walletFilter: walletAddress })
+    );
+  });
+
   it("should call CSV generation functions", async () => {
     await exportAnalyticsToCSV(
       "0x1234567890abcdef1234567890abcdef12345678",
@@ -382,6 +398,22 @@ describe("exportAnalyticsToCSV", () => {
     );
 
     loggerErrorSpy.mockRestore();
+  });
+
+  it("returns generic message when thrown value is not an Error instance", async () => {
+    // Exercises the `error instanceof Error ? ... : "Failed to generate CSV file"` false branch
+    generateCSVSpy.mockImplementation(() => {
+      throw "plain string error";
+    });
+
+    const result = await exportAnalyticsToCSV(
+      "0x1234567890abcdef1234567890abcdef12345678",
+      validAnalyticsData,
+      { key: "1Y", days: 365, label: "1 Year" }
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate CSV file");
   });
 
   it("should work with different time periods", async () => {

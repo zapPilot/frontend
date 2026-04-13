@@ -1,15 +1,10 @@
-"use client";
-
 import { AnimatePresence } from "framer-motion";
 import { type ReactElement, useRef, useState } from "react";
-import { useConnectModal } from "thirdweb/react";
+import { useConnect, useConnectors } from "wagmi";
 
-import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
-import { WALLET_LABELS } from "@/constants/wallet";
 import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { copyTextToClipboard } from "@/utils";
-import { THIRDWEB_CLIENT } from "@/utils/thirdweb";
 
 import { WalletMenuButton, WalletMenuDropdown } from "./WalletMenuContent";
 
@@ -35,7 +30,8 @@ export function WalletMenu({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { connect, isConnecting } = useConnectModal();
+  const connectors = useConnectors();
+  const { mutateAsync: connectAsync, isPending: isConnecting } = useConnect();
 
   const closeMenu = (): void => {
     setIsMenuOpen(false);
@@ -48,15 +44,10 @@ export function WalletMenu({
   useClickOutside(menuRef, closeMenu, isMenuOpen);
 
   const handleConnectClick = async (): Promise<void> => {
-    await connect({
-      client: THIRDWEB_CLIENT,
-      wallets: DEFAULT_WALLETS,
-      chains: DEFAULT_SUPPORTED_CHAINS,
-      theme: "dark",
-      size: "compact",
-      title: WALLET_LABELS.CONNECT,
-      showThirdwebBranding: false,
-    });
+    const connector = connectors[0];
+    if (connector) {
+      await connectAsync({ connector });
+    }
   };
 
   const copyAddress = async (address: string): Promise<void> => {

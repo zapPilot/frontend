@@ -65,144 +65,124 @@ vi.mock("@/utils/formatters", () => ({
 const mockSuggestionData = {
   as_of: "2026-03-07",
   config_id: "dma_gated_fgi_default",
+  config_display_name: "DMA Gated FGI Default",
   strategy_id: "dma_gated_fgi" as const,
-  market: {
-    date: "2026-03-07",
-    token_price: { btc: 68148.28 },
-    sentiment: 18,
-    sentiment_label: "extreme_fear",
-  },
-  portfolio: {
-    spot_usd: 7000,
-    stable_usd: 3000,
-    total_value: 10000,
-    allocation: {
-      spot: 0.7,
-      stable: 0.3,
-    },
-    asset_allocation: {
-      btc: 0.4,
-      eth: 0.3,
-      stable: 0.3,
-      alt: 0,
-    },
-  },
-  signal: {
-    id: "dma_gated_fgi" as const,
-    regime: "extreme_fear",
-    raw_value: 18,
-    confidence: 1,
-    details: {
-      dma: {
-        dma_200: 65000,
-        distance: 0.05,
-        zone: "above" as const,
-        cross_event: null,
-        cooldown_active: false,
-        cooldown_remaining_days: 0,
-        cooldown_blocked_zone: null,
-        fgi_slope: -2,
-      },
-    },
-  },
-  decision: {
-    action: "buy" as const,
-    reason: "below_extreme_fear_buy",
-    rule_group: "dma_fgi" as const,
-    target_allocation: {
-      spot: 1,
-      stable: 0,
-    },
-    target_asset_allocation: {
-      btc: 1,
-      eth: 0,
-      stable: 0,
-      alt: 0,
-    },
-    immediate: false,
-    details: {
-      target_spot_asset: "eth",
-    },
-  },
-  user_action: {
+  action: {
     status: "action_required" as const,
     required: true,
-    event: "rebalance" as const,
+    kind: "rebalance" as const,
+    reason_code: "eth_btc_ratio_rebalance",
     transfers: [
       {
         from_bucket: "stable" as const,
-        to_bucket: "spot" as const,
+        to_bucket: "eth" as const,
         amount_usd: 500,
       },
       {
-        from_bucket: "spot" as const,
+        from_bucket: "eth" as const,
         to_bucket: "stable" as const,
         amount_usd: 200,
       },
     ],
-    blocked_reason: null,
   },
-  execution: {
-    event: "rebalance",
-    transfers: [
-      {
-        from_bucket: "stable" as const,
-        to_bucket: "spot" as const,
-        amount_usd: 500,
+  context: {
+    market: {
+      date: "2026-03-07",
+      token_price: { btc: 68148.28 },
+      sentiment: 18,
+      sentiment_label: "extreme_fear",
+    },
+    portfolio: {
+      spot_usd: 7000,
+      stable_usd: 3000,
+      total_value: 10000,
+      allocation: {
+        spot: 0.7,
+        stable: 0.3,
       },
-      {
-        from_bucket: "spot" as const,
-        to_bucket: "stable" as const,
-        amount_usd: 200,
+      asset_allocation: {
+        btc: 0.4,
+        eth: 0.3,
+        stable: 0.3,
+        alt: 0,
       },
-    ],
-    blocked_reason: null,
-    step_count: 1,
-    steps_remaining: 2,
-    interval_days: 3,
+    },
+    signal: {
+      id: "dma_gated_fgi" as const,
+      regime: "extreme_fear",
+      raw_value: 18,
+      confidence: 1,
+      details: {
+        dma: {
+          dma_200: 65000,
+          distance: 0.05,
+          zone: "above" as const,
+          cross_event: null,
+          cooldown_active: false,
+          cooldown_remaining_days: 0,
+          cooldown_blocked_zone: null,
+          fgi_slope: -2,
+        },
+      },
+    },
+    target: {
+      allocation: {
+        spot: 1,
+        stable: 0,
+      },
+      asset_allocation: {
+        btc: 1,
+        eth: 0,
+        stable: 0,
+        alt: 0,
+      },
+    },
+    strategy: {
+      stance: "buy" as const,
+      reason_code: "below_extreme_fear_buy",
+      rule_group: "dma_fgi" as const,
+      details: {
+        target_spot_asset: "eth",
+      },
+    },
   },
 };
 
 const mockBlockedSuggestion = {
   ...mockSuggestionData,
-  decision: {
-    ...mockSuggestionData.decision,
-    action: "hold" as const,
-    reason: "cooldown_hold",
-  },
-  user_action: {
+  action: {
     status: "blocked" as const,
     required: false,
-    event: null,
+    kind: null,
+    reason_code: "eth_btc_ratio_cooldown_active",
     transfers: [],
-    blocked_reason: "cooldown_active",
   },
-  execution: {
-    ...mockSuggestionData.execution,
-    transfers: [],
-    blocked_reason: "cooldown_active",
+  context: {
+    ...mockSuggestionData.context,
+    strategy: {
+      ...mockSuggestionData.context.strategy,
+      stance: "hold" as const,
+      reason_code: "eth_btc_ratio_rebalance",
+    },
   },
 };
 
 const mockNoActionSuggestion = {
   ...mockSuggestionData,
-  decision: {
-    ...mockSuggestionData.decision,
-    action: "hold" as const,
-    reason: "already_aligned",
-  },
-  user_action: {
+  action: {
     status: "no_action" as const,
     required: false,
-    event: null,
+    kind: null,
+    reason_code: "already_aligned",
     transfers: [],
-    blocked_reason: null,
   },
-  execution: {
-    ...mockSuggestionData.execution,
-    event: null,
-    transfers: [],
-    blocked_reason: null,
+  context: {
+    ...mockSuggestionData.context,
+    strategy: {
+      ...mockSuggestionData.context.strategy,
+      stance: "hold" as const,
+      reason_code: "already_aligned",
+    },
   },
 };
 
@@ -259,9 +239,10 @@ describe("RebalancePanel", () => {
     render(<RebalancePanel userId="0xabc" />);
 
     expect(screen.getByText("Action blocked")).toBeDefined();
-    expect(screen.getByText("cooldown_active")).toBeDefined();
+    expect(
+      screen.getByText("ETH/BTC rotation cooldown is still active.")
+    ).toBeDefined();
     const button = screen.getByText("Execution Unavailable");
-    expect(button).toBeDefined();
     expect(button.hasAttribute("disabled")).toBe(true);
   });
 
@@ -269,10 +250,28 @@ describe("RebalancePanel", () => {
     vi.mocked(useDailySuggestion).mockReturnValue({
       data: {
         ...mockSuggestionData,
-        decision: {
-          ...mockSuggestionData.decision,
-          details: {
-            target_spot_asset: "doge",
+        action: {
+          ...mockSuggestionData.action,
+          transfers: [
+            {
+              from_bucket: "stable" as const,
+              to_bucket: "spot" as const,
+              amount_usd: 500,
+            },
+            {
+              from_bucket: "spot" as const,
+              to_bucket: "stable" as const,
+              amount_usd: 200,
+            },
+          ],
+        },
+        context: {
+          ...mockSuggestionData.context,
+          strategy: {
+            ...mockSuggestionData.context.strategy,
+            details: {
+              target_spot_asset: "doge",
+            },
           },
         },
       },
@@ -292,9 +291,10 @@ describe("RebalancePanel", () => {
     render(<RebalancePanel userId="0xabc" />);
 
     expect(screen.getByText("No trades needed")).toBeDefined();
-    expect(screen.getByText("already_aligned")).toBeDefined();
+    expect(
+      screen.getByText("Portfolio is already aligned with the current target.")
+    ).toBeDefined();
     const button = screen.getByText("No Action Needed");
-    expect(button).toBeDefined();
     expect(button.hasAttribute("disabled")).toBe(true);
   });
 
@@ -346,5 +346,28 @@ describe("RebalancePanel", () => {
     render(<RebalancePanel userId="0xabc" />);
 
     expect(useDailySuggestion).toHaveBeenCalledWith("0xabc", undefined);
+  });
+
+  it("renders ALT bucket label when transfer targets alt bucket", () => {
+    vi.mocked(useDailySuggestion).mockReturnValue({
+      data: {
+        ...mockSuggestionData,
+        action: {
+          ...mockSuggestionData.action,
+          transfers: [
+            {
+              from_bucket: "stable" as const,
+              to_bucket: "alt" as const,
+              amount_usd: 150,
+            },
+          ],
+        },
+      },
+    } as ReturnType<typeof useDailySuggestion>);
+
+    render(<RebalancePanel userId="0xabc" />);
+
+    expect(screen.getByText("ALT")).toBeDefined();
+    expect(screen.getByText("STABLE -> ALT")).toBeDefined();
   });
 });

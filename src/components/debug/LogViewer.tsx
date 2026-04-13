@@ -1,16 +1,15 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { Z_INDEX } from "@/constants/design-system";
+import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
 import { type LogEntry, logger, LogLevel } from "@/utils/logger";
 
 /**
  * Development Log Viewer Component
  *
- * Provides a UI for viewing logs in development mode.
- * Only renders in development or when debug logging is enabled.
+ * Renders when `VITE_ENABLE_LOG_VIEWER=1` in development, or when
+ * `VITE_ENABLE_DEBUG_LOGGING=true` (e.g. production diagnostics).
  */
 export function LogViewer() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -18,8 +17,9 @@ export function LogViewer() {
   const [filterLevel, setFilterLevel] = useState<LogLevel>(LogLevel.DEBUG);
 
   const shouldShow =
-    process.env.NODE_ENV === "development" ||
-    process.env["NEXT_PUBLIC_ENABLE_DEBUG_LOGGING"] === "true";
+    (isRuntimeMode("development") &&
+      getRuntimeEnv("VITE_ENABLE_LOG_VIEWER") === "1") ||
+    getRuntimeEnv("VITE_ENABLE_DEBUG_LOGGING") === "true";
 
   useEffect(() => {
     if (!shouldShow) return;

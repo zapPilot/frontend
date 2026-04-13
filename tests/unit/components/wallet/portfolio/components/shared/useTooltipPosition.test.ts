@@ -4,8 +4,28 @@ import { describe, expect, it, vi } from "vitest";
 import { useTooltipPosition } from "@/components/wallet/portfolio/components/shared/useTooltipPosition";
 
 describe("useTooltipPosition", () => {
+  type MockRect = Pick<
+    DOMRect,
+    "top" | "bottom" | "left" | "right" | "width" | "height" | "x" | "y"
+  > & {
+    toJSON: () => object;
+  };
+
   function createRef<T>(current: T | null) {
     return { current };
+  }
+
+  function mockElementRect(
+    element: HTMLElement,
+    rectOrFactory: MockRect | (() => MockRect)
+  ) {
+    const getRect =
+      typeof rectOrFactory === "function" ? rectOrFactory : () => rectOrFactory;
+
+    Object.defineProperty(element, "getBoundingClientRect", {
+      configurable: true,
+      value: vi.fn((): DOMRect => getRect() as DOMRect),
+    });
   }
 
   function renderTooltipPosition(
@@ -52,7 +72,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(container, {
       top: 100,
       bottom: 120,
       left: 200,
@@ -64,7 +84,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     });
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 30,
       left: 0,
@@ -87,7 +107,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(container, {
       top: 100,
       bottom: 130,
       left: 10,
@@ -99,7 +119,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     });
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 200,
       left: 0,
@@ -130,7 +150,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(container, {
       top: 100,
       bottom: 130,
       left: 300,
@@ -142,7 +162,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     });
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 200,
       left: 0,
@@ -170,7 +190,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(container, {
       top: 100,
       bottom: 130,
       left: 400,
@@ -182,7 +202,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     });
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 100,
       left: 0,
@@ -216,7 +236,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(container, {
       top: 0,
       bottom: 30,
       left: 100,
@@ -228,7 +248,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     });
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 30,
       left: 0,
@@ -268,7 +288,7 @@ describe("useTooltipPosition", () => {
     const container = document.createElement("div");
     const tooltip = document.createElement("div");
 
-    vi.spyOn(container, "getBoundingClientRect").mockImplementation(() => ({
+    mockElementRect(container, () => ({
       top: containerTop,
       bottom: containerTop + 30,
       left: 200,
@@ -280,7 +300,7 @@ describe("useTooltipPosition", () => {
       toJSON: () => ({}),
     }));
 
-    vi.spyOn(tooltip, "getBoundingClientRect").mockReturnValue({
+    mockElementRect(tooltip, {
       top: 0,
       bottom: 40,
       left: 0,

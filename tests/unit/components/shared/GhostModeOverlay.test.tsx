@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { GhostModeOverlay } from "@/components/layout/overlays/GhostModeOverlay";
 
-// Mock the ConnectWalletButton to avoid thirdweb dependencies
+// Mock the ConnectWalletButton to avoid wagmi dependencies in unit tests
 vi.mock("@/components/WalletManager/components/ConnectWalletButton", () => ({
   ConnectWalletButton: () => (
     <button data-testid="connect-wallet-button">Connect Wallet</button>

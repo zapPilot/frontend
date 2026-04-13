@@ -46,10 +46,10 @@ vi.mock("@/services/accountService", () => ({
   connectWallet: (...args: any[]) => mockConnectWallet(...args),
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => mockRouter,
-  useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/bundle",
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: () => mockRouter,
+  useAppSearchParams: () => new URLSearchParams(),
+  useAppPathname: () => "/bundle",
 }));
 
 vi.mock("@/providers/ToastProvider", () => ({

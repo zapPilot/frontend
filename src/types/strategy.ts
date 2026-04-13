@@ -8,8 +8,9 @@ import type {
   BacktestAssetAllocation,
   BacktestCompareParamsV3,
   BacktestDecision,
-  BacktestExecution,
+  BacktestDecisionDetails,
   BacktestMarketPoint,
+  BacktestPortfolioAllocation,
   BacktestSignal,
   BacktestStrategyCatalogEntryV3,
   BacktestStrategyPortfolio,
@@ -34,17 +35,37 @@ export interface DailySuggestionDecision extends BacktestDecision {
   target_asset_allocation: BacktestAssetAllocation;
 }
 
-export type DailySuggestionUserActionStatus =
+export type DailySuggestionActionStatus =
   | "action_required"
   | "blocked"
   | "no_action";
 
-export interface DailySuggestionUserAction {
-  status: DailySuggestionUserActionStatus;
+export interface DailySuggestionAction {
+  status: DailySuggestionActionStatus;
   required: boolean;
-  event: "rebalance" | null;
+  kind: "rebalance" | null;
+  reason_code: string;
   transfers: BacktestTransferMetadata[];
-  blocked_reason: string | null;
+}
+
+export interface DailySuggestionTarget {
+  allocation: BacktestPortfolioAllocation;
+  asset_allocation: BacktestAssetAllocation;
+}
+
+export interface DailySuggestionStrategyContext {
+  stance: DailySuggestionDecision["action"];
+  reason_code: string;
+  rule_group: DailySuggestionDecision["rule_group"];
+  details?: BacktestDecisionDetails;
+}
+
+export interface DailySuggestionContext {
+  market: BacktestMarketPoint;
+  signal: BacktestSignal;
+  portfolio: DailySuggestionPortfolio;
+  target: DailySuggestionTarget;
+  strategy: DailySuggestionStrategyContext;
 }
 
 /**
@@ -53,13 +74,10 @@ export interface DailySuggestionUserAction {
 export interface DailySuggestionResponse {
   as_of: string;
   config_id: string;
+  config_display_name: string;
   strategy_id: string;
-  market: BacktestMarketPoint;
-  portfolio: DailySuggestionPortfolio;
-  signal: BacktestSignal;
-  decision: DailySuggestionDecision;
-  user_action: DailySuggestionUserAction;
-  execution: BacktestExecution;
+  action: DailySuggestionAction;
+  context: DailySuggestionContext;
 }
 
 /**

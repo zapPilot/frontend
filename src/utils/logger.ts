@@ -2,6 +2,8 @@
  * Centralized logging utility with levels and formatting
  */
 
+import { getRuntimeEnv, isRuntimeMode } from "@/lib/env/runtimeEnv";
+
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -31,12 +33,12 @@ export class Logger {
   private localLogs: LogEntry[] = [];
 
   constructor(config: Partial<LogConfig> = {}) {
-    const isProduction = process.env.NODE_ENV === "production";
-    const isDevelopment = process.env.NODE_ENV === "development";
+    const isProduction = isRuntimeMode("production");
+    const isDevelopment = isRuntimeMode("development");
     const enableDebugInProd =
-      process.env["NEXT_PUBLIC_ENABLE_DEBUG_LOGGING"] === "true";
+      getRuntimeEnv("VITE_ENABLE_DEBUG_LOGGING") === "true";
     const enableDevLogging =
-      process.env["NEXT_PUBLIC_ENABLE_DEV_LOGGING"] !== "false";
+      getRuntimeEnv("VITE_ENABLE_DEV_LOGGING") !== "false";
 
     this.config = {
       level:

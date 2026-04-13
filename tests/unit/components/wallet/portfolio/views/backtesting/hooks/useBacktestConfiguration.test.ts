@@ -1,7 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { validateConfigsStrategyIdsAgainstCatalog } from "@/components/wallet/portfolio/views/backtesting/hooks/backtestRequestValidation";
+import {
+  formatValidationError,
+  normalizeParams,
+  validateConfigsStrategyIdsAgainstCatalog,
+} from "@/components/wallet/portfolio/views/backtesting/hooks/backtestRequestValidation";
 import { useBacktestConfiguration } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestConfiguration";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 import { getBacktestingStrategiesV3 } from "@/services/backtestingService";
@@ -1142,6 +1146,20 @@ describe("validateConfigsStrategyIdsAgainstCatalog", () => {
     ).toBeNull();
   });
 
+  it("skips configs without a strategy_id and returns null", () => {
+    // Exercises the `if (!strategyId) continue` branch
+    const catalog = makeStrategyCatalog(["dca_classic"]);
+    expect(
+      validateConfigsStrategyIdsAgainstCatalog(
+        [
+          { strategy_id: undefined },
+          { strategy_id: null as unknown as string },
+        ],
+        catalog
+      )
+    ).toBeNull();
+  });
+
   it("returns null when every strategy_id is listed in the catalog", () => {
     const catalog = makeStrategyCatalog(["dca_classic", "dma_gated_fgi"]);
     expect(
@@ -1214,5 +1232,48 @@ describe("useBacktestConfiguration catalog strategy_id refine", () => {
     expect(result.current.editorError).toContain("configs.0.strategy_id");
     expect(result.current.editorError).toContain("not_in_catalog");
     expect(mockMutate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("formatValidationError", () => {
+  it("uses field path when issue has a non-empty path", () => {
+    const { ZodError } = require("zod");
+    const error = new ZodError([
+      {
+        code: "custom",
+        path: ["configs", "0", "strategy_id"],
+        message: "Unknown strategy",
+      },
+    ]);
+    expect(formatValidationError(error)).toBe(
+      "configs.0.strategy_id: Unknown strategy"
+    );
+  });
+
+  it("falls back to 'payload' label when issue path is empty", () => {
+    // Exercises the `issue.path.join(".") || "payload"` false branch.
+    // An issue with path: [] produces "" after join, which is falsy → "payload" is used.
+    const { ZodError } = require("zod");
+    const error = new ZodError([
+      { code: "custom", path: [], message: "Root-level error" },
+    ]);
+    expect(formatValidationError(error)).toBe("payload: Root-level error");
+  });
+});
+
+describe("normalizeParams pruneUndefinedDeep", () => {
+  it("prunes keys with undefined values from a nested object", () => {
+    // Exercises the `normalizedEntry === undefined ? [] : [[key, normalizedEntry]]`
+    // both branches: the [] branch fires for undefined values, [[...]] for defined values.
+    const result = normalizeParams({ signal: { cross_cooldown_days: 7 } });
+    expect(result).toEqual({ signal: { cross_cooldown_days: 7 } });
+  });
+
+  it("prunes nested object keys that are explicitly undefined", () => {
+    // `{ k: undefined }` → after pruning → pruneUndefinedDeep returns undefined → normalizeParams returns undefined
+    const result = normalizeParams({
+      pacing: { k: undefined, r_max: undefined },
+    });
+    expect(result).toBeUndefined();
   });
 });

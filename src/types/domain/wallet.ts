@@ -2,7 +2,7 @@
  * Simplified Wallet Types
  *
  * Essential types for wallet operations without over-abstraction.
- * Focused on current ThirdWeb usage while maintaining future flexibility.
+ * Focused on current wagmi usage while maintaining future flexibility.
  */
 
 /**

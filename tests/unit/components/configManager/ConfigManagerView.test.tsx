@@ -196,4 +196,35 @@ describe("ConfigManagerView", () => {
       expect(screen.getByText("Strategy Configurations")).toBeDefined();
     });
   });
+
+  it("shows Unknown error when error is not an Error instance", () => {
+    vi.mocked(useStrategyAdminConfigs).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: "raw string error",
+    });
+
+    render(<ConfigManagerView />);
+    expect(screen.getByText(/Failed to load configurations/i)).toBeDefined();
+    expect(screen.getByText(/Unknown error/)).toBeDefined();
+  });
+
+  it("transitions to editor view with duplicateFrom config when Duplicate is clicked", async () => {
+    render(<ConfigManagerView />);
+
+    const duplicateButtons = screen.getAllByRole("button", {
+      name: /duplicate/i,
+    });
+    fireEvent.click(duplicateButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Create Configuration")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("Cancel"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Strategy Configurations")).toBeDefined();
+    });
+  });
 });

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/useTransactionForm";

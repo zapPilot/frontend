@@ -1,7 +1,4 @@
-"use client";
-
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { type ReactElement, type ReactNode } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
@@ -9,6 +6,7 @@ import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/L
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
 import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfolioDataProgressive";
 import { useEtlJobPolling, useEtlJobSync } from "@/hooks/wallet";
+import { useAppRouter } from "@/lib/routing";
 import { logger } from "@/utils";
 
 interface DashboardShellProps {
@@ -112,7 +110,7 @@ export function DashboardShell({
   footerOverlays,
   initialEtlJobId,
 }: DashboardShellProps): ReactElement {
-  const router = useRouter();
+  const router = useAppRouter();
   const queryClient = useQueryClient();
 
   const {

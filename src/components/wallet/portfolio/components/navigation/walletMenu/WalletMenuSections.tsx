@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, Copy, LogOut, Plus, Settings, Wallet } from "lucide-react";
 import { type ReactElement } from "react";
 

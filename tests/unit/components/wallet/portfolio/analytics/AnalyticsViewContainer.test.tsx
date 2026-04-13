@@ -300,4 +300,53 @@ describe("AnalyticsViewContainer", () => {
     // Should render analytics view with bundle owner's data
     expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
   });
+
+  it("returns empty wallets list when bundleOwnerInfo has no additionalWallets", () => {
+    // Exercises the `!additionalWallets → return []` true branch
+    vi.mocked(useUserById).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<AnalyticsViewContainer userId="user-123" />);
+
+    // No wallet selector options populated — component still renders
+    expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
+  });
+
+  it("shows fallback 'Export failed' message when result has no error field", async () => {
+    // Exercises the `result.error || "Export failed"` false branch
+    vi.mocked(exportAnalyticsToCSV).mockResolvedValue({
+      success: false,
+      // no error field → result.error is undefined → falls back to "Export failed"
+    });
+
+    render(<AnalyticsViewContainer userId="user-123" />);
+
+    await userEvent.click(screen.getByTestId("export-btn"));
+
+    expect(screen.getByTestId("export-error")).toHaveTextContent(
+      "Export failed"
+    );
+  });
+
+  it("renders AnalyticsView with empty data when data is null and no error", () => {
+    // Exercises the `data ?? createEmptyAnalyticsData()` right branch.
+    // When data is null and error is also null, the error state is NOT shown,
+    // so we reach line 169 with data=null → createEmptyAnalyticsData() is called.
+    vi.mocked(useAnalyticsData).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    } as any);
+
+    render(<AnalyticsViewContainer userId="user-123" />);
+
+    // Still renders AnalyticsView (not error state) with empty analytics data
+    expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
 });

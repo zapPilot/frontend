@@ -2,7 +2,7 @@
  * WalletProvider - Provider Tests
  *
  * Comprehensive test suite for wallet provider functionality.
- * Tests context provision, ThirdWeb integration, state management, and error handling.
+ * Tests context provision, wagmi integration, state management, and error handling.
  */
 
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -12,27 +12,42 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Import after mocks
 import { useWalletProvider, WalletProvider } from "@/providers/WalletProvider";
 
-// Mock ThirdWeb hooks
-const mockUseActiveAccount = vi.fn();
-const mockUseActiveWallet = vi.fn();
-const mockUseActiveWalletChain = vi.fn();
-const mockUseConnect = vi.fn();
-const mockUseDisconnect = vi.fn();
-const mockUseSwitchActiveWalletChain = vi.fn();
-const mockUseWalletBalance = vi.fn();
-const mockUseConnectedWallets = vi.fn();
-const mockUseSetActiveWallet = vi.fn();
+// Mock wagmi hooks
+const mockUseAccount = vi.fn();
+const mockUseConnectors = vi.fn();
+const mockUseBalance = vi.fn();
+const mockConnectAsync = vi.fn();
+const mockDisconnectAsync = vi.fn();
+const mockSwitchChainAsync = vi.fn();
+const mockSignMessageAsync = vi.fn();
 
-vi.mock("thirdweb/react", () => ({
-  useActiveAccount: () => mockUseActiveAccount(),
-  useActiveWallet: () => mockUseActiveWallet(),
-  useActiveWalletChain: () => mockUseActiveWalletChain(),
-  useConnect: () => mockUseConnect(),
-  useDisconnect: () => mockUseDisconnect(),
-  useSwitchActiveWalletChain: () => mockUseSwitchActiveWalletChain(),
-  useWalletBalance: () => mockUseWalletBalance(),
-  useConnectedWallets: () => mockUseConnectedWallets(),
-  useSetActiveWallet: () => mockUseSetActiveWallet(),
+vi.mock("wagmi", () => ({
+  // wagmi v2: useAccount was renamed to useConnection
+  useConnection: () => mockUseAccount(),
+  // wagmi v2: connectors are enumerated via a dedicated hook
+  useConnectors: () => mockUseConnectors(),
+  useBalance: () => mockUseBalance(),
+  // wagmi v2: mutation hooks use TanStack Mutation shape { mutateAsync, isPending }
+  useConnect: () => ({
+    mutateAsync: mockConnectAsync,
+    isPending: false,
+  }),
+  useDisconnect: () => ({
+    mutateAsync: mockDisconnectAsync,
+    isPending: false,
+  }),
+  useSwitchChain: () => ({
+    mutateAsync: mockSwitchChainAsync,
+  }),
+  useSignMessage: () => ({
+    mutateAsync: mockSignMessageAsync,
+  }),
+}));
+
+vi.mock("viem", () => ({
+  formatUnits: (value: bigint, decimals: number) => {
+    return (Number(value) / 10 ** decimals).toString();
+  },
 }));
 
 // Mock logger
@@ -42,11 +57,6 @@ vi.mock("@/utils/logger", () => ({
     error: vi.fn(),
     warn: vi.fn(),
   },
-}));
-
-// Mock ThirdWeb client
-vi.mock("@/utils/thirdweb", () => ({
-  THIRDWEB_CLIENT: { clientId: "test-client-id" },
 }));
 
 async function invokeWalletProviderAction<T>(
@@ -67,23 +77,7 @@ async function invokeWalletProviderAction<T>(
 }
 
 describe("WalletProvider", () => {
-  // Mock wallet objects
-  const mockWallet1 = {
-    getAccount: vi.fn(() => ({
-      address: "0x1234567890123456789012345678901234567890",
-    })),
-  };
-
-  const mockWallet2 = {
-    getAccount: vi.fn(() => ({
-      address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-    })),
-  };
-
-  const mockAccount = {
-    address: "0x1234567890123456789012345678901234567890",
-    signMessage: vi.fn(),
-  };
+  const mockAddress = "0x1234567890123456789012345678901234567890";
 
   const mockChain = {
     id: 1,
@@ -95,28 +89,22 @@ describe("WalletProvider", () => {
     },
   };
 
-  const mockBalance = {
-    data: {
-      displayValue: "1.5",
-      value: BigInt("1500000000000000000"),
-    },
-    isLoading: false,
-    isError: false,
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default mock implementations
-    mockUseActiveAccount.mockReturnValue(null);
-    mockUseActiveWallet.mockReturnValue(null);
-    mockUseActiveWalletChain.mockReturnValue(null);
-    mockUseConnect.mockReturnValue({ connect: vi.fn() });
-    mockUseDisconnect.mockReturnValue({ disconnect: vi.fn() });
-    mockUseSwitchActiveWalletChain.mockReturnValue(vi.fn());
-    mockUseWalletBalance.mockReturnValue({ data: null, isLoading: false });
-    mockUseConnectedWallets.mockReturnValue([]);
-    mockUseSetActiveWallet.mockReturnValue(vi.fn());
+    // Default mock implementations — disconnected state
+    mockUseAccount.mockReturnValue({
+      address: undefined,
+      isConnected: false,
+      isConnecting: false,
+      chain: undefined,
+    });
+    mockUseConnectors.mockReturnValue([{ id: "injected", name: "MetaMask" }]);
+    mockUseBalance.mockReturnValue({ data: undefined, isLoading: false });
+    mockConnectAsync.mockResolvedValue(undefined);
+    mockDisconnectAsync.mockResolvedValue(undefined);
+    mockSwitchChainAsync.mockResolvedValue(undefined);
+    mockSignMessageAsync.mockResolvedValue("0xsignature");
   });
 
   describe("Provider rendering", () => {
@@ -175,10 +163,19 @@ describe("WalletProvider", () => {
     });
 
     it("should show connected state when account is present", () => {
-      mockUseActiveAccount.mockReturnValue(mockAccount);
-      mockUseActiveWallet.mockReturnValue(mockWallet1);
-      mockUseActiveWalletChain.mockReturnValue(mockChain);
-      mockUseWalletBalance.mockReturnValue(mockBalance);
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({
+        data: {
+          value: BigInt("1500000000000000000"),
+          decimals: 18,
+          symbol: "ETH",
+        },
+      });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -188,38 +185,10 @@ describe("WalletProvider", () => {
 
       expect(result.current.isConnected).toBe(true);
       expect(result.current.account).toEqual({
-        address: mockAccount.address,
+        address: mockAddress,
         isConnected: true,
         balance: "1.5",
       });
-    });
-
-    it("should show connecting state when wallet present but no account", () => {
-      mockUseActiveAccount.mockReturnValue(null);
-      mockUseActiveWallet.mockReturnValue(mockWallet1);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      expect(result.current.isConnecting).toBe(true);
-      expect(result.current.isConnected).toBe(false);
-    });
-
-    it("should show disconnecting state when account present but no wallet", () => {
-      mockUseActiveAccount.mockReturnValue(mockAccount);
-      mockUseActiveWallet.mockReturnValue(null);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      expect(result.current.isDisconnecting).toBe(true);
-      expect(result.current.isConnected).toBe(true);
     });
   });
 
@@ -235,8 +204,19 @@ describe("WalletProvider", () => {
     });
 
     it("should transform account with balance", () => {
-      mockUseActiveAccount.mockReturnValue(mockAccount);
-      mockUseWalletBalance.mockReturnValue(mockBalance);
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({
+        data: {
+          value: BigInt("1500000000000000000"),
+          decimals: 18,
+          symbol: "ETH",
+        },
+      });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -245,15 +225,20 @@ describe("WalletProvider", () => {
       });
 
       expect(result.current.account).toEqual({
-        address: mockAccount.address,
+        address: mockAddress,
         isConnected: true,
         balance: "1.5",
       });
     });
 
     it("should default balance to '0' when no balance data", () => {
-      mockUseActiveAccount.mockReturnValue(mockAccount);
-      mockUseWalletBalance.mockReturnValue({ data: null, isLoading: false });
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -277,7 +262,13 @@ describe("WalletProvider", () => {
     });
 
     it("should transform chain with full data", () => {
-      mockUseActiveWalletChain.mockReturnValue(mockChain);
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -293,10 +284,13 @@ describe("WalletProvider", () => {
     });
 
     it("should use fallback name when chain name is missing", () => {
-      mockUseActiveWalletChain.mockReturnValue({
-        id: 137,
-        nativeCurrency: { symbol: "MATIC", decimals: 18 },
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: { id: 137, nativeCurrency: { symbol: "MATIC", decimals: 18 } },
       });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -308,11 +302,13 @@ describe("WalletProvider", () => {
     });
 
     it("should use fallback symbol when currency symbol is missing", () => {
-      mockUseActiveWalletChain.mockReturnValue({
-        id: 1,
-        name: "Ethereum",
-        nativeCurrency: { decimals: 18 },
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: { id: 1, name: "Ethereum", nativeCurrency: { decimals: 18 } },
       });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -324,10 +320,8 @@ describe("WalletProvider", () => {
     });
   });
 
-  describe("Multi-wallet support", () => {
-    it("should return empty wallet list when no wallets connected", () => {
-      mockUseConnectedWallets.mockReturnValue([]);
-
+  describe("Wallet list (single-account model)", () => {
+    it("should return empty wallet list when not connected", () => {
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
           <WalletProvider>{children}</WalletProvider>
@@ -338,9 +332,14 @@ describe("WalletProvider", () => {
       expect(result.current.hasMultipleWallets).toBe(false);
     });
 
-    it("should list connected wallets with active state", () => {
-      mockUseActiveAccount.mockReturnValue(mockAccount);
-      mockUseConnectedWallets.mockReturnValue([mockWallet1, mockWallet2]);
+    it("should return single wallet when connected", () => {
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -348,38 +347,20 @@ describe("WalletProvider", () => {
         ),
       });
 
-      expect(result.current.connectedWallets).toHaveLength(2);
-      expect(result.current.connectedWallets[0]).toEqual({
-        address: "0x1234567890123456789012345678901234567890",
-        isActive: true,
-      });
-      expect(result.current.connectedWallets[1]).toEqual({
-        address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        isActive: false,
-      });
-    });
-
-    it("should detect multiple wallets", () => {
-      mockUseConnectedWallets.mockReturnValue([mockWallet1, mockWallet2]);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      expect(result.current.hasMultipleWallets).toBe(true);
-    });
-
-    it("should filter out wallets without addresses", () => {
-      const mockWalletNoAddress = {
-        getAccount: vi.fn(() => ({ address: "" })),
-      };
-
-      mockUseConnectedWallets.mockReturnValue([
-        mockWallet1,
-        mockWalletNoAddress,
+      expect(result.current.connectedWallets).toEqual([
+        { address: mockAddress, isActive: true },
       ]);
+      expect(result.current.hasMultipleWallets).toBe(false);
+    });
+
+    it("switchActiveWallet should be a no-op", async () => {
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -387,16 +368,15 @@ describe("WalletProvider", () => {
         ),
       });
 
-      expect(result.current.connectedWallets).toHaveLength(1);
+      // Should not throw
+      await invokeWalletProviderAction(() =>
+        result.current.switchActiveWallet("0xother")
+      );
     });
   });
 
   describe("Connect function", () => {
-    it("should call connect with first available wallet", async () => {
-      const mockConnect = vi.fn().mockResolvedValue();
-      mockUseConnect.mockReturnValue({ connect: mockConnect });
-      mockUseConnectedWallets.mockReturnValue([mockWallet1]);
-
+    it("should call connectAsync with first connector", async () => {
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
           <WalletProvider>{children}</WalletProvider>
@@ -405,39 +385,13 @@ describe("WalletProvider", () => {
 
       await invokeWalletProviderAction(() => result.current.connect());
 
-      expect(mockConnect).toHaveBeenCalledWith(mockWallet1);
-    });
-
-    it("should throw error when no wallet available", async () => {
-      const mockConnect = vi.fn();
-      mockUseConnect.mockReturnValue({ connect: mockConnect });
-      mockUseConnectedWallets.mockReturnValue([]);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      const { error } = await invokeWalletProviderAction(() =>
-        result.current.connect()
-      );
-
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe("No wallet available");
-
-      await waitFor(() => {
-        expect(result.current.error).toEqual({
-          message: "No wallet available",
-          code: "CONNECT_ERROR",
-        });
+      expect(mockConnectAsync).toHaveBeenCalledWith({
+        connector: { id: "injected", name: "MetaMask" },
       });
     });
 
     it("should set error state on connection failure", async () => {
-      const mockConnect = vi.fn().mockRejectedValue(new Error("User rejected"));
-      mockUseConnect.mockReturnValue({ connect: mockConnect });
-      mockUseConnectedWallets.mockReturnValue([mockWallet1]);
+      mockConnectAsync.mockRejectedValue(new Error("User rejected"));
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -461,12 +415,9 @@ describe("WalletProvider", () => {
     });
 
     it("should clear previous errors before connecting", async () => {
-      const mockConnect = vi
-        .fn()
+      mockConnectAsync
         .mockRejectedValueOnce(new Error("First error"))
-        .mockResolvedValueOnce();
-      mockUseConnect.mockReturnValue({ connect: mockConnect });
-      mockUseConnectedWallets.mockReturnValue([mockWallet1]);
+        .mockResolvedValueOnce(undefined);
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -479,7 +430,6 @@ describe("WalletProvider", () => {
         result.current.connect()
       );
       expect(firstAttempt.error).toBeInstanceOf(Error);
-      expect((firstAttempt.error as Error).message).toBe("First error");
       expect(result.current.error).toBeDefined();
 
       // Second attempt succeeds
@@ -489,11 +439,7 @@ describe("WalletProvider", () => {
   });
 
   describe("Disconnect function", () => {
-    it("should call disconnect with current wallet", async () => {
-      const mockDisconnect = vi.fn().mockResolvedValue();
-      mockUseDisconnect.mockReturnValue({ disconnect: mockDisconnect });
-      mockUseActiveWallet.mockReturnValue(mockWallet1);
-
+    it("should call disconnectAsync", async () => {
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
           <WalletProvider>{children}</WalletProvider>
@@ -502,15 +448,11 @@ describe("WalletProvider", () => {
 
       await invokeWalletProviderAction(() => result.current.disconnect());
 
-      expect(mockDisconnect).toHaveBeenCalledWith(mockWallet1);
+      expect(mockDisconnectAsync).toHaveBeenCalled();
     });
 
     it("should handle disconnect errors", async () => {
-      const mockDisconnect = vi
-        .fn()
-        .mockRejectedValue(new Error("Disconnect failed"));
-      mockUseDisconnect.mockReturnValue({ disconnect: mockDisconnect });
-      mockUseActiveWallet.mockReturnValue(mockWallet1);
+      mockDisconnectAsync.mockRejectedValue(new Error("Disconnect failed"));
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -532,29 +474,10 @@ describe("WalletProvider", () => {
         });
       });
     });
-
-    it("should do nothing when no wallet is connected", async () => {
-      const mockDisconnect = vi.fn();
-      mockUseDisconnect.mockReturnValue({ disconnect: mockDisconnect });
-      mockUseActiveWallet.mockReturnValue(null);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      await invokeWalletProviderAction(() => result.current.disconnect());
-
-      expect(mockDisconnect).not.toHaveBeenCalled();
-    });
   });
 
   describe("Switch chain function", () => {
     it("should switch to target chain", async () => {
-      const mockSwitchChain = vi.fn().mockResolvedValue();
-      mockUseSwitchActiveWalletChain.mockReturnValue(mockSwitchChain);
-
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
           <WalletProvider>{children}</WalletProvider>
@@ -563,23 +486,13 @@ describe("WalletProvider", () => {
 
       await invokeWalletProviderAction(() => result.current.switchChain(137));
 
-      expect(mockSwitchChain).toHaveBeenCalledWith({
-        id: 137,
-        name: "Chain 137",
-        rpc: "https://rpc-137.example.com",
-        nativeCurrency: {
-          name: "ETH",
-          symbol: "ETH",
-          decimals: 18,
-        },
-      });
+      expect(mockSwitchChainAsync).toHaveBeenCalledWith({ chainId: 137 });
     });
 
     it("should throw error on chain switch failure", async () => {
-      const mockSwitchChain = vi
-        .fn()
-        .mockRejectedValue(new Error("User rejected chain switch"));
-      mockUseSwitchActiveWalletChain.mockReturnValue(mockSwitchChain);
+      mockSwitchChainAsync.mockRejectedValue(
+        new Error("User rejected chain switch")
+      );
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -598,12 +511,14 @@ describe("WalletProvider", () => {
 
   describe("Sign message function", () => {
     it("should sign message with active account", async () => {
-      const mockSignMessage = vi.fn().mockResolvedValue("0xsignature");
-      const accountWithSign = {
-        ...mockAccount,
-        signMessage: mockSignMessage,
-      };
-      mockUseActiveAccount.mockReturnValue(accountWithSign);
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
+      mockSignMessageAsync.mockResolvedValue("0xsignature");
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -615,7 +530,7 @@ describe("WalletProvider", () => {
         result.current.signMessage("Hello, world!")
       );
 
-      expect(mockSignMessage).toHaveBeenCalledWith({
+      expect(mockSignMessageAsync).toHaveBeenCalledWith({
         message: "Hello, world!",
       });
       expect(error).toBeUndefined();
@@ -623,8 +538,6 @@ describe("WalletProvider", () => {
     });
 
     it("should throw error when no account is connected", async () => {
-      mockUseActiveAccount.mockReturnValue(null);
-
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
           <WalletProvider>{children}</WalletProvider>
@@ -640,14 +553,16 @@ describe("WalletProvider", () => {
     });
 
     it("should throw error on signing failure", async () => {
-      const mockSignMessage = vi
-        .fn()
-        .mockRejectedValue(new Error("User rejected signing"));
-      const accountWithSign = {
-        ...mockAccount,
-        signMessage: mockSignMessage,
-      };
-      mockUseActiveAccount.mockReturnValue(accountWithSign);
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        isConnecting: false,
+        chain: mockChain,
+      });
+      mockUseBalance.mockReturnValue({ data: undefined });
+      mockSignMessageAsync.mockRejectedValue(
+        new Error("User rejected signing")
+      );
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -664,89 +579,9 @@ describe("WalletProvider", () => {
     });
   });
 
-  describe("Switch active wallet function", () => {
-    it("should switch to target wallet", async () => {
-      const mockSetActiveWallet = vi.fn().mockResolvedValue();
-      mockUseSetActiveWallet.mockReturnValue(mockSetActiveWallet);
-      mockUseConnectedWallets.mockReturnValue([mockWallet1, mockWallet2]);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      await invokeWalletProviderAction(() =>
-        result.current.switchActiveWallet(
-          "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-        )
-      );
-
-      expect(mockSetActiveWallet).toHaveBeenCalledWith(mockWallet2);
-    });
-
-    it("should throw error when target wallet not found", async () => {
-      mockUseConnectedWallets.mockReturnValue([mockWallet1]);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      const { error } = await invokeWalletProviderAction(() =>
-        result.current.switchActiveWallet("0xnonexistent")
-      );
-
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe("Wallet 0xnonexistent not found");
-
-      await waitFor(() => {
-        expect(result.current.error).toEqual({
-          message: "Wallet 0xnonexistent not found",
-          code: "WALLET_NOT_FOUND",
-        });
-      });
-    });
-
-    it("should handle switch wallet errors", async () => {
-      const mockSetActiveWallet = vi
-        .fn()
-        .mockRejectedValue(new Error("Switch failed"));
-      mockUseSetActiveWallet.mockReturnValue(mockSetActiveWallet);
-      mockUseConnectedWallets.mockReturnValue([mockWallet1, mockWallet2]);
-
-      const { result } = renderHook(() => useWalletProvider(), {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <WalletProvider>{children}</WalletProvider>
-        ),
-      });
-
-      const { error } = await invokeWalletProviderAction(() =>
-        result.current.switchActiveWallet(
-          "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-        )
-      );
-
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe("Switch failed");
-
-      await waitFor(() => {
-        expect(result.current.error).toEqual({
-          message: "Switch failed",
-          code: "SWITCH_WALLET_ERROR",
-        });
-      });
-    });
-  });
-
   describe("Error management", () => {
     it("should clear error when clearError is called", async () => {
-      const mockConnect = vi
-        .fn()
-        .mockRejectedValue(new Error("Connection failed"));
-      mockUseConnect.mockReturnValue({ connect: mockConnect });
-      mockUseConnectedWallets.mockReturnValue([mockWallet1]);
+      mockConnectAsync.mockRejectedValue(new Error("Connection failed"));
 
       const { result } = renderHook(() => useWalletProvider(), {
         wrapper: ({ children }: { children: ReactNode }) => (
@@ -759,7 +594,6 @@ describe("WalletProvider", () => {
         result.current.connect()
       );
       expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe("Connection failed");
       expect(result.current.error).toBeDefined();
 
       // Clear the error

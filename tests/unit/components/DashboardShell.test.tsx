@@ -16,18 +16,14 @@ const mockUsePortfolioDataProgressive = vi.fn();
 const mockUseSentimentData = vi.fn();
 const mockUseRegimeHistory = vi.fn();
 
-// Mock Next.js navigation
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
+// Mock routing adapter
+vi.mock("@/lib/routing", () => ({
+  useAppRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-    refresh: vi.fn(),
-    prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/bundle/user-123",
+  useAppSearchParams: () => new URLSearchParams(),
+  useAppPathname: () => "/bundle/user-123",
 }));
 
 vi.mock("@/hooks/queries/analytics/usePortfolioDataProgressive", () => ({

@@ -8,7 +8,7 @@ import {
 
 const BUNDLE_USER_ID = "0x1234567890123456789012345678901234567890";
 const LIVE_ANALYTICS_ENGINE_URL =
-  process.env["NEXT_PUBLIC_ANALYTICS_ENGINE_URL"] ?? "http://127.0.0.1:8001";
+  process.env["VITE_ANALYTICS_ENGINE_URL"] ?? "http://127.0.0.1:8001";
 const PLAYWRIGHT_TEST_BASE_URL =
   process.env["PLAYWRIGHT_BASE_URL"] ??
   `http://127.0.0.1:${process.env["PLAYWRIGHT_PORT"] ?? "3000"}`;

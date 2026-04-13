@@ -221,8 +221,11 @@ NEXT_PUBLIC_USE_V22_LAYOUT=true
 # Set rollout percentage (0-100)
 NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE=50
 
-# Enable React Query Devtools
+# Optional: React Query Devtools (uses extra memory; omit or set 0 for lean dev)
 NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS=1
+
+# Optional: in-app log viewer overlay in dev (set to 1 only when needed)
+# NEXT_PUBLIC_ENABLE_LOG_VIEWER=1
 ```
 
 ### Playwright Config
@@ -333,8 +336,8 @@ Many tests rely on `data-testid` attributes for reliable element selection. See
 
 ### 1. Wallet Connection in Tests
 
-**Issue:** E2E tests cannot easily simulate wallet connection (ThirdWeb modal) **Workaround:** Tests
-use demo route `/layout-demo/v22` which doesn't require wallet
+**Issue:** E2E tests cannot easily simulate wallet connection (wagmi injected connector)
+**Workaround:** Tests use demo route `/layout-demo/v22` which doesn't require wallet
 
 ### 2. Feature Flag Environment Variables
 

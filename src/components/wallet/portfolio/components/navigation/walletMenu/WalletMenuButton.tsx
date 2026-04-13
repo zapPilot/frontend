@@ -1,5 +1,3 @@
-"use client";
-
 import { ChevronDown, Wallet } from "lucide-react";
 import { type ReactElement } from "react";
 

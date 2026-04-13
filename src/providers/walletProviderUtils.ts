@@ -28,28 +28,6 @@ interface WalletChainSource {
   };
 }
 
-interface WalletItem {
-  getAccount: () => { address?: string } | undefined | null;
-}
-
-export const getWalletAddress = (walletItem: WalletItem): string =>
-  walletItem.getAccount()?.address ?? "";
-
-export const buildWalletList = (
-  connectedWallets: WalletItem[],
-  activeAddress: string | undefined
-): { address: string; isActive: boolean }[] =>
-  connectedWallets
-    .map(walletItem => {
-      const address = getWalletAddress(walletItem);
-
-      return {
-        address,
-        isActive: address === activeAddress,
-      };
-    })
-    .filter(walletItem => Boolean(walletItem.address));
-
 export const buildWalletAccount = (
   address: string | undefined,
   balanceDisplayValue: string | undefined
@@ -78,17 +56,6 @@ export const buildWalletChain = (
     symbol: chain.nativeCurrency?.symbol ?? "ETH",
   };
 };
-
-export const createChainSwitchTarget = (chainId: number) => ({
-  id: chainId,
-  name: `Chain ${chainId}`,
-  rpc: `https://rpc-${chainId}.example.com`,
-  nativeCurrency: {
-    name: "ETH",
-    symbol: "ETH",
-    decimals: 18,
-  },
-});
 
 export const handleWalletOperationError = (
   setError: Dispatch<SetStateAction<WalletError | null>>,

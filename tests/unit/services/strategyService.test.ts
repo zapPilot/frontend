@@ -82,64 +82,73 @@ describe("strategyService", () => {
     const mockSuggestion = {
       as_of: "2026-03-07",
       config_id: "dma_gated_fgi_default",
+      config_display_name: "DMA Gated FGI Default",
       strategy_id: "dma_gated_fgi",
-      market: {
-        date: "2026-03-07",
-        token_price: { btc: 68148.28 },
-        sentiment: 18,
-        sentiment_label: "extreme_fear",
-      },
-      portfolio: {
-        spot_usd: 7000,
-        stable_usd: 3000,
-        total_value: 10000,
-        allocation: {
-          spot: 0.7,
-          stable: 0.3,
-        },
-      },
-      signal: {
-        id: "dma_gated_fgi",
-        regime: "extreme_fear",
-        raw_value: 18,
-        confidence: 1,
-        details: {
-          dma: {
-            dma_200: 65000,
-            distance: 0.048,
-            zone: "above",
-            cross_event: null,
-            cooldown_active: false,
-            cooldown_remaining_days: 0,
-            cooldown_blocked_zone: null,
-            fgi_slope: -2,
-          },
-        },
-      },
-      decision: {
-        action: "hold",
-        reason: "wait",
-        rule_group: "none",
-        target_allocation: {
-          spot: 0.7,
-          stable: 0.3,
-        },
-        immediate: false,
-      },
-      user_action: {
+      action: {
         status: "no_action",
         required: false,
-        event: null,
+        kind: null,
+        reason_code: "already_aligned",
         transfers: [],
-        blocked_reason: null,
       },
-      execution: {
-        event: null,
-        transfers: [],
-        blocked_reason: null,
-        step_count: 0,
-        steps_remaining: 0,
-        interval_days: 0,
+      context: {
+        market: {
+          date: "2026-03-07",
+          token_price: { btc: 68148.28 },
+          sentiment: 18,
+          sentiment_label: "extreme_fear",
+        },
+        portfolio: {
+          spot_usd: 7000,
+          stable_usd: 3000,
+          total_value: 10000,
+          allocation: {
+            spot: 0.7,
+            stable: 0.3,
+          },
+          asset_allocation: {
+            btc: 0.7,
+            eth: 0,
+            stable: 0.3,
+            alt: 0,
+          },
+        },
+        signal: {
+          id: "dma_gated_fgi",
+          regime: "extreme_fear",
+          raw_value: 18,
+          confidence: 1,
+          details: {
+            dma: {
+              dma_200: 65000,
+              distance: 0.048,
+              zone: "above",
+              cross_event: null,
+              cooldown_active: false,
+              cooldown_remaining_days: 0,
+              cooldown_blocked_zone: null,
+              fgi_slope: -2,
+            },
+          },
+        },
+        target: {
+          allocation: {
+            spot: 0.7,
+            stable: 0.3,
+          },
+          asset_allocation: {
+            btc: 0.7,
+            eth: 0,
+            stable: 0.3,
+            alt: 0,
+          },
+        },
+        strategy: {
+          stance: "hold",
+          reason_code: "already_aligned",
+          rule_group: "none",
+          details: {},
+        },
       },
     };
 

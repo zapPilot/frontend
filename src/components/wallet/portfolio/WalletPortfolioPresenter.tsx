@@ -1,24 +1,24 @@
-"use client";
-
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { type ReactElement, type ReactNode, useRef, useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
 import { InitialDataLoadingState } from "@/components/wallet/InitialDataLoadingState";
-import { AnalyticsView } from "@/components/wallet/portfolio/analytics";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/navigation";
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
-import { PortfolioModals } from "@/components/wallet/portfolio/modals";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
-import { InvestView } from "@/components/wallet/portfolio/views/invest/InvestView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
-import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
+import { lazyImport } from "@/lib/lazy/lazyImport";
 import {
   buildPortfolioRouteSearchParams,
   readPortfolioRouteState,
 } from "@/lib/portfolio/portfolioRouteState";
+import {
+  useAppPathname,
+  useAppRouter,
+  useAppSearchParams,
+} from "@/lib/routing";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services";
 import type {
@@ -35,6 +35,42 @@ const LAYOUT = {
   main: "flex-1 flex justify-center p-4 md:p-8",
   content: "w-full max-w-4xl flex flex-col gap-8 min-h-[600px]",
 } as const;
+
+function PortfolioTabLoadingState(): ReactElement {
+  return (
+    <div
+      className="min-h-[16rem] rounded-3xl border border-gray-800/60 bg-gray-900/40 flex items-center justify-center"
+      data-testid="portfolio-tab-loading"
+    >
+      <div className="flex items-center gap-3 text-sm text-gray-400">
+        <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+        Loading view...
+      </div>
+    </div>
+  );
+}
+
+const LazyAnalyticsView = lazyImport(
+  async () => import("@/components/wallet/portfolio/analytics"),
+  mod => mod.AnalyticsView,
+  { fallback: <PortfolioTabLoadingState /> }
+);
+
+const LazyInvestView = lazyImport(
+  async () => import("@/components/wallet/portfolio/views/invest/InvestView"),
+  mod => mod.InvestView,
+  { fallback: <PortfolioTabLoadingState /> }
+);
+
+const LazyPortfolioModals = lazyImport(
+  async () => import("@/components/wallet/portfolio/modals"),
+  mod => mod.PortfolioModals
+);
+
+const LazyWalletManager = lazyImport(
+  async () => import("@/components/WalletManager"),
+  mod => mod.WalletManager
+);
 
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
@@ -110,9 +146,9 @@ export function WalletPortfolioPresenter({
   headerBanners,
   footerOverlays,
 }: WalletPortfolioPresenterProps): ReactElement {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useAppRouter();
+  const pathname = useAppPathname();
+  const searchParams = useAppSearchParams();
   const { showToast } = useToast();
   const currentRegime = getRegimeById(data.currentRegime);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -188,7 +224,7 @@ export function WalletPortfolioPresenter({
         currentSearchParams: searchParams,
       });
 
-      // Navigate with Next.js router
+      // Navigate through the app router adapter
       router.push(bundleUrl);
     } catch (error) {
       if (isValidationSearchError(error)) {
@@ -228,12 +264,12 @@ export function WalletPortfolioPresenter({
     ),
     analytics: userId ? (
       <div data-testid="analytics-content">
-        <AnalyticsView userId={userId} />
+        <LazyAnalyticsView userId={userId} />
       </div>
     ) : null,
     invest: (
       <div data-testid="invest-content">
-        <InvestView
+        <LazyInvestView
           userId={userId}
           activeSubTab={routeState.invest}
           activeMarketSection={routeState.market}
@@ -293,7 +329,7 @@ export function WalletPortfolioPresenter({
         containerClassName="max-w-4xl"
       />
 
-      <PortfolioModals
+      <LazyPortfolioModals
         activeModal={activeModal}
         onClose={closeModal}
         data={data}
@@ -303,7 +339,7 @@ export function WalletPortfolioPresenter({
       />
 
       {/* Wallet Manager Modal */}
-      <WalletManager
+      <LazyWalletManager
         isOpen={isWalletManagerOpen}
         onClose={closeWalletManager}
         {...(userId ? { urlUserId: userId } : {})}

@@ -3,16 +3,16 @@ name: next-tailwind-dev-guidelines
 description:
   Specialized development guidelines for the Zap Pilot frontend built with Next.js 15, React 19,
   Tailwind CSS v4, and TypeScript. Covers service-first architecture, component composition
-  patterns, TanStack Query integration, Radix UI components, Web3 wallet integration via ThirdWeb
-  SDK, routing with Next.js App Router, and progressive web app optimization. Use when working with
-  React components, API integration, styling, data fetching, wallet connectivity, or building new
-  features.
+  patterns, TanStack Query integration, Radix UI components, Web3 wallet integration via wagmi +
+  viem SDK, routing with Next.js App Router, and progressive web app optimization. Use when working
+  with React components, API integration, styling, data fetching, wallet connectivity, or building
+  new features.
 ---
 
 # Next.js + Tailwind Development Guidelines
 
-**Tech Stack**: Next.js 15, React 19, Tailwind CSS v4, Radix UI, TanStack Query, ThirdWeb SDK v5,
-TypeScript 5
+**Tech Stack**: Next.js 15, React 19, Tailwind CSS v4, Radix UI, TanStack Query, wagmi + viem SDK
+v5, TypeScript 5
 
 This skill provides development guidelines specifically for the Zap Pilot frontend codebase. It
 follows a **progressive disclosure pattern** - start here for the overview, then consult specific
@@ -34,7 +34,8 @@ resource files as needed.
 - **Routing**: See `@routing.md` for Next.js App Router patterns, navigation, and dynamic routes
 - **Data Fetching**: See `@data-fetching.md` for TanStack Query patterns and caching strategies
 - **Styling**: See `@styling.md` for Tailwind utilities, design tokens, and animations
-- **Web3**: See `@web3-integration.md` for ThirdWeb SDK, wallet connectivity, and chain management
+- **Web3**: See `@web3-integration.md` for wagmi + viem SDK, wallet connectivity, and chain
+  management
 
 ## Project Structure
 
@@ -128,7 +129,7 @@ For detailed guidance on specific topics, reference these files:
 - `@routing.md` - Next.js App Router, dynamic routes, navigation, layouts
 - `@data-fetching.md` - TanStack Query patterns, caching, mutations, optimistic updates
 - `@styling.md` - Tailwind CSS utilities, design tokens, animations, responsive design
-- `@web3-integration.md` - ThirdWeb SDK integration, wallet connectivity, transaction handling
+- `@web3-integration.md` - wagmi + viem SDK integration, wallet connectivity, transaction handling
 - `@main.md` - Additional patterns, error handling, testing standards, security practices
 
 Use `@filename.md` syntax to include specific resource files when needed for deeper guidance.

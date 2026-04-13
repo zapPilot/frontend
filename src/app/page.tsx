@@ -2,7 +2,7 @@ import { Suspense } from "react";
 
 import { BundlePageEntry } from "./bundle/BundlePageEntry";
 
-export default function LandingPage() {
+export function LandingPage() {
   return (
     <Suspense
       fallback={

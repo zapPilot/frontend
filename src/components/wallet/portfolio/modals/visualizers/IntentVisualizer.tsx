@@ -1,5 +1,3 @@
-"use client";
-
 import { Check } from "lucide-react";
 import { type ReactElement, useEffect, useState } from "react";
 
@@ -98,7 +96,6 @@ export function IntentVisualizer({
 
             {/* Protocol Identity */}
             <div className="w-8 h-8 rounded shrink-0 relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getProtocolLogo(lane.id)}
                 className="w-full h-full object-cover rounded opacity-80"

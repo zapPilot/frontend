@@ -235,6 +235,25 @@ describe("Logger", () => {
       expect(LogLevel.WARN).toBeLessThan(LogLevel.ERROR);
     });
   });
+
+  describe("formatLogEntry UNKNOWN fallback", () => {
+    it("uses UNKNOWN when log level index is out of range", () => {
+      // Exercises the `levelNames[entry.level] || "UNKNOWN"` false branch.
+      // Level 99 is out of bounds → levelNames[99] is undefined → "UNKNOWN" is used.
+      logger.setLevel(LogLevel.DEBUG);
+      logger.setConsoleLogging(true);
+      // Access private `log` method via bracket notation to inject an invalid level.
+
+      (logger as any)["log"](99, "out-of-range level message");
+
+      // The console switch-case won't match level 99, but formatLogEntry still runs.
+      // Verify the entry was stored with the invalid level.
+      const logs = logger.getLogs();
+      const last = logs[logs.length - 1];
+      expect(last.message).toBe("out-of-range level message");
+      expect(last.level).toBe(99);
+    });
+  });
   describe("Advanced Features", () => {
     it("should respect maxLocalLogs limit", () => {
       logger.clearLogs();
@@ -262,7 +281,7 @@ describe("Logger", () => {
 
     it("should configure for production", () => {
       vi.stubEnv("NODE_ENV", "production");
-      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "false");
+      vi.stubEnv("VITE_ENABLE_DEBUG_LOGGING", "false");
 
       const prodLogger = new LoggerClass();
       const config = prodLogger.getConfig();
@@ -273,7 +292,7 @@ describe("Logger", () => {
 
     it("should enable debug in production if flag set", () => {
       vi.stubEnv("NODE_ENV", "production");
-      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "true");
+      vi.stubEnv("VITE_ENABLE_DEBUG_LOGGING", "true");
 
       const debugProdLogger = new LoggerClass();
       const config = debugProdLogger.getConfig();

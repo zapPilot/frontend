@@ -92,6 +92,26 @@ describe("formatCurrency", () => {
       });
       expect(result).toBe("< $0.0010");
     });
+
+    it("uses default threshold (0.01) when threshold is explicitly undefined", () => {
+      // Exercises the `options.threshold ?? 0.01` right branch.
+      // normalizeFormatOptions spreads user options over defaults, so explicit
+      // `undefined` overrides the default 0.01, making ?? fallback fire.
+      const result = formatCurrency(0.005, {
+        smartPrecision: true,
+        threshold: undefined,
+      });
+      expect(result).toBe("< $0.01");
+    });
+
+    it("uses default showNegative (true) when showNegative is explicitly undefined", () => {
+      // Exercises the `options.showNegative ?? true` right branch.
+      const result = formatCurrency(-0.005, {
+        smartPrecision: true,
+        showNegative: undefined,
+      });
+      expect(result).toBe("-< $0.01");
+    });
   });
 });
 

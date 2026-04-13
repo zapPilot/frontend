@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import type { ReactElement } from "react";
 

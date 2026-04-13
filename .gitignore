@@ -13,13 +13,12 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# build artifacts
 .vitest-reports/
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -40,7 +39,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # commit msg
 gitdiff

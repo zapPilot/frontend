@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartSkeleton, MetricsSkeleton } from "@/components/ui";
 
 export function BacktestLoadingState() {

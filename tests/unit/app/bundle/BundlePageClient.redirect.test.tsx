@@ -27,14 +27,11 @@ const replaceMock = vi.fn();
 const pathnameMock = vi.fn().mockReturnValue("/");
 const searchParamsMock = vi.fn().mockReturnValue(new URLSearchParams());
 
-vi.mock("next/navigation", async () => {
-  const actual =
-    await vi.importActual<typeof import("next/navigation")>("next/navigation");
+vi.mock("@/lib/routing", () => {
   return {
-    ...actual,
-    useRouter: () => ({ replace: replaceMock }),
-    usePathname: () => pathnameMock(),
-    useSearchParams: () => searchParamsMock(),
+    useAppRouter: () => ({ replace: replaceMock }),
+    useAppPathname: () => pathnameMock(),
+    useAppSearchParams: () => searchParamsMock(),
   };
 });
 

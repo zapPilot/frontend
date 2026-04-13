@@ -170,7 +170,7 @@ test.describe("Basic Functionality Validation", () => {
         !error.includes("404") &&
         !error.includes("net::ERR") &&
         !error.includes("Failed to load resource") &&
-        !error.includes("chunk") // Next.js chunk loading issues
+        !error.includes("chunk") // stale asset/chunk loading issues
     );
 
     // For now, just log errors but don't fail the test

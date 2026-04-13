@@ -1,5 +1,3 @@
-import { useSearchParams } from "next/navigation";
-
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GhostModeOverlay } from "@/components/layout/overlays/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
@@ -13,6 +11,7 @@ import {
   PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
+import { useAppSearchParams } from "@/lib/routing";
 import type { ModalType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -46,7 +45,7 @@ export function DashboardView({
   onOpenModal,
   userId,
 }: DashboardViewProps) {
-  const searchParams = useSearchParams();
+  const searchParams = useAppSearchParams();
   const urlUserId = searchParams.get("userId");
 
   // Only enable ghost mode on root path (no userId param)

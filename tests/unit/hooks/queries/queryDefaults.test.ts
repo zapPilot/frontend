@@ -1,12 +1,68 @@
 /**
  * Unit tests for queryDefaults - React Query configuration utilities
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { createQueryConfig } from "@/hooks/queries/queryDefaults";
+import {
+  createQueryConfig,
+  logQueryError,
+} from "@/hooks/queries/queryDefaults";
 import { ServiceError } from "@/lib/errors";
+import { APIError } from "@/lib/http";
+
+vi.mock("@/utils", async importOriginal => {
+  const original = await importOriginal<typeof import("@/utils")>();
+  return {
+    ...original,
+    logger: {
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+      getLogs: vi.fn(() => []),
+    },
+  };
+});
 
 describe("queryDefaults", () => {
+  describe("logQueryError", () => {
+    it("logs a plain Error with its message and undefined status", async () => {
+      const { logger } = await import("@/utils");
+      vi.clearAllMocks();
+
+      logQueryError("Failed to fetch", new Error("timeout"));
+
+      expect(logger.error).toHaveBeenCalledWith("Failed to fetch", {
+        error: "timeout",
+        status: undefined,
+      });
+    });
+
+    it("logs an APIError with its message and numeric status", async () => {
+      const { logger } = await import("@/utils");
+      vi.clearAllMocks();
+
+      logQueryError("API fail", new APIError("bad request", 400, "BAD_REQ"));
+
+      expect(logger.error).toHaveBeenCalledWith("API fail", {
+        error: "bad request",
+        status: 400,
+      });
+    });
+
+    it("logs a raw string error with String() coercion and undefined status", async () => {
+      const { logger } = await import("@/utils");
+      vi.clearAllMocks();
+
+      logQueryError("Unknown", "raw string");
+
+      expect(logger.error).toHaveBeenCalledWith("Unknown", {
+        error: "raw string",
+        status: undefined,
+      });
+    });
+  });
+
   describe("createQueryConfig", () => {
     it("should return default configuration with etl timings", () => {
       const config = createQueryConfig();

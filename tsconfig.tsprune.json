@@ -4,5 +4,5 @@
     "noEmit": true
   },
   "include": ["src/**/*", "scripts/**/*"],
-  "exclude": ["**/*.test.*", "**/*.spec.*", "tests", ".next", "node_modules"]
+  "exclude": ["**/*.test.*", "**/*.spec.*", "tests", "node_modules"]
 }

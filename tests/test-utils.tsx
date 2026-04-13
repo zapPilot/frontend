@@ -6,6 +6,7 @@ import {
   RenderOptions,
 } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
 
 import { ToastProvider } from "../src/providers/ToastProvider";
 
@@ -58,9 +59,11 @@ function AllTheProviders({ children }: AllTheProvidersProps) {
   const queryClient = createTestQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>{children}</ToastProvider>
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
@@ -98,7 +101,9 @@ export function QueryClientWrapper({ children }: { children: ReactNode }) {
   const queryClient = createTestQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
