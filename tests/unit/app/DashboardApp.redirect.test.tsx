@@ -1,90 +1,70 @@
-import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import DashboardApp from "../../../src/app/page";
-import { render } from "../../test-utils";
+import { LandingPage } from "@/app/page";
 
-// Mock WalletPortfolio to avoid heavy rendering
-vi.mock("../../../src/components/wallet/portfolio/WalletPortfolio", () => ({
-  WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
+import { render, screen, waitFor } from "../../test-utils";
+
+function defaultBundlePageEntry() {
+  return <div data-testid="bundle-page-entry">Bundle Page Entry Component</div>;
+}
+
+const { mockBundlePageEntry } = vi.hoisted(() => ({
+  mockBundlePageEntry: vi.fn(),
 }));
 
-// Mock Navigation to avoid heavy rendering
-vi.mock("../../../src/components/Navigation", () => ({
-  Navigation: ({ activeTab }: any) => (
-    <div data-testid="navigation" data-tab={activeTab} />
-  ),
+vi.mock("@/app/bundle/BundlePageEntry", () => ({
+  BundlePageEntry: mockBundlePageEntry,
 }));
 
-vi.mock("@/components/wallet/portfolio/DashboardShell", () => ({
-  DashboardShell: () => <div data-testid="dashboard-shell" />,
-}));
-
-vi.mock("@/components/WalletManager", () => ({
-  WalletManager: () => null,
-}));
-
-// Mock useUser to control connection state
-let mockUser = {
-  userInfo: { userId: "user-abc" },
-  loading: false,
-  error: null as string | null,
-  isConnected: true,
-  connectedWallet: "0xabc",
-  refetch: vi.fn(),
-};
-
-vi.mock("../../../src/contexts/UserContext", () => ({
-  useUser: () => mockUser,
-  UserProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-// Spy on router.replace
-const hoisted = vi.hoisted(() => ({
-  replaceSpy: vi.fn(),
-  pathname: "/",
-}));
-
-vi.mock("@/lib/routing", () => ({
-  useAppRouter: () => ({ replace: hoisted.replaceSpy }),
-  useAppSearchParams: () => new URLSearchParams(""),
-  useAppPathname: () => hoisted.pathname,
-}));
-
-describe("DashboardApp redirect to bundle", () => {
+describe("LandingPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    hoisted.pathname = "/";
-    // Default: connected with userId
-    mockUser = {
-      userInfo: { userId: "user-abc" },
-      loading: false,
-      error: null,
-      isConnected: true,
-      connectedWallet: "0xabc",
-      refetch: vi.fn(),
+    mockBundlePageEntry.mockReset();
+    mockBundlePageEntry.mockImplementation(defaultBundlePageEntry);
+  });
+
+  it("renders the bundle page entry", () => {
+    render(<LandingPage />);
+
+    expect(screen.getByTestId("bundle-page-entry")).toBeInTheDocument();
+  });
+
+  it("shows the suspense fallback while the entry component is loading", async () => {
+    let resolveEntry: () => void = () => {
+      /* Will be assigned by Promise */
     };
-  });
-
-  it("does not redirect when not connected", async () => {
-    mockUser.isConnected = false;
-
-    await act(async () => {
-      render(<DashboardApp />);
-      await Promise.resolve();
+    const pendingEntry = new Promise<void>(resolve => {
+      resolveEntry = resolve;
     });
 
-    expect(hoisted.replaceSpy).not.toHaveBeenCalled();
-  });
-
-  it("does not redirect when not on root path", async () => {
-    hoisted.pathname = "/some/other/path";
-
-    await act(async () => {
-      render(<DashboardApp />);
-      await Promise.resolve();
+    mockBundlePageEntry.mockImplementation(() => {
+      throw pendingEntry;
     });
 
-    expect(hoisted.replaceSpy).not.toHaveBeenCalled();
+    render(<LandingPage />);
+
+    expect(
+      await screen.findByTestId("bundle-suspense-fallback")
+    ).toBeInTheDocument();
+
+    mockBundlePageEntry.mockImplementation(defaultBundlePageEntry);
+    resolveEntry();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("bundle-page-entry")).toBeInTheDocument();
+    });
+  });
+
+  it("propagates errors thrown by the entry component", () => {
+    const error = new Error("Import failed");
+    mockBundlePageEntry.mockImplementation(() => {
+      throw error;
+    });
+
+    expect(() => render(<LandingPage />)).toThrow(error);
+  });
+
+  it("exports landing page as a component", () => {
+    expect(LandingPage).toBeDefined();
+    expect(typeof LandingPage).toBe("function");
   });
 });

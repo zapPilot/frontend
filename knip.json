@@ -18,7 +18,7 @@
 
   "ignoreDependencies": [
     "@types/*",
-    "eslint-config-next",
+    "tailwindcss",
     "eslint-plugin-jsx-a11y",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
@@ -36,10 +36,6 @@
   },
 
   "includeEntryExports": true,
-
-  "next": {
-    "entry": ["src/app/**", "!src/app/**/*.test.{ts,tsx}", "!src/app/**/*.spec.{ts,tsx}"]
-  },
 
   "vitest": {
     "config": ["vitest.config.ts"],

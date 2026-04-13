@@ -151,4 +151,36 @@ describe("InvestView", () => {
     const tradingBtn = screen.getByText("trading").closest("button");
     expect(tradingBtn?.className).toContain("text-white");
   });
+
+  it("applies inactive style to non-selected tabs", () => {
+    render(<ControlledInvestView userId="0xabc" />);
+
+    // 'backtesting' is not the active tab when trading is active
+    const backtestingBtn = screen.getByText("backtesting").closest("button");
+    expect(backtestingBtn?.className).toContain("text-gray-500");
+    expect(backtestingBtn?.className).not.toContain("text-white");
+  });
+
+  it("renders with default props when optional handlers not provided", () => {
+    // InvestView should render without throwing even when no handlers are passed
+    render(<InvestView userId="0xabc" />);
+
+    expect(screen.getByTestId("trading-view")).toBeDefined();
+  });
+
+  it("shows active tab underline indicator for current tab only", () => {
+    render(<ControlledInvestView userId="0xabc" />);
+
+    // The active tab indicator (bottom bar) should be inside the trading button
+    const tradingBtn = screen.getByText("trading").closest("button");
+    // The indicator div exists inside the button
+    const indicator = tradingBtn?.querySelector(".absolute.bottom-0");
+    expect(indicator).not.toBeNull();
+
+    // Backtesting (inactive) should NOT have the indicator
+    const backtestingBtn = screen.getByText("backtesting").closest("button");
+    const inactiveIndicator =
+      backtestingBtn?.querySelector(".absolute.bottom-0");
+    expect(inactiveIndicator).toBeNull();
+  });
 });

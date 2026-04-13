@@ -156,5 +156,24 @@ describe("SectionWrapper", () => {
       );
       expect(container.firstChild).toBeNull();
     });
+
+    it("calls window.location.reload when retry button is clicked", () => {
+      const reloadMock = vi.fn();
+      Object.defineProperty(window, "location", {
+        value: { ...window.location, reload: reloadMock },
+        configurable: true,
+      });
+
+      render(
+        <SectionWrapper state={createErrorState<string>("Error")}>
+          {data => <div>{data}</div>}
+        </SectionWrapper>
+      );
+
+      const retryButton = screen.getByTitle("Retry");
+      retryButton.click();
+
+      expect(reloadMock).toHaveBeenCalledOnce();
+    });
   });
 });

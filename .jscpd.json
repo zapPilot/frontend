@@ -9,8 +9,6 @@
     "**/tests/**",
     "**/*.d.ts",
     "**/dist/**",
-    "**/.next/**",
-    "**/out/**",
     "**/coverage/**",
     ".jscpd/**",
     "jscpd-report/**",

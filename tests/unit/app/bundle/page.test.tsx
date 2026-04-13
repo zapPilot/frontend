@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import BundlePage from "../../../../src/app/bundle/page";
+import { BundlePage } from "@/app/bundle/page";
+
 import { render, screen, waitFor } from "../../../test-utils";
 
 function defaultBundlePageEntry() {
@@ -11,7 +12,7 @@ const { mockBundlePageEntry } = vi.hoisted(() => ({
   mockBundlePageEntry: vi.fn(),
 }));
 
-vi.mock("../../../../src/app/bundle/BundlePageEntry", () => ({
+vi.mock("@/app/bundle/BundlePageEntry", () => ({
   BundlePageEntry: mockBundlePageEntry,
 }));
 

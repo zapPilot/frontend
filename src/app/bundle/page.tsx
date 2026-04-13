@@ -16,5 +16,3 @@ export function BundlePage() {
     </Suspense>
   );
 }
-
-export default BundlePage;

@@ -14,8 +14,6 @@
 /coverage
 
 # build artifacts
-/.next/
-/out/
 .vitest-reports/
 
 # production
@@ -41,7 +39,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # commit msg
 gitdiff

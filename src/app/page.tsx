@@ -16,5 +16,3 @@ export function LandingPage() {
     </Suspense>
   );
 }
-
-export default LandingPage;

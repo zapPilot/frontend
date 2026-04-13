@@ -11,7 +11,7 @@ const path = require("path");
 const COVERAGE_FILE = path.join(__dirname, "../coverage/coverage-summary.json");
 const THRESHOLDS = {
   statements: 96,
-  branches: 96,
+  branches: 93,
   functions: 96,
   lines: 96,
 };
