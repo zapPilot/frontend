@@ -1,1 +1,0 @@
-export { createErrorMapper } from "./serviceErrorFactory";

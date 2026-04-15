@@ -22,10 +22,11 @@ export {
 // ERROR UTILITIES
 // ============================================================================
 
-// Error helper functions (classification and factory)
+// Error helper functions (classification, factory, and message extraction)
 export {
   createIntentServiceError,
   extractErrorCode,
+  extractErrorMessage,
   extractStatusCode,
   isClientError,
   isRetryableError,
@@ -34,7 +35,6 @@ export {
 
 // Legacy factory utilities (still used in some places)
 export { resolveErrorMessage } from "./errorFactory";
-export { extractErrorMessage } from "./extractErrorMessage";
 
 // Error handling utilities
 export type { ServiceResult } from "./errorHandling";

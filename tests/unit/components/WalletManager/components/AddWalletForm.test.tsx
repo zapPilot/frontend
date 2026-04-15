@@ -3,28 +3,18 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { AddWalletForm } from "@/components/WalletManager/components/AddWalletForm";
-import type {
-  NewWallet,
-  WalletOperations,
-} from "@/components/WalletManager/types/wallet.types";
+import type { WalletOperations } from "@/components/WalletManager/types/wallet.types";
+
+import {
+  DEFAULT_NEW_WALLET,
+  DEFAULT_WALLET_OPERATIONS,
+} from "../../../../fixtures/componentMocks";
 
 describe("AddWalletForm", () => {
-  const defaultNewWallet: NewWallet = {
-    label: "",
-    address: "",
-  };
-
-  const defaultOperations: WalletOperations = {
-    adding: { isLoading: false, error: null },
-    removing: {},
-    editing: {},
-    subscribing: { isLoading: false, error: null },
-  };
-
   const defaultProps = {
     isAdding: false,
-    newWallet: defaultNewWallet,
-    operations: defaultOperations,
+    newWallet: DEFAULT_NEW_WALLET,
+    operations: DEFAULT_WALLET_OPERATIONS,
     validationError: null,
     onWalletChange: vi.fn(),
     onAddWallet: vi.fn(),
@@ -266,7 +256,7 @@ describe("AddWalletForm", () => {
   describe("operation error display", () => {
     it("should display add operation error when present", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         adding: { isLoading: false, error: "Wallet already associated" },
       };
 
@@ -293,7 +283,7 @@ describe("AddWalletForm", () => {
 
     it("should display both validation and operation errors", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         adding: { isLoading: false, error: "Network error" },
       };
 
@@ -316,7 +306,7 @@ describe("AddWalletForm", () => {
   describe("loading state", () => {
     it("should show loading spinner when adding is in progress", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         adding: { isLoading: true, error: null },
       };
 
@@ -333,7 +323,7 @@ describe("AddWalletForm", () => {
 
     it("should disable Add to Bundle button when loading", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         adding: { isLoading: true, error: null },
       };
 
@@ -392,7 +382,7 @@ describe("AddWalletForm", () => {
       const user = userEvent.setup();
       const onAddWallet = vi.fn();
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         adding: { isLoading: true, error: null },
       };
 

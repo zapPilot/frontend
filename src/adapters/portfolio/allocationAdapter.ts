@@ -1,6 +1,6 @@
 import { ASSET_COLORS } from "@/constants/assets";
 import type { LandingPageResponse } from "@/services";
-import type { AllocationConstituent } from "@/types/portfolio-allocation";
+import type { AllocationConstituent } from "@/types/portfolio";
 
 /**
  * Constituent asset type for allocation breakdown
@@ -19,6 +19,12 @@ export interface PortfolioAllocation {
   };
   simplifiedCrypto: AllocationConstituent[];
 }
+
+const CRYPTO_ASSET_META: Omit<AllocationConstituent, "value">[] = [
+  { asset: "BTC", symbol: "BTC", name: "Bitcoin", color: ASSET_COLORS.BTC },
+  { asset: "ETH", symbol: "ETH", name: "Ethereum", color: ASSET_COLORS.ETH },
+  { asset: "Others", symbol: "ALT", name: "Altcoins", color: ASSET_COLORS.ALT },
+];
 
 /**
  * Calculates current allocation from portfolio data
@@ -56,28 +62,15 @@ export function calculateAllocation(
 
   // Build constituents for detailed breakdown
   const safeCryptoDivisor = totalCrypto || 1;
+  const [btcMeta, ethMeta, altMeta] = CRYPTO_ASSET_META as [
+    Omit<AllocationConstituent, "value">,
+    Omit<AllocationConstituent, "value">,
+    Omit<AllocationConstituent, "value">,
+  ];
   const cryptoConstituents: AllocationConstituent[] = [
-    {
-      asset: "BTC",
-      symbol: "BTC",
-      name: "Bitcoin",
-      value: (btcValue / safeCryptoDivisor) * 100,
-      color: ASSET_COLORS.BTC,
-    },
-    {
-      asset: "ETH",
-      symbol: "ETH",
-      name: "Ethereum",
-      value: (ethValue / safeCryptoDivisor) * 100,
-      color: ASSET_COLORS.ETH,
-    },
-    {
-      asset: "Others",
-      symbol: "ALT",
-      name: "Altcoins",
-      value: (othersValue / safeCryptoDivisor) * 100,
-      color: ASSET_COLORS.ALT,
-    },
+    { ...btcMeta, value: (btcValue / safeCryptoDivisor) * 100 },
+    { ...ethMeta, value: (ethValue / safeCryptoDivisor) * 100 },
+    { ...altMeta, value: (othersValue / safeCryptoDivisor) * 100 },
   ].filter(c => c.value > 0);
   const stableConstituents: AllocationConstituent[] = [];
 
@@ -107,27 +100,9 @@ export function calculateAllocation(
   // Create simplified crypto breakdown for composition bar
   // Using absolute portfolio percentages directly from API
   const simplifiedCrypto: AllocationConstituent[] = [
-    {
-      symbol: "BTC",
-      name: "Bitcoin",
-      asset: "BTC",
-      value: allocation.btc.percentage_of_portfolio,
-      color: ASSET_COLORS.BTC,
-    },
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      asset: "ETH",
-      value: allocation.eth.percentage_of_portfolio,
-      color: ASSET_COLORS.ETH,
-    },
-    {
-      symbol: "ALT",
-      name: "Altcoins",
-      asset: "Others",
-      value: allocation.others.percentage_of_portfolio,
-      color: ASSET_COLORS.ALT,
-    },
+    { ...btcMeta, value: allocation.btc.percentage_of_portfolio },
+    { ...ethMeta, value: allocation.eth.percentage_of_portfolio },
+    { ...altMeta, value: allocation.others.percentage_of_portfolio },
   ].filter(c => c.value > 0);
 
   return {

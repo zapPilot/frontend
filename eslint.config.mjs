@@ -28,6 +28,7 @@ const eslintConfig = [
       "test-results/**/*",
       ".claude/**/*",
       "**/__snapshots__/**",
+      "tsconfig.test.json",
     ],
   },
 

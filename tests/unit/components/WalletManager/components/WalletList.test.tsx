@@ -3,11 +3,15 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { WalletList } from "@/components/WalletManager/components/WalletList";
-import type {
-  NewWallet,
-  WalletOperations,
-} from "@/components/WalletManager/types/wallet.types";
+import type { WalletOperations } from "@/components/WalletManager/types/wallet.types";
 import type { WalletData } from "@/lib/validation/walletUtils";
+
+import {
+  DEFAULT_NEW_WALLET,
+  DEFAULT_WALLET_OPERATIONS,
+  MOCK_WALLET_1,
+  MOCK_WALLET_2,
+} from "../../../../fixtures/componentMocks";
 
 // Mock useWalletList context hook
 vi.mock("@/components/WalletManager/contexts/WalletListContext", () => ({
@@ -114,42 +118,12 @@ vi.mock("@/lib/ui/animationVariants", () => ({
 }));
 
 describe("WalletList", () => {
-  const mockWallet1: WalletData = {
-    id: "wallet1",
-    address: "0x1234567890123456789012345678901234567890",
-    label: "Main Wallet",
-    isActive: false,
-    isMain: false,
-    createdAt: "2024-01-01T00:00:00Z",
-  };
-
-  const mockWallet2: WalletData = {
-    id: "wallet2",
-    address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-    label: "Trading Wallet",
-    isActive: false,
-    isMain: false,
-    createdAt: "2024-01-02T00:00:00Z",
-  };
-
-  const defaultOperations: WalletOperations = {
-    adding: { isLoading: false, error: null },
-    removing: {},
-    editing: {},
-    subscribing: { isLoading: false, error: null },
-  };
-
-  const defaultNewWallet: NewWallet = {
-    label: "",
-    address: "",
-  };
-
   const defaultProps = {
-    wallets: [mockWallet1, mockWallet2],
-    operations: defaultOperations,
+    wallets: [MOCK_WALLET_1, MOCK_WALLET_2],
+    operations: DEFAULT_WALLET_OPERATIONS,
     isOwner: true,
     isAdding: false,
-    newWallet: defaultNewWallet,
+    newWallet: DEFAULT_NEW_WALLET,
     validationError: null,
     openDropdown: null,
     menuPosition: null,
@@ -242,7 +216,10 @@ describe("WalletList", () => {
   describe("wallet list display", () => {
     it("should show wallet count in header", () => {
       render(
-        <WalletList {...defaultProps} wallets={[mockWallet1, mockWallet2]} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1, MOCK_WALLET_2]}
+        />
       );
 
       expect(screen.getByText("Bundled Wallets (2)")).toBeInTheDocument();
@@ -250,7 +227,10 @@ describe("WalletList", () => {
 
     it("should render WalletCard for each wallet", () => {
       render(
-        <WalletList {...defaultProps} wallets={[mockWallet1, mockWallet2]} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1, MOCK_WALLET_2]}
+        />
       );
 
       const cards = screen.getAllByTestId("wallet-card");
@@ -259,7 +239,10 @@ describe("WalletList", () => {
 
     it("should pass correct wallet data to WalletCards", () => {
       render(
-        <WalletList {...defaultProps} wallets={[mockWallet1, mockWallet2]} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1, MOCK_WALLET_2]}
+        />
       );
 
       expect(screen.getByText("Wallet: Main Wallet")).toBeInTheDocument();
@@ -267,7 +250,7 @@ describe("WalletList", () => {
     });
 
     it("should render single wallet correctly", () => {
-      render(<WalletList {...defaultProps} wallets={[mockWallet1]} />);
+      render(<WalletList {...defaultProps} wallets={[MOCK_WALLET_1]} />);
 
       expect(screen.getByText("Bundled Wallets (1)")).toBeInTheDocument();
       expect(screen.getAllByTestId("wallet-card")).toHaveLength(1);
@@ -291,7 +274,10 @@ describe("WalletList", () => {
 
     it("should use wallet ID as key", () => {
       render(
-        <WalletList {...defaultProps} wallets={[mockWallet1, mockWallet2]} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1, MOCK_WALLET_2]}
+        />
       );
 
       const card1 = screen.getByText("Wallet: Main Wallet").closest("div");
@@ -392,7 +378,7 @@ describe("WalletList", () => {
   describe("operations and state", () => {
     it("should pass operations to WalletCard", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         removing: {
           wallet1: { isLoading: true, error: null },
         },
@@ -455,7 +441,11 @@ describe("WalletList", () => {
       expect(screen.getByText("Bundled Wallets (0)")).toBeInTheDocument();
 
       rerender(
-        <WalletList {...defaultProps} wallets={[mockWallet1]} isOwner={true} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1]}
+          isOwner={true}
+        />
       );
 
       expect(screen.getByText("Bundled Wallets (1)")).toBeInTheDocument();
@@ -466,7 +456,11 @@ describe("WalletList", () => {
 
     it("should handle transition from populated to empty", () => {
       const { rerender } = render(
-        <WalletList {...defaultProps} wallets={[mockWallet1]} isOwner={true} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1]}
+          isOwner={true}
+        />
       );
 
       expect(screen.getByText("Bundled Wallets (1)")).toBeInTheDocument();
@@ -481,13 +475,21 @@ describe("WalletList", () => {
 
     it("should handle isOwner changing from true to false", () => {
       const { rerender } = render(
-        <WalletList {...defaultProps} wallets={[mockWallet1]} isOwner={true} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1]}
+          isOwner={true}
+        />
       );
 
       expect(screen.getByText("Add Another Wallet")).toBeInTheDocument();
 
       rerender(
-        <WalletList {...defaultProps} wallets={[mockWallet1]} isOwner={false} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1]}
+          isOwner={false}
+        />
       );
 
       expect(screen.queryByText("Add Another Wallet")).not.toBeInTheDocument();
@@ -495,7 +497,10 @@ describe("WalletList", () => {
 
     it("should maintain wallet order", () => {
       render(
-        <WalletList {...defaultProps} wallets={[mockWallet1, mockWallet2]} />
+        <WalletList
+          {...defaultProps}
+          wallets={[MOCK_WALLET_1, MOCK_WALLET_2]}
+        />
       );
 
       const cards = screen.getAllByTestId("wallet-card");

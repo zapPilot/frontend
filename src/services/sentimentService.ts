@@ -10,7 +10,7 @@ import {
   type SentimentLabel,
 } from "@/config/sentimentQuotes";
 import { httpUtils } from "@/lib/http";
-import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
+import { createApiServiceCaller } from "@/lib/http/createServiceCaller";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,

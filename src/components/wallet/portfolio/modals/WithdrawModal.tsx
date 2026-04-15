@@ -6,7 +6,7 @@ import {
   getCategoryForToken,
 } from "@/lib/domain/assetCategoryUtils";
 import { transactionServiceMock } from "@/services";
-import type { WithdrawModalProps } from "@/types/ui/modals";
+import type { WithdrawModalProps } from "@/types/ui/ui.types";
 
 import { TransactionModalBase } from "./base/TransactionModalBase";
 import * as modalDeps from "./transactionModalDependencies";

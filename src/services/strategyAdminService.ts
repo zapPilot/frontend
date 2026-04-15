@@ -5,7 +5,7 @@
  */
 
 import { httpUtils } from "@/lib/http";
-import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
+import { createApiServiceCaller } from "@/lib/http/createServiceCaller";
 import type {
   CreateStrategyConfigRequest,
   StrategyAdminConfigResponse,

@@ -4,7 +4,7 @@ import { type ReactElement, useState } from "react";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionServiceMock } from "@/services";
-import type { RebalanceModalProps } from "@/types/ui/modals";
+import type { RebalanceModalProps } from "@/types/ui/ui.types";
 
 import {
   SubmittingState,

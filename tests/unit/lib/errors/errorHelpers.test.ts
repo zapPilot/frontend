@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createIntentServiceError,
   extractErrorCode,
+  extractErrorMessage,
   extractStatusCode,
   isClientError,
   isRetryableError,
@@ -119,6 +120,41 @@ describe("errorHelpers", () => {
       expect(error.status).toBe(400);
       expect(error.code).toBe("E_SLIPPAGE");
       expect(error.details).toEqual({ max: 50, provided: 100 });
+    });
+  });
+
+  describe("extractErrorMessage", () => {
+    it("returns the message from an Error instance", () => {
+      const error = new Error("something exploded");
+      expect(extractErrorMessage(error, "fallback")).toBe("something exploded");
+    });
+
+    it("returns a string error directly", () => {
+      expect(extractErrorMessage("raw string error", "fallback")).toBe(
+        "raw string error"
+      );
+    });
+
+    it("returns .message from a plain object", () => {
+      expect(extractErrorMessage({ message: "from object" }, "fallback")).toBe(
+        "from object"
+      );
+    });
+
+    it("returns the fallback when error has no message", () => {
+      expect(extractErrorMessage({}, "fallback")).toBe("fallback");
+    });
+
+    it("returns the fallback for null", () => {
+      expect(extractErrorMessage(null, "fallback")).toBe("fallback");
+    });
+
+    it("returns the fallback for undefined", () => {
+      expect(extractErrorMessage(undefined, "fallback")).toBe("fallback");
+    });
+
+    it("returns the fallback when .message is not a string", () => {
+      expect(extractErrorMessage({ message: 42 }, "fallback")).toBe("fallback");
     });
   });
 });

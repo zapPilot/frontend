@@ -1,8 +1,38 @@
 import { getIntentErrorMessage } from "@/lib/errors/errorMessages";
 
 import { resolveErrorMessage } from "./errorFactory";
-import { extractErrorMessage } from "./extractErrorMessage";
 import { IntentServiceError, type ServiceError } from "./ServiceError";
+
+/**
+ * Extract a human-readable message from an unknown error object.
+ *
+ * @param error - Error-like value to inspect
+ * @param fallbackMessage - Message to return when no usable message exists
+ * @returns Resolved error message string
+ */
+export function extractErrorMessage(
+  error: unknown,
+  fallbackMessage: string
+): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
 
 interface ErrorWithStatus {
   status?: number;
@@ -16,13 +46,6 @@ interface ErrorContextSource {
   message?: string;
   response?: { data?: unknown; status?: unknown };
   details?: Record<string, unknown>;
-}
-
-interface ErrorContext {
-  status: number;
-  code: string | undefined;
-  errorObj: ErrorContextSource;
-  message: string;
 }
 
 /**
@@ -128,25 +151,6 @@ export function extractErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
-function buildErrorContext(
-  error: unknown,
-  fallbackMessage: string
-): ErrorContext {
-  const status = extractStatusCode(error);
-  const code = extractErrorCode(error);
-  const errorObj = error as ErrorContextSource;
-
-  const message = resolveErrorMessage(
-    fallbackMessage,
-    extractErrorMessage(error, fallbackMessage),
-    errorObj.response?.data,
-    errorObj.details,
-    errorObj
-  );
-
-  return { status, code, errorObj, message };
-}
-
 /**
  * Enhanced error messages for common intent engine errors
  *
@@ -154,12 +158,16 @@ function buildErrorContext(
  * @returns Formatted IntentServiceError
  */
 export function createIntentServiceError(error: unknown): IntentServiceError {
-  const {
-    status,
-    code,
-    errorObj,
-    message: fallbackMessage,
-  } = buildErrorContext(error, "Intent service error");
+  const status = extractStatusCode(error);
+  const code = extractErrorCode(error);
+  const errorObj = error as ErrorContextSource;
+  const fallbackMessage = resolveErrorMessage(
+    "Intent service error",
+    extractErrorMessage(error, "Intent service error"),
+    errorObj.response?.data,
+    errorObj.details,
+    errorObj
+  );
   const userMessage = getIntentErrorMessage(status, fallbackMessage);
 
   return new IntentServiceError(

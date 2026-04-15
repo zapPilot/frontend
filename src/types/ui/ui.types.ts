@@ -11,6 +11,8 @@
  * @version 2.0.0
  */
 
+import type { AllocationBreakdown } from "@/types/domain/allocation";
+
 // =============================================================================
 // SIZE TYPES
 // =============================================================================
@@ -169,3 +171,58 @@ export interface InteractiveComponentProps extends BaseComponentProps {
 // NOTE: Type guards (isComponentSize, isButtonVariant, isLoadingVariant) and
 // constants (DEFAULT_SIZES, DEFAULT_VARIANTS, SIZE_ORDER) removed as dead code
 // (2025-12-22). Add back if needed.
+
+// =============================================================================
+// TRANSACTION MODAL PROPS
+// =============================================================================
+
+/**
+ * Base props shared by all transaction modals.
+ */
+export interface BaseTransactionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+/**
+ * Props for the deposit modal.
+ */
+export interface DepositModalProps extends BaseTransactionModalProps {
+  defaultChainId?: number;
+}
+
+/**
+ * Props for the withdraw modal.
+ */
+export interface WithdrawModalProps extends BaseTransactionModalProps {
+  defaultChainId?: number;
+}
+
+/**
+ * Props for the rebalance modal.
+ */
+export interface RebalanceModalProps extends BaseTransactionModalProps {
+  currentAllocation: AllocationBreakdown;
+  targetAllocation: AllocationBreakdown;
+}
+
+// =============================================================================
+// SWAP TOKEN
+// =============================================================================
+
+export interface SwapToken {
+  symbol: string;
+  name: string;
+  address: string;
+  chainId: number;
+  decimals: number;
+  balance?: number;
+  price?: number;
+  logo_url?: string;
+  optimized_symbol?: string;
+  icon?: string;
+  type?: "native" | "wrapped" | "erc20";
+  wrappedVersion?: string;
+  nativeVersion?: string;
+  hasDeposit?: boolean;
+}

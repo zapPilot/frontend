@@ -1,4 +1,4 @@
-import type { SwapToken } from "@/types/ui/swap";
+import type { SwapToken } from "@/types/ui/ui.types";
 
 type TransactionType = "deposit" | "withdraw" | "rebalance";
 

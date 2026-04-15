@@ -37,3 +37,14 @@ export type MarketSection = (typeof MARKET_SECTION_IDS)[number];
  * Modal types for portfolio actions
  */
 export type ModalType = "deposit" | "withdraw" | "rebalance";
+
+/**
+ * Portfolio allocation type definitions shared across adapters and UI.
+ */
+export interface AllocationConstituent {
+  asset: string;
+  symbol: string;
+  name: string;
+  value: number;
+  color: string;
+}

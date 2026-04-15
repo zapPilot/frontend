@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
 
 import { queryKeys } from "@/lib/state/queryClient";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import type { UserProfileResponse } from "@/schemas/api/accountSchemas";
 import { connectWallet, getUserProfile } from "@/services";
 
@@ -74,43 +74,61 @@ function buildUserInfo({
   };
 }
 
-// Hook to get user by wallet address
-export function useUserByWallet(walletAddress: string | null) {
-  return useQuery({
+/**
+ * Builds a React Query config for user data queries.
+ *
+ * @param key - Query key array
+ * @param identifier - Value that must be non-null to enable the query
+ * @param fetchUser - Async function returning a UserInfo
+ * @returns React Query options
+ */
+function buildUserQuery(
+  key: readonly unknown[],
+  identifier: string | null,
+  fetchUser: () => Promise<UserInfo>
+) {
+  return {
     ...baseUserQueryConfig,
-    queryKey: queryKeys.user.byWallet(walletAddress || ""),
-    queryFn: async (): Promise<UserInfo> => {
-      if (!walletAddress) {
-        throw new Error("No wallet address provided");
-      }
-
-      // Connect wallet to create/retrieve user (returns data directly or throws)
-      const connectResponse = await connectWallet(walletAddress);
-      const {
-        user_id: userId,
-        is_new_user: isNewUser,
-        etl_job,
-      } = connectResponse;
-
-      // Fetch complete user profile once (includes wallets and email)
-      const profileData: UserProfileResponse = await getUserProfile(userId);
-
-      return buildUserInfo({
-        userId,
-        profileData,
-        fallbackWallet: walletAddress,
-        isNewUser,
-        etlJobId: etl_job?.job_id ?? null,
-      });
-    },
-    enabled: !!walletAddress, // Only run when wallet address is available
-  });
+    queryKey: key,
+    queryFn: fetchUser,
+    enabled: !!identifier,
+  };
 }
 
-// Hook to access current user data (combines wallet connection + user query)
+/** Hook to get user by wallet address */
+export function useUserByWallet(walletAddress: string | null) {
+  return useQuery(
+    buildUserQuery(
+      queryKeys.user.byWallet(walletAddress || ""),
+      walletAddress,
+      async () => {
+        if (!walletAddress) throw new Error("No wallet address provided");
+
+        const connectResponse = await connectWallet(walletAddress);
+        const {
+          user_id: userId,
+          is_new_user: isNewUser,
+          etl_job,
+        } = connectResponse;
+
+        const profileData: UserProfileResponse = await getUserProfile(userId);
+
+        return buildUserInfo({
+          userId,
+          profileData,
+          fallbackWallet: walletAddress,
+          isNewUser,
+          etlJobId: etl_job?.job_id ?? null,
+        });
+      }
+    )
+  );
+}
+
+/** Hook to access current user data (combines wallet connection + user query) */
 export function useCurrentUser() {
-  const { address } = useAccount();
-  const connectedWallet = address ?? null;
+  const { account } = useWalletProvider();
+  const connectedWallet = account?.address ?? null;
 
   const userQuery = useUserByWallet(connectedWallet);
 
@@ -119,33 +137,25 @@ export function useCurrentUser() {
     isConnected: !!connectedWallet,
     connectedWallet,
     userInfo: userQuery.data || null,
-    // Transform error messages for UI consistency
     error: (userQuery.error as Error | null)?.message || null,
   };
 }
 
 /**
- * Hook to get user data by userId (for viewing bundle owner's data)
- * This is used to fetch any user's profile without wallet connection
- * Primarily for visitor mode to see bundle owner's wallets
+ * Hook to get user data by userId (for viewing bundle owner's data).
+ * Used in visitor mode to see bundle owner's wallets.
  *
  * @param userId - The userId to fetch (bundle owner ID from URL)
  * @returns Query result with user profile data
  */
 export function useUserById(userId: string | null) {
-  return useQuery({
-    ...baseUserQueryConfig,
-    queryKey: queryKeys.user.byId(userId || ""),
-    queryFn: async (): Promise<UserInfo> => {
-      if (!userId) {
-        throw new Error("No user ID provided");
-      }
+  return useQuery(
+    buildUserQuery(queryKeys.user.byId(userId || ""), userId, async () => {
+      if (!userId) throw new Error("No user ID provided");
 
-      // Fetch user profile directly by userId (no wallet connection needed)
       const profileData: UserProfileResponse = await getUserProfile(userId);
 
       return buildUserInfo({ userId, profileData });
-    },
-    enabled: !!userId,
-  });
+    })
+  );
 }

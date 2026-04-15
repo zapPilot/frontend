@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { WalletActionMenu } from "@/components/WalletManager/components/WalletActionMenu";
 import type { WalletOperations } from "@/components/WalletManager/types/wallet.types";
-import type { WalletData } from "@/lib/validation/walletUtils";
+
+import {
+  DEFAULT_WALLET_OPERATIONS,
+  MOCK_WALLET_1,
+} from "../../../../fixtures/componentMocks";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -30,27 +34,11 @@ vi.mock("@/constants/design-system", () => ({
 }));
 
 describe("WalletActionMenu", () => {
-  const mockWallet: WalletData = {
-    id: "wallet1",
-    address: "0x1234567890123456789012345678901234567890",
-    label: "Main Wallet",
-    isActive: false,
-    isMain: false,
-    createdAt: "2024-01-01T00:00:00Z",
-  };
-
-  const defaultOperations: WalletOperations = {
-    adding: { isLoading: false, error: null },
-    removing: {},
-    editing: {},
-    subscribing: { isLoading: false, error: null },
-  };
-
   const defaultProps = {
-    wallet: mockWallet,
+    wallet: MOCK_WALLET_1,
     isOpen: false,
     menuPosition: null,
-    operations: defaultOperations,
+    operations: DEFAULT_WALLET_OPERATIONS,
     isOwner: true,
     onCopyAddress: vi.fn(),
     onEditWallet: vi.fn(),
@@ -99,13 +87,13 @@ describe("WalletActionMenu", () => {
       await user.click(button);
 
       expect(onToggleDropdown).toHaveBeenCalledWith(
-        mockWallet.id,
+        MOCK_WALLET_1.id,
         expect.any(HTMLElement)
       );
     });
 
     it("should use different aria-label for different wallets", () => {
-      const wallet = { ...mockWallet, label: "Trading Wallet" };
+      const wallet = { ...MOCK_WALLET_1, label: "Trading Wallet" };
 
       render(<WalletActionMenu {...defaultProps} wallet={wallet} />);
 
@@ -247,8 +235,8 @@ describe("WalletActionMenu", () => {
       await user.click(screen.getByText("Copy Address"));
 
       expect(onCopyAddress).toHaveBeenCalledWith(
-        mockWallet.address,
-        mockWallet.id
+        MOCK_WALLET_1.address,
+        MOCK_WALLET_1.id
       );
     });
 
@@ -308,7 +296,7 @@ describe("WalletActionMenu", () => {
       const link = screen.getByText("View on DeBank").closest("a");
       expect(link).toHaveAttribute(
         "href",
-        `https://debank.com/profile/${mockWallet.address}`
+        `https://debank.com/profile/${MOCK_WALLET_1.address}`
       );
     });
 
@@ -459,8 +447,8 @@ describe("WalletActionMenu", () => {
       await user.click(screen.getByText("Edit Label"));
 
       expect(onEditWallet).toHaveBeenCalledWith(
-        mockWallet.id,
-        mockWallet.label
+        MOCK_WALLET_1.id,
+        MOCK_WALLET_1.label
       );
     });
 
@@ -541,7 +529,7 @@ describe("WalletActionMenu", () => {
 
       await user.click(screen.getByText("Remove from Bundle"));
 
-      expect(onDeleteWallet).toHaveBeenCalledWith(mockWallet.id);
+      expect(onDeleteWallet).toHaveBeenCalledWith(MOCK_WALLET_1.id);
     });
 
     it("should close dropdown after deleting", async () => {
@@ -565,7 +553,7 @@ describe("WalletActionMenu", () => {
 
     it("should be disabled when removing operation is in progress", () => {
       const operations: WalletOperations = {
-        ...defaultOperations,
+        ...DEFAULT_WALLET_OPERATIONS,
         removing: {
           wallet1: { isLoading: true, error: null },
         },
@@ -602,7 +590,7 @@ describe("WalletActionMenu", () => {
 
   describe("edge cases", () => {
     it("should handle wallet with different IDs", () => {
-      const wallet = { ...mockWallet, id: "wallet999" };
+      const wallet = { ...MOCK_WALLET_1, id: "wallet999" };
       const onToggleDropdown = vi.fn();
 
       render(
@@ -626,7 +614,7 @@ describe("WalletActionMenu", () => {
 
     it("should handle different DeBank URLs for different addresses", () => {
       const wallet = {
-        ...mockWallet,
+        ...MOCK_WALLET_1,
         address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
       };
 

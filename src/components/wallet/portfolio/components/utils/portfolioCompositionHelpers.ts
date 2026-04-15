@@ -4,7 +4,7 @@ import {
   type Regime,
 } from "@/components/wallet/regime/regimeData";
 import { ASSET_COLORS } from "@/constants/assets";
-import type { AllocationConstituent } from "@/types/portfolio-allocation";
+import type { AllocationConstituent } from "@/types/portfolio";
 
 /**
  * Build target crypto assets from regime breakdown for empty state

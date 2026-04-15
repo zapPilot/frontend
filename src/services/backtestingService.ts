@@ -1,5 +1,5 @@
 import { httpUtils } from "@/lib/http";
-import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
+import { createApiServiceCaller } from "@/lib/http/createServiceCaller";
 import {
   MAX_CHART_POINTS,
   MIN_CHART_POINTS,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createErrorMapper } from "@/lib/http/createErrorMapper";
+import { createErrorMapper } from "@/lib/http/serviceErrorFactory";
 
 describe("createErrorMapper", () => {
   const mapper = createErrorMapper(

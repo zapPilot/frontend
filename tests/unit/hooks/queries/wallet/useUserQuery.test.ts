@@ -18,7 +18,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-// Re-import mocked modules so we can configure them in tests
 import { useAccount } from "wagmi";
 
 import {
@@ -26,6 +25,7 @@ import {
   useUserById,
   useUserByWallet,
 } from "@/hooks/queries/wallet/useUserQuery";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import { connectWallet, getUserProfile } from "@/services/accountService";
 
 // ---------------------------------------------------------------------------
@@ -39,6 +39,10 @@ vi.mock("@tanstack/react-query", async () => {
 
 vi.mock("wagmi", () => ({
   useAccount: vi.fn(),
+}));
+
+vi.mock("@/providers/WalletProvider", () => ({
+  useWalletProvider: vi.fn(),
 }));
 
 vi.mock("@/services/accountService", () => ({
@@ -435,9 +439,9 @@ describe("useUserQuery — uncovered branches", () => {
     it("exposes error as a string message when the inner query errors", () => {
       const testError = new Error("Wallet service unavailable");
 
-      vi.mocked(useAccount).mockReturnValue({
-        address: "0xDEAD",
-      } as ReturnType<typeof useAccount>);
+      vi.mocked(useWalletProvider).mockReturnValue({
+        account: { address: "0xDEAD", isConnected: true },
+      } as ReturnType<typeof useWalletProvider>);
       vi.mocked(useQuery).mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -456,9 +460,9 @@ describe("useUserQuery — uncovered branches", () => {
     });
 
     it("exposes error as null when the inner query has no error", () => {
-      vi.mocked(useAccount).mockReturnValue({
-        address: undefined,
-      } as ReturnType<typeof useAccount>);
+      vi.mocked(useWalletProvider).mockReturnValue({
+        account: null,
+      } as ReturnType<typeof useWalletProvider>);
       vi.mocked(useQuery).mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -476,10 +480,10 @@ describe("useUserQuery — uncovered branches", () => {
       expect(result.current.isConnected).toBe(false);
     });
 
-    it("derives connectedWallet from useAccount address", () => {
-      vi.mocked(useAccount).mockReturnValue({
-        address: "0xBEEF",
-      } as ReturnType<typeof useAccount>);
+    it("derives connectedWallet from wallet provider account", () => {
+      vi.mocked(useWalletProvider).mockReturnValue({
+        account: { address: "0xBEEF", isConnected: true },
+      } as ReturnType<typeof useWalletProvider>);
 
       const { result } = renderHook(() => useCurrentUser());
 
@@ -487,10 +491,10 @@ describe("useUserQuery — uncovered branches", () => {
       expect(result.current.isConnected).toBe(true);
     });
 
-    it("sets connectedWallet to null when useAccount has no address", () => {
-      vi.mocked(useAccount).mockReturnValue({
-        address: undefined,
-      } as ReturnType<typeof useAccount>);
+    it("sets connectedWallet to null when wallet provider has no account", () => {
+      vi.mocked(useWalletProvider).mockReturnValue({
+        account: null,
+      } as ReturnType<typeof useWalletProvider>);
 
       const { result } = renderHook(() => useCurrentUser());
 
@@ -499,9 +503,9 @@ describe("useUserQuery — uncovered branches", () => {
     });
 
     it("sets userInfo to null when query has no data", () => {
-      vi.mocked(useAccount).mockReturnValue({
-        address: "0xBEEF",
-      } as ReturnType<typeof useAccount>);
+      vi.mocked(useWalletProvider).mockReturnValue({
+        account: { address: "0xBEEF", isConnected: true },
+      } as ReturnType<typeof useWalletProvider>);
       vi.mocked(useQuery).mockReturnValue({
         data: undefined,
         isLoading: true,
